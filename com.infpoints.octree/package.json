@@ -1,0 +1,16 @@
+{
+  "name": "com.infpoints.octree",
+  "version": "0.0.1-preview",
+  "displayName": "Octree",
+  "description": "DOTS ready Octree",
+  "unity": "2019.2",
+  "keywords": [
+    "octree"
+  ],
+  "author": {
+    "name": "John Sietsma",
+    "email": "john@sietsma.com",
+    "url": "https://johnsietsma.com/"
+  },
+  "type": "library"
+}
