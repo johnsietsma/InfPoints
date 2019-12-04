@@ -1,0 +1,14 @@
+{
+  "name": "com.infpoints.common",
+  "version": "0.0.1-preview",
+  "displayName": "Infpoints Common",
+  "description": "Common functionality for Infpoints",
+  "unity": "2019.2",
+  "keywords": [],
+  "author": {
+    "name": "John Sietsma",
+    "email": "john@sietsma.com",
+    "url": "https://johnsietsma.com/"
+  },
+  "type": "library"
+}
