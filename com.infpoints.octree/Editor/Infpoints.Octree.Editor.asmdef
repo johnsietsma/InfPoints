@@ -1,5 +1,5 @@
 {
-    "name": "com.infpoints.editor.tests",
+    "name": "Infpoints.Octree.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"

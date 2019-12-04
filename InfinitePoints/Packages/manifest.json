@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "com.infpoints.octree": "file:C:/Users/johns/Projects/InfPoints/com.infpoints.octree",
+    "com.infpoints.common": "file:../../com.infpoints.common",
+    "com.infpoints.octree": "file:../../com.infpoints.octree",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.ads": "2.0.8",
@@ -9,9 +10,10 @@
     "com.unity.ext.nunit": "1.0.0",
     "com.unity.ide.rider": "1.1.0",
     "com.unity.ide.vscode": "1.0.7",
+    "com.unity.mathematics": "1.1.0",
     "com.unity.purchasing": "2.0.6",
     "com.unity.render-pipelines.universal": "7.0.1",
-    "com.unity.test-framework": "1.1.1",
+    "com.unity.test-framework": "1.1.8",
     "com.unity.textmeshpro": "2.0.1",
     "com.unity.timeline": "1.2.2",
     "com.unity.ugui": "1.0.0",

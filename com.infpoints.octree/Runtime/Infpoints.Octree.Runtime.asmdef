@@ -1,6 +1,9 @@
 {
-    "name": "com.infpoints.runtime.tests",
-    "references": [],
+    "name": "Infpoints.Octree.Runtime",
+    "references": [
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:aaf184c82a14172448e79b361f1bd349"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
