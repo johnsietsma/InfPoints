@@ -1,7 +1,7 @@
 {
   "name": "com.infpoints.common",
   "version": "0.0.1-preview",
-  "displayName": "Infpoints Common",
+  "displayName": "InfPoints Common",
   "description": "Common functionality for Infpoints",
   "unity": "2019.2",
   "keywords": [],

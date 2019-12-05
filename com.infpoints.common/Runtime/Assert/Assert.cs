@@ -1,4 +1,4 @@
-namespace Infpoints.Common
+namespace InfPoints.Common
 {
     using System;
     using System.Diagnostics;

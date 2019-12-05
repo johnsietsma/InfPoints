@@ -1,7 +1,7 @@
 {
   "name": "com.infpoints.octree",
   "version": "0.0.1-preview",
-  "displayName": "Infpoints Octree",
+  "displayName": "InfPoints Octree",
   "description": "DOTS ready Octree",
   "unity": "2019.2",
   "keywords": [
