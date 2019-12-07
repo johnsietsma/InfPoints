@@ -4,22 +4,28 @@
     using NUnit.Framework;
     using Unity.Collections;
     using Unity.Mathematics;
+    using Unity.PerformanceTesting;
     using UnityEngine.TestTools.Constraints;
     using Is = UnityEngine.TestTools.Constraints.Is;
 
     public class MortonTests
     {
-        static readonly int NUM_COORDS = 1000;
-        private uint3[] m_Coordinates = new uint3[NUM_COORDS];
-        private uint[] m_Codes = new uint[NUM_COORDS];
+        static readonly int NUM_COORDS = 1000000;
+        private uint3[] m_RandomCoordinates = new uint3[NUM_COORDS];
+        private uint[] m_RandomCodes = new uint[NUM_COORDS];
 
         [SetUp]
         public void SetupTests()
         {
             Random r = new Random(1);
-            for( int i=0;i< m_Coordinates.Length; i++)
+            for( int i=0;i< m_RandomCoordinates.Length; i++)
             {
-                m_Coordinates[i] = r.NextUInt3();
+                m_RandomCoordinates[i] = r.NextUInt3();
+            }
+
+            for (int i = 0; i < m_RandomCoordinates.Length; i++)
+            {
+                m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
             }
         }
 
@@ -45,7 +51,7 @@
         public void MortonJobs()
         {
             NativeArray<uint3> coordinates = new NativeArray<uint3>(
-                m_Coordinates,
+                m_RandomCoordinates,
                 Allocator.TempJob);
             NativeArray<uint> codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob);
 
@@ -60,6 +66,32 @@
             codes.Dispose();
         }
 
+        [Test, Performance]
+        [Version("1")]
+        public void Performance_Encode()
+        {
+            Measure.Method(() =>
+            {
+                for (int i = 0; i < m_RandomCoordinates.Length; i++)
+                {
+                    m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
+                }
+            }).MeasurementCount(20).WarmupCount(2).Run();
+        }
+
+        [Test, Performance]
+        [Version("1")]
+        public void Performance_Decode()
+        {
+            Measure.Method(() =>
+            {
+                for (int i = 0; i < m_RandomCoordinates.Length; i++)
+                {
+                    m_RandomCoordinates[i] = Morton.DecodeMorton3(m_RandomCodes[i]);
+                }
+            }).MeasurementCount(20).WarmupCount(5).Run();
+        }
+
 
         private void TestEncoding(uint3 coordinate, uint expectedCode)
         {
@@ -69,6 +101,8 @@
             Assert.AreEqual(code, expectedCode);
             Assert.AreEqual(coordinate, decodedCoorindate);
         }
+
+
     }
 
 }
