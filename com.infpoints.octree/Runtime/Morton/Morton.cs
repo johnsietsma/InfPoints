@@ -24,6 +24,11 @@ namespace InfPoints.Octree.Morton
             return new uint3(x, y, z);
         }
 
+        public static uint4 EncodeMorton3(uint4x3 coordinates)
+        {
+            return EncodeMorton3(coordinates[0], coordinates[1], coordinates[2]);
+        }
+        
         public static uint4 EncodeMorton3(uint4 coordinateX, uint4 coordinateY, uint4 coordinateZ)
         {
             return (Part1By2(coordinateX) << 2) + (Part1By2(coordinateY) << 1) + Part1By2(coordinateZ);
