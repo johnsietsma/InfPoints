@@ -1,4 +1,5 @@
-﻿
+﻿using Unity.Collections.LowLevel.Unsafe;
+
 namespace InfPoints.Octree.Tests.Editor
 {
     using Morton;
@@ -8,7 +9,6 @@ namespace InfPoints.Octree.Tests.Editor
     using Unity.PerformanceTesting;
     using UnityEngine.TestTools.Constraints;
     using System.Diagnostics.CodeAnalysis;
-    using Is = UnityEngine.TestTools.Constraints.Is;
 
     [SuppressMessage("ReSharper", "HeapView.BoxingAllocation")]
     public class MortonTests
@@ -23,7 +23,8 @@ namespace InfPoints.Octree.Tests.Editor
             new uint3(5, 9, 1)
         };
 
-        static readonly uint[] WellKnownCodes = {
+        static readonly uint[] WellKnownCodes =
+        {
             0,
             1,
             5,
@@ -31,21 +32,21 @@ namespace InfPoints.Octree.Tests.Editor
         };
 
 
-        private readonly uint3[] _RandomCoordinates = new uint3[NUM_COORDS];
-        private readonly uint[] _RandomCodes = new uint[NUM_COORDS];
+        readonly uint3[] m_RandomCoordinates = new uint3[NUM_COORDS];
+        readonly uint[] m_RandomCodes = new uint[NUM_COORDS];
 
         [SetUp]
         public void SetupTests()
         {
-            var r = new Unity.Mathematics.Random(1);
-            for (int i = 0; i < _RandomCoordinates.Length; i++)
+            var r = new Random(1);
+            for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                _RandomCoordinates[i] = r.NextUInt3();
+                m_RandomCoordinates[i] = r.NextUInt3();
             }
 
-            for (int i = 0; i < _RandomCoordinates.Length; i++)
+            for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                _RandomCodes[i] = Morton.EncodeMorton3(_RandomCoordinates[i]);
+                m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
             }
         }
 
@@ -78,14 +79,12 @@ namespace InfPoints.Octree.Tests.Editor
         [Test]
         public void WellKnowNumbers_Packed()
         {
-            var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1], WellKnownCoordinates[2], WellKnownCoordinates[3]);
+            var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
+                WellKnownCoordinates[2], WellKnownCoordinates[3]);
             var packedCodes = Morton.EncodeMorton3(math.transpose((packedCoordinatesIn)));
-            var packedCoordinatesOut = Morton.DecodeMorton3(packedCodes);
+            var packedCoordinatesOut = math.transpose(Morton.DecodeMorton3(packedCodes));
 
-            Assert.AreEqual(packedCoordinatesIn[0], packedCoordinatesOut[0]);
-            Assert.AreEqual(packedCoordinatesIn[1], packedCoordinatesOut[1]);
-            Assert.AreEqual(packedCoordinatesIn[2], packedCoordinatesOut[2]);
-            Assert.AreEqual(packedCoordinatesIn[3], packedCoordinatesOut[3]);
+            Assert.AreEqual(packedCoordinatesIn, packedCoordinatesOut);
         }
 
         [Test]
@@ -101,23 +100,35 @@ namespace InfPoints.Octree.Tests.Editor
 
 
         [Test]
-        public void MortonJobs()
+        public void MortonJob_Encode()
         {
-            NativeArray<uint3> coordinates = new NativeArray<uint3>(
-                _RandomCoordinates,
-                Allocator.TempJob);
-            NativeArray<uint> codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob);
-
-            MortonEncodeJob job = new MortonEncodeJob()
+            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates, Allocator.TempJob))
+            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
             {
-                m_Coordinates = coordinates,
-                m_Codes = codes
-            };
+                var job = new MortonEncodeJob()
+                {
+                    m_Coordinates = coordinates,
+                    m_Codes = codes
+                };
 
-            job.Execute();
+                job.Execute();
+            }
+        }
 
-            coordinates.Dispose();
-            codes.Dispose();
+        [Test]
+        public void MortonJob_EncodePacked()
+        {
+            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates, Allocator.TempJob))
+            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
+            {
+                var job = new MortonEncodeJob_Packed()
+                {
+                    m_Coordinates = coordinates.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>()),
+                    m_Codes = codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
+                };
+
+                job.Execute();
+            }
         }
 
         [Test, Performance]
@@ -126,9 +137,9 @@ namespace InfPoints.Octree.Tests.Editor
         {
             void EncodeArray()
             {
-                for (int i = 0; i < _RandomCoordinates.Length; i++)
+                for (int i = 0; i < m_RandomCoordinates.Length; i++)
                 {
-                    _RandomCodes[i] = Morton.EncodeMorton3(_RandomCoordinates[i]);
+                    m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
                 }
             }
 
@@ -141,14 +152,13 @@ namespace InfPoints.Octree.Tests.Editor
         {
             void DecodeArray()
             {
-                for (int i = 0; i < _RandomCoordinates.Length; i++)
+                for (int i = 0; i < m_RandomCoordinates.Length; i++)
                 {
-                    _RandomCoordinates[i] = Morton.DecodeMorton3(_RandomCodes[i]);
+                    m_RandomCoordinates[i] = Morton.DecodeMorton3(m_RandomCodes[i]);
                 }
             }
 
             Measure.Method(DecodeArray).MeasurementCount(20).WarmupCount(5).Run();
         }
     }
-
 }
