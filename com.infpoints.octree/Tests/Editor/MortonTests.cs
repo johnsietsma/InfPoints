@@ -99,23 +99,35 @@
 
 
         [Test]
-        public void MortonJobs()
+        public void MortonJob_Encode()
         {
-            NativeArray<uint3> coordinates = new NativeArray<uint3>(
-                m_RandomCoordinates,
-                Allocator.TempJob);
-            NativeArray<uint> codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob);
-
-            MortonEncodeJob job = new MortonEncodeJob()
+            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates,Allocator.TempJob))
+            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
             {
-                m_Coordinates = coordinates,
-                m_Codes = codes
-            };
+                var job = new MortonEncodeJob()
+                {
+                    m_Coordinates = coordinates,
+                    m_Codes = codes
+                };
 
-            job.Execute();
+                job.Execute();
+            }
+        }
+        
+        [Test]
+        public void MortonJob_EncodePacked()
+        {
+            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates,Allocator.TempJob))
+            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
+            {
+                var job = new MortonEncodeJob_Packed()
+                {
+                    m_Coordinates = coordinates.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>()),
+                    m_Codes = codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
+                };
 
-            coordinates.Dispose();
-            codes.Dispose();
+                job.Execute();
+            }
         }
 
         [Test, Performance]
