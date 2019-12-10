@@ -1,26 +1,29 @@
-﻿namespace InfPoints.Octree.Tests.Editor
+﻿
+namespace InfPoints.Octree.Tests.Editor
 {
-    using InfPoints.Octree.Morton;
+    using Morton;
     using NUnit.Framework;
     using Unity.Collections;
     using Unity.Mathematics;
     using Unity.PerformanceTesting;
-    using UnityEngine;
     using UnityEngine.TestTools.Constraints;
+    using System.Diagnostics.CodeAnalysis;
     using Is = UnityEngine.TestTools.Constraints.Is;
 
+    [SuppressMessage("ReSharper", "HeapView.BoxingAllocation")]
     public class MortonTests
     {
         static readonly int NUM_COORDS = 1000000;
-        static readonly uint3[] WELL_KNOWN_COORDINATES = new uint3[]
+
+        private static uint3[] WellKnownCoordinates { get; } =
         {
-            new uint3(0,0,0),
-            new uint3(1,0,0),
-            new uint3(1,0,1),
-            new uint3(5,9,1)
+            new uint3(0, 0, 0),
+            new uint3(1, 0, 0),
+            new uint3(1, 0, 1),
+            new uint3(5, 9, 1)
         };
-        static readonly uint[] WELL_KNOWN_CODES = new uint[]
-        {
+
+        static readonly uint[] WellKnownCodes = {
             0,
             1,
             5,
@@ -28,28 +31,28 @@
         };
 
 
-        private uint3[] m_RandomCoordinates = new uint3[NUM_COORDS];
-        private uint[] m_RandomCodes = new uint[NUM_COORDS];
+        private readonly uint3[] _RandomCoordinates = new uint3[NUM_COORDS];
+        private readonly uint[] _RandomCodes = new uint[NUM_COORDS];
 
         [SetUp]
         public void SetupTests()
         {
             var r = new Unity.Mathematics.Random(1);
-            for (int i = 0; i < m_RandomCoordinates.Length; i++)
+            for (int i = 0; i < _RandomCoordinates.Length; i++)
             {
-                m_RandomCoordinates[i] = r.NextUInt3();
+                _RandomCoordinates[i] = r.NextUInt3();
             }
 
-            for (int i = 0; i < m_RandomCoordinates.Length; i++)
+            for (int i = 0; i < _RandomCoordinates.Length; i++)
             {
-                m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
+                _RandomCodes[i] = Morton.EncodeMorton3(_RandomCoordinates[i]);
             }
         }
 
         [Test]
         public void First8()
         {
-            Assert.AreEqual(expected: Morton.DecodeMorton3(0), actual: new uint3(0, 0, 0));
+            Assert.AreEqual(Morton.DecodeMorton3(0), new uint3(0, 0, 0));
             Assert.AreEqual(Morton.DecodeMorton3(1), new uint3(1, 0, 0));
             Assert.AreEqual(Morton.DecodeMorton3(2), new uint3(0, 1, 0));
             Assert.AreEqual(Morton.DecodeMorton3(3), new uint3(1, 1, 0));
@@ -62,21 +65,20 @@
         [Test]
         public void WellKnowNumbers()
         {
-            for (int i = 0; i < WELL_KNOWN_CODES.Length; i++)
+            for (int i = 0; i < WellKnownCodes.Length; i++)
             {
-                var coordinate = WELL_KNOWN_COORDINATES[i];
-                var code = Morton.EncodeMorton3(WELL_KNOWN_COORDINATES[i]);
+                var code = Morton.EncodeMorton3(WellKnownCoordinates[i]);
                 var decodedCoordinate = Morton.DecodeMorton3(code);
 
-                Assert.AreEqual(code, WELL_KNOWN_CODES[i]);
-                Assert.AreEqual(WELL_KNOWN_COORDINATES[i], decodedCoordinate);
+                Assert.AreEqual(code, WellKnownCodes[i]);
+                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
             }
         }
 
         [Test]
         public void WellKnowNumbers_Packed()
         {
-            var packedCoordinatesIn = new uint3x4(WELL_KNOWN_COORDINATES[0], WELL_KNOWN_COORDINATES[1], WELL_KNOWN_COORDINATES[2], WELL_KNOWN_COORDINATES[3]);
+            var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1], WellKnownCoordinates[2], WellKnownCoordinates[3]);
             var packedCodes = Morton.EncodeMorton3(math.transpose((packedCoordinatesIn)));
             var packedCoordinatesOut = Morton.DecodeMorton3(packedCodes);
 
@@ -94,7 +96,7 @@
                 {
                     Morton.EncodeMorton3(new uint3(0));
                     Morton.DecodeMorton3(0);
-                }, Is.Not.AllocatingGCMemory());
+                }, NUnit.Framework.Is.Not.AllocatingGCMemory());
         }
 
 
@@ -102,7 +104,7 @@
         public void MortonJobs()
         {
             NativeArray<uint3> coordinates = new NativeArray<uint3>(
-                m_RandomCoordinates,
+                _RandomCoordinates,
                 Allocator.TempJob);
             NativeArray<uint> codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob);
 
@@ -122,39 +124,31 @@
         [Version("1")]
         public void Performance_Encode()
         {
-            Measure.Method(() =>
+            void EncodeArray()
             {
-                for (int i = 0; i < m_RandomCoordinates.Length; i++)
+                for (int i = 0; i < _RandomCoordinates.Length; i++)
                 {
-                    m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
+                    _RandomCodes[i] = Morton.EncodeMorton3(_RandomCoordinates[i]);
                 }
-            }).MeasurementCount(20).WarmupCount(2).Run();
+            }
+
+            Measure.Method(EncodeArray).MeasurementCount(20).WarmupCount(2).Run();
         }
 
         [Test, Performance]
         [Version("1")]
         public void Performance_Decode()
         {
-            Measure.Method(() =>
+            void DecodeArray()
             {
-                for (int i = 0; i < m_RandomCoordinates.Length; i++)
+                for (int i = 0; i < _RandomCoordinates.Length; i++)
                 {
-                    m_RandomCoordinates[i] = Morton.DecodeMorton3(m_RandomCodes[i]);
+                    _RandomCoordinates[i] = Morton.DecodeMorton3(_RandomCodes[i]);
                 }
-            }).MeasurementCount(20).WarmupCount(5).Run();
+            }
+
+            Measure.Method(DecodeArray).MeasurementCount(20).WarmupCount(5).Run();
         }
-
-
-        private void TestEncoding(uint3 coordinate, uint expectedCode)
-        {
-            var code = Morton.EncodeMorton3(coordinate);
-            var decodedCoorindate = Morton.DecodeMorton3(code);
-
-            Assert.AreEqual(code, expectedCode);
-            Assert.AreEqual(coordinate, decodedCoorindate);
-        }
-
-
     }
 
 }
