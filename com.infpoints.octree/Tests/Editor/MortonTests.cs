@@ -102,7 +102,7 @@ namespace InfPoints.Octree.Tests.Editor
         }
 
         [Test]
-        public void WellKnowNumbers_Packed()
+        public void WellKnownNumbers_Packed()
         {
             var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
                 WellKnownCoordinates[2], WellKnownCoordinates[3]);
@@ -138,10 +138,21 @@ namespace InfPoints.Octree.Tests.Editor
         }
 
         [Test]
-        public void MortonJob_EncodePacked()
+        public void MortonJob_EncodeDecodePacked()
         {
             DoTransposePacked();
             DoEncodeDecodeJobPacked();
+            DoTransposeUnpacked();
+
+            Assert.IsTrue(m_Coordinates.ArraysEqual(m_CoordinatesDecoded));
+            Assert.IsTrue(m_CoordinatesPacked.ArraysEqual(m_CoordinatesDecodedPacked));
+        }
+
+        [Test]
+        public void MortonJob_EncodeDecodePackedFor()
+        {
+            DoTransposePacked();
+            DoEncodeDecodeJobPackedFor();
             DoTransposeUnpacked();
 
             Assert.IsTrue(m_Coordinates.ArraysEqual(m_CoordinatesDecoded));
@@ -167,6 +178,13 @@ namespace InfPoints.Octree.Tests.Editor
         public void Performance_EncodeDecodeJobPacked()
         {
             Measure.Method(DoEncodeDecodeJobPacked).WarmupCount(2).Run();
+        }
+        
+        [Test, Performance]
+        [Version("1")]
+        public void Performance_EncodeDecodeJobPackedFor()
+        {
+            Measure.Method(DoEncodeDecodeJobPackedFor).WarmupCount(2).Run();
         }
 
         void DoEncodeDecode()
@@ -241,6 +259,27 @@ namespace InfPoints.Octree.Tests.Editor
 
             var encodeJobHandle = encodeJob.Schedule();
             var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+
+            decodeJobHandle.Complete();
+        }
+        
+        void DoEncodeDecodeJobPackedFor()
+        {
+            var encodeJob = new MortonEncodeJob_PackedFor()
+            {
+                Coordinates = m_CoordinatesPacked,
+                Codes = m_Codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
+            };
+
+            var decodeJob = new MortonDecodeJob_PackedFor()
+            {
+                Codes = m_Codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>()),
+                Coordinates = m_CoordinatesDecodedPacked,
+            };
+
+            var coordinatesLength = encodeJob.Coordinates.Length;
+            var encodeJobHandle = encodeJob.Schedule(coordinatesLength, 1);
+            var decodeJobHandle = decodeJob.Schedule(coordinatesLength, 1, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }
