@@ -1,4 +1,5 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 
 namespace InfPoints.Octree.Tests.Editor
 {
@@ -35,19 +36,43 @@ namespace InfPoints.Octree.Tests.Editor
         readonly uint3[] m_RandomCoordinates = new uint3[NUM_COORDS];
         readonly uint[] m_RandomCodes = new uint[NUM_COORDS];
 
+        NativeArray<uint3> m_Coordinates;
+        NativeArray<uint4x3> m_CoordinatesPacked;
+        NativeArray<uint3> m_CoordinatesDecoded;
+        NativeArray<uint4x3> m_CoordinatesDecodedPacked;
+        NativeArray<uint> m_Codes;
+
         [SetUp]
         public void SetupTests()
         {
             var r = new Random(1);
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                m_RandomCoordinates[i] = r.NextUInt3();
+                m_RandomCoordinates[i] = r.NextUInt3(999);
             }
 
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
                 m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
             }
+
+            int coordinatesLength = m_RandomCoordinates.Length;
+            int packedLength = coordinatesLength / 4;
+            m_Coordinates = new NativeArray<uint3>(m_RandomCoordinates, Allocator.TempJob);
+            m_CoordinatesPacked = new NativeArray<uint4x3>(packedLength, Allocator.TempJob);
+            m_CoordinatesDecoded = new NativeArray<uint3>(coordinatesLength, Allocator.TempJob);
+            m_CoordinatesDecodedPacked = new NativeArray<uint4x3>(packedLength, Allocator.TempJob);
+            m_Codes = new NativeArray<uint>(coordinatesLength, Allocator.TempJob);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            m_Coordinates.Dispose();
+            m_CoordinatesPacked.Dispose();
+            m_CoordinatesDecoded.Dispose();
+            m_CoordinatesDecodedPacked.Dispose();
+            m_Codes.Dispose();
         }
 
         [Test]
@@ -64,7 +89,7 @@ namespace InfPoints.Octree.Tests.Editor
         }
 
         [Test]
-        public void WellKnowNumbers()
+        public void WellKnownNumbers()
         {
             for (int i = 0; i < WellKnownCodes.Length; i++)
             {
@@ -81,7 +106,7 @@ namespace InfPoints.Octree.Tests.Editor
         {
             var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
                 WellKnownCoordinates[2], WellKnownCoordinates[3]);
-            var packedCodes = Morton.EncodeMorton3(math.transpose((packedCoordinatesIn)));
+            var packedCodes = Morton.EncodeMorton3(math.transpose(packedCoordinatesIn));
             var packedCoordinatesOut = math.transpose(Morton.DecodeMorton3(packedCodes));
 
             Assert.AreEqual(packedCoordinatesIn, packedCoordinatesOut);
@@ -98,67 +123,126 @@ namespace InfPoints.Octree.Tests.Editor
                 }, NUnit.Framework.Is.Not.AllocatingGCMemory());
         }
 
+        [Test, Performance]
+        public void Morton_EncodeDecode()
+        {
+            DoEncodeDecode();
+            Assert.IsTrue(m_Coordinates.ArraysEqual(m_CoordinatesDecoded));
+        }
 
         [Test]
-        public void MortonJob_Encode()
+        public void MortonJob_EncodeDecode()
         {
-            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates, Allocator.TempJob))
-            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
-            {
-                var job = new MortonEncodeJob()
-                {
-                    m_Coordinates = coordinates,
-                    m_Codes = codes
-                };
-
-                job.Execute();
-            }
+            DoEncodeDecodeJob();
+            Assert.IsTrue(m_Coordinates.ArraysEqual(m_CoordinatesDecoded));
         }
 
         [Test]
         public void MortonJob_EncodePacked()
         {
-            using (var coordinates = new NativeArray<uint3>(m_RandomCoordinates, Allocator.TempJob))
-            using (var codes = new NativeArray<uint>(coordinates.Length, Allocator.TempJob))
-            {
-                var job = new MortonEncodeJob_Packed()
-                {
-                    m_Coordinates = coordinates.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>()),
-                    m_Codes = codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
-                };
+            DoTransposePacked();
+            DoEncodeDecodeJobPacked();
+            DoTransposeUnpacked();
 
-                job.Execute();
-            }
+            Assert.IsTrue(m_Coordinates.ArraysEqual(m_CoordinatesDecoded));
+            Assert.IsTrue(m_CoordinatesPacked.ArraysEqual(m_CoordinatesDecodedPacked));
         }
 
         [Test, Performance]
         [Version("1")]
-        public void Performance_Encode()
+        public void Performance_EncodeDecode()
         {
-            void EncodeArray()
-            {
-                for (int i = 0; i < m_RandomCoordinates.Length; i++)
-                {
-                    m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
-                }
-            }
-
-            Measure.Method(EncodeArray).MeasurementCount(20).WarmupCount(2).Run();
+            Measure.Method(DoEncodeDecode).WarmupCount(2).Run();
         }
 
         [Test, Performance]
         [Version("1")]
-        public void Performance_Decode()
+        public void Performance_EncodeDecodeJob()
         {
-            void DecodeArray()
+            Measure.Method(DoEncodeDecodeJob).WarmupCount(2).Run();
+        }
+
+        [Test, Performance]
+        [Version("1")]
+        public void Performance_EncodeDecodeJobPacked()
+        {
+            Measure.Method(DoEncodeDecodeJobPacked).WarmupCount(2).Run();
+        }
+
+        void DoEncodeDecode()
+        {
+            for (int i = 0; i < m_Coordinates.Length; i++)
             {
-                for (int i = 0; i < m_RandomCoordinates.Length; i++)
-                {
-                    m_RandomCoordinates[i] = Morton.DecodeMorton3(m_RandomCodes[i]);
-                }
+                m_Codes[i] = Morton.EncodeMorton3(m_Coordinates[i]);
             }
 
-            Measure.Method(DecodeArray).MeasurementCount(20).WarmupCount(5).Run();
+            for (int i = 0; i < m_Codes.Length; i++)
+            {
+                m_CoordinatesDecoded[i] = Morton.DecodeMorton3(m_Codes[i]);
+            }
+        }
+
+        void DoEncodeDecodeJob()
+        {
+            var encodeJob = new MortonEncodeJob()
+            {
+                Coordinates = m_Coordinates,
+                Codes = m_Codes
+            };
+
+            var decodeJob = new MortonDecodeJob()
+            {
+                Codes = m_Codes,
+                Coordinates = m_CoordinatesDecoded
+            };
+
+            var encodeJobHandle = encodeJob.Schedule();
+            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+
+            decodeJobHandle.Complete();
+        }
+
+        void DoTransposePacked()
+        {
+            var transposePackedJob = new TransposePackedJob()
+            {
+                SourceArray = m_Coordinates.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>()),
+                TransposedArray = m_CoordinatesPacked
+            };
+            
+            transposePackedJob.Execute();
+        }
+        
+        void DoTransposeUnpacked()
+        {
+            var transposeUnpackedJob = new TransposeUnpackedJob()
+            {
+                SourceArray = m_CoordinatesDecodedPacked,
+                TransposedArray = m_CoordinatesDecoded.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>())
+            };
+            
+            transposeUnpackedJob.Execute();
+        }
+
+
+        void DoEncodeDecodeJobPacked()
+        {
+            var encodeJob = new MortonEncodeJob_Packed()
+            {
+                Coordinates = m_CoordinatesPacked,
+                Codes = m_Codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
+            };
+
+            var decodeJob = new MortonDecodeJob_Packed()
+            {
+                Codes = m_Codes.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>()),
+                Coordinates = m_CoordinatesDecodedPacked,
+            };
+
+            var encodeJobHandle = encodeJob.Schedule();
+            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+
+            decodeJobHandle.Complete();
         }
     }
 }

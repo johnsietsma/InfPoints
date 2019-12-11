@@ -5,34 +5,98 @@ using Unity.Mathematics;
 
 namespace InfPoints.Octree.Morton
 {
-    [BurstCompile]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct MortonEncodeJob : IJob
     {
         [ReadOnly]
-        public NativeArray<uint3> m_Coordinates;
-        public NativeArray<uint> m_Codes;
+        public NativeArray<uint3> Coordinates;
+        public NativeArray<uint> Codes;
 
         public void Execute()
         {
-            for (int i = 0; i < m_Coordinates.Length; i++)
+            for (int i = 0; i < Coordinates.Length; i++)
             {
-                m_Codes[i] = Morton.EncodeMorton3(m_Coordinates[i]);
+                Codes[i] = Morton.EncodeMorton3(Coordinates[i]);
             }
         }
     }
     
-    [BurstCompile]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct MortonEncodeJob_Packed : IJob
     {
         [ReadOnly]
-        public NativeArray<uint3x4> m_Coordinates;
-        public NativeArray<uint4> m_Codes;
+        public NativeArray<uint4x3> Coordinates;
+        public NativeArray<uint4> Codes;
 
         public void Execute()
         {
-            for (int i = 0; i < m_Coordinates.Length; i++)
+            for (int i = 0; i < Coordinates.Length; i++)
             {
-                m_Codes[i] = Morton.EncodeMorton3( math.transpose(m_Coordinates[i]) );
+                Codes[i] = Morton.EncodeMorton3( Coordinates[i] );
+            }
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct MortonDecodeJob : IJob
+    {
+        [ReadOnly]
+        public NativeArray<uint> Codes;
+        public NativeArray<uint3> Coordinates;
+
+        public void Execute()
+        {
+            for (int i = 0; i < Codes.Length; i++)
+            {
+                Coordinates[i] = Morton.DecodeMorton3( Codes[i] );
+            }
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct MortonDecodeJob_Packed : IJob
+    {
+        [ReadOnly]
+        public NativeArray<uint4> Codes;
+        public NativeArray<uint4x3> Coordinates;
+
+        public void Execute()
+        {
+            for (int i = 0; i < Codes.Length; i++)
+            {
+                Coordinates[i] = Morton.DecodeMorton3( Codes[i] );
+            }
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct TransposePackedJob : IJob
+    {
+        [ReadOnly]
+        public NativeArray<uint3x4> SourceArray;
+        public NativeArray<uint4x3> TransposedArray;
+
+        public void Execute()
+        {
+            for (int i = 0; i < SourceArray.Length; i++)
+            {
+                TransposedArray[i] = math.transpose(SourceArray[i]);
+            }
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct TransposeUnpackedJob : IJob
+    {
+        [ReadOnly]
+        public NativeArray<uint4x3> SourceArray;
+        public NativeArray<uint3x4> TransposedArray;
+
+        public void Execute()
+        {
+            for (int i = 0; i < SourceArray.Length; i++)
+            {
+                TransposedArray[i] = math.transpose(SourceArray[i]);
             }
         }
     }
