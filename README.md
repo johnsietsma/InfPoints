@@ -2,7 +2,7 @@
 
 Version 0.000001
 
-Unite Version 2019.3.0b4
+Unite Version 2019.3.0f3
 
 It's becoming more and more common to use photogrammetry and lidar scanning to capture buildings, engineering projects, sites of cultural significance, archaeological digs, etc. Most of these points clouds are in the billions of points; slow to render and unable to fit into memory.
 
@@ -21,3 +21,9 @@ Infinite Points is a point cloud renderer for Unity that solves these issues but
 
 * [Potree](http://www.potree.org/)
 * [Unreal Point Cloud Plugin](https://pointcloudplugin.com/)
+
+## Blog Posts
+* [InfPoints - Introduction](http://johnsietsma.com/2019/11/29/infinite-points-introduction/)
+* [Morton Order - Introduction](http://johnsietsma.com/2019/12/05/morton-order-introduction/)
+* [Morton Order - Burst](http://johnsietsma.com/2019/12/13/mordon-burst/)
+
