@@ -123,7 +123,7 @@ namespace InfPoints.Octree.Tests.Editor
                 }, NUnit.Framework.Is.Not.AllocatingGCMemory());
         }
 
-        [Test, Performance]
+        [Test]
         public void Morton_EncodeDecode()
         {
             DoEncodeDecode();
@@ -177,13 +177,27 @@ namespace InfPoints.Octree.Tests.Editor
         [Version("1")]
         public void Performance_EncodeDecodeJobPacked()
         {
+            DoTransposePacked();
             Measure.Method(DoEncodeDecodeJobPacked).WarmupCount(2).Run();
         }
-        
+
+        [Test, Performance]
+        [Version("1")]
+        public void Performance_EncodeDecodeJobPackedWithTranspose()
+        {
+            Measure.Method(() =>
+            {
+                DoTransposePacked();
+                DoEncodeDecodeJobPacked();
+                DoTransposeUnpacked();
+            }).WarmupCount(2).Run();
+        }
+
         [Test, Performance]
         [Version("1")]
         public void Performance_EncodeDecodeJobPackedFor()
         {
+            DoTransposePacked();
             Measure.Method(DoEncodeDecodeJobPackedFor).WarmupCount(2).Run();
         }
 
@@ -278,8 +292,8 @@ namespace InfPoints.Octree.Tests.Editor
             };
 
             var coordinatesLength = encodeJob.Coordinates.Length;
-            var encodeJobHandle = encodeJob.Schedule(coordinatesLength, 1);
-            var decodeJobHandle = decodeJob.Schedule(coordinatesLength, 1, encodeJobHandle);
+            var encodeJobHandle = encodeJob.Schedule(coordinatesLength, 32);
+            var decodeJobHandle = decodeJob.Schedule(coordinatesLength, 32, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }
