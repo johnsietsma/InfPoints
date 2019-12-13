@@ -1,4 +1,6 @@
-﻿using Unity.Collections.LowLevel.Unsafe;
+﻿using System;
+using System.Diagnostics;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 namespace InfPoints.Octree.Tests.Editor
@@ -48,7 +50,7 @@ namespace InfPoints.Octree.Tests.Editor
             var r = new Random(1);
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                m_RandomCoordinates[i] = r.NextUInt3(999);
+                m_RandomCoordinates[i] = r.NextUInt3(Morton.MaxCoordinateValue);
             }
 
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
@@ -111,7 +113,7 @@ namespace InfPoints.Octree.Tests.Editor
 
             Assert.AreEqual(packedCoordinatesIn, packedCoordinatesOut);
         }
-
+        
         [Test]
         public void NoAllocation()
         {
@@ -123,6 +125,17 @@ namespace InfPoints.Octree.Tests.Editor
                 }, NUnit.Framework.Is.Not.AllocatingGCMemory());
         }
 
+        [Test]
+        [Conditional("DEBUG")]
+        public void Limits()
+        {
+            var maxCoordinate = new uint3(Morton.MaxCoordinateValue);
+            var maxMorton = Morton.EncodeMorton3( maxCoordinate);
+            Assert.AreEqual(maxMorton, 1073741823);
+            Assert.AreEqual(maxCoordinate, Morton.DecodeMorton3(maxMorton));
+            Assert.Throws<OverflowException>(()=>Morton.EncodeMorton3( new uint3(Morton.MaxCoordinateValue+1)));
+        }
+        
         [Test]
         public void Morton_EncodeDecode()
         {

@@ -1,4 +1,5 @@
-﻿
+﻿using System;
+using System.Diagnostics;
 
 namespace InfPoints.Octree.Morton
 {
@@ -13,16 +14,34 @@ namespace InfPoints.Octree.Morton
     /// </summary>
     public static class Morton
     {
+        public static readonly uint MaxCoordinateValue = 0b0011_1111_1111;
+        
         public static uint EncodeMorton3(uint3 coordinate)
         {
+            CheckLimits(coordinate);
             return (Part1By2(coordinate.z) << 2) + (Part1By2(coordinate.y) << 1) + Part1By2(coordinate.x);
         }
-
+        
+        /// <summary>
+        /// SIMD verison. This will take the "packed" coordinates and Burst will auto-vectorise so four encodings
+        /// happen for the price of one. 
+        /// </summary>
+        /// <param name="coordinates">(xxxx),(yyyy),(zzzz)</param>
+        /// <returns></returns>
         public static uint4 EncodeMorton3(uint4x3 coordinates)
         {
+            CheckLimits(coordinates);
             return EncodeMorton3(coordinates[0], coordinates[1], coordinates[2]);
         }
-        
+
+        /// <summary>
+        /// SIMD verison. This will take the "packed" coordinates and Burst will auto-vectorise so four encodings
+        /// happen for the price of one. 
+        /// </summary>
+        /// <param name="coordinateX">(xxxx)</param>
+        /// <param name="coordinateY">(yyyy)</param>
+        /// <param name="coordinateZ">(zzzz)</param>
+        /// <returns></returns>
         public static uint4 EncodeMorton3(uint4 coordinateX, uint4 coordinateY, uint4 coordinateZ)
         {
             return (Part1By2(coordinateX) << 2) + (Part1By2(coordinateY) << 1) + Part1By2(coordinateZ);
@@ -36,6 +55,11 @@ namespace InfPoints.Octree.Morton
             return new uint3(x, y, z);
         }
         
+        /// <summary>
+        /// SIMD version. Pass in four codes as a single unit4, it will be auto-vectorised by Burst.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
         public static uint4x3 DecodeMorton3(uint4 code)
         {
             var z = Compact1By2(code);
@@ -91,5 +115,25 @@ namespace InfPoints.Octree.Morton
             x = (x ^ (x >> 16)) & 0x000003ff; // x = ---- ---- ---- ---- ---- --98 7654 3210
             return x;
         }
+
+        [Conditional("DEBUG")]
+        static void CheckLimits(uint4x3 coordinates)
+        {
+            var transposedCoordinates = math.transpose(coordinates);
+            CheckLimits(transposedCoordinates[0]);
+            CheckLimits(transposedCoordinates[1]);
+            CheckLimits(transposedCoordinates[2]);
+            CheckLimits(transposedCoordinates[3]);
+        }
+        
+        static void CheckLimits(uint3 coordinates)
+        {
+            if (math.cmax(coordinates) > MaxCoordinateValue)
+            {
+                throw new OverflowException(
+                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue}");
+            }
+        }
+        
     }
 }
