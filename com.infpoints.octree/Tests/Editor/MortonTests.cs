@@ -23,7 +23,7 @@ namespace InfPoints.Octree.Tests.Editor
             new uint3(0, 0, 0),
             new uint3(1, 0, 0),
             new uint3(1, 0, 1),
-            new uint3(5, 9, 1)
+            new uint3(0b0101, 0b1001, 0b0001)
         };
 
         static readonly uint[] WellKnownCodes =
@@ -31,9 +31,19 @@ namespace InfPoints.Octree.Tests.Editor
             0,
             1,
             5,
-            1095
+            0b10001000111
         };
 
+        private static uint3[] WellKnownCoordinates64 { get; } =
+        {
+            new uint3(0b001_001_001_001_001_001_001, 0b010_010_010_010_010_010_010, 0b100_100_100_100_100_100_100)
+        };
+
+
+        static readonly uint[] WellKnownCodes64 =
+        {
+            0b100_001_010_100_001_010_100
+        };
 
         readonly uint3[] m_RandomCoordinates = new uint3[NUM_COORDS];
         readonly uint[] m_RandomCodes = new uint[NUM_COORDS];
@@ -102,18 +112,41 @@ namespace InfPoints.Octree.Tests.Editor
                 Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
             }
         }
+        
+        [Test]
+        public void WellKnownNumbers64()
+        {
+            for (int i = 0; i < WellKnownCodes.Length; i++)
+            {
+                var code = Morton.EncodeMorton3(WellKnownCoordinates[i]);
+                var decodedCoordinate = Morton.DecodeMorton3(code);
+
+                Assert.AreEqual(code, WellKnownCodes[i]);
+                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
+            }
+            
+            for (int i = 0; i < WellKnownCodes64.Length; i++)
+            {
+                var code = Morton.EncodeMorton3_64(WellKnownCoordinates[i]);
+                var decodedCoordinate = Morton.DecodeMorton3_64(code);
+
+                Assert.AreEqual(code, WellKnownCodes[i]);
+                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
+            }
+        }
 
         [Test]
         public void WellKnownNumbers_Packed()
         {
             var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
                 WellKnownCoordinates[2], WellKnownCoordinates[3]);
-            var packedCodes = Morton.EncodeMorton3(math.transpose(packedCoordinatesIn));
+            var coordinates = math.transpose(packedCoordinatesIn);
+            var packedCodes = Morton.EncodeMorton3(coordinates[0], coordinates[1], coordinates[2]);
             var packedCoordinatesOut = math.transpose(Morton.DecodeMorton3(packedCodes));
 
             Assert.AreEqual(packedCoordinatesIn, packedCoordinatesOut);
         }
-        
+
         [Test]
         public void NoAllocation()
         {
@@ -130,12 +163,12 @@ namespace InfPoints.Octree.Tests.Editor
         public void Limits()
         {
             var maxCoordinate = new uint3(Morton.MaxCoordinateValue);
-            var maxMorton = Morton.EncodeMorton3( maxCoordinate);
+            var maxMorton = Morton.EncodeMorton3(maxCoordinate);
             Assert.AreEqual(maxMorton, 1073741823);
             Assert.AreEqual(maxCoordinate, Morton.DecodeMorton3(maxMorton));
-            Assert.Throws<OverflowException>(()=>Morton.EncodeMorton3( new uint3(Morton.MaxCoordinateValue+1)));
+            Assert.Throws<OverflowException>(() => Morton.EncodeMorton3(new uint3(Morton.MaxCoordinateValue + 1)));
         }
-        
+
         [Test]
         public void Morton_EncodeDecode()
         {
@@ -254,10 +287,10 @@ namespace InfPoints.Octree.Tests.Editor
                 SourceArray = m_Coordinates.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>()),
                 TransposedArray = m_CoordinatesPacked
             };
-            
+
             transposePackedJob.Execute();
         }
-        
+
         void DoTransposeUnpacked()
         {
             var transposeUnpackedJob = new TransposeUnpackedJob()
@@ -265,7 +298,7 @@ namespace InfPoints.Octree.Tests.Editor
                 SourceArray = m_CoordinatesDecodedPacked,
                 TransposedArray = m_CoordinatesDecoded.Reinterpret<uint3x4>(UnsafeUtility.SizeOf<uint3>())
             };
-            
+
             transposeUnpackedJob.Execute();
         }
 
@@ -289,7 +322,7 @@ namespace InfPoints.Octree.Tests.Editor
 
             decodeJobHandle.Complete();
         }
-        
+
         void DoEncodeDecodeJobPackedFor()
         {
             var encodeJob = new MortonEncodeJob_PackedFor()

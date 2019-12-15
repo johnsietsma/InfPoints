@@ -30,7 +30,8 @@ namespace InfPoints.Octree.Morton
         {
             for (int i = 0; i < Coordinates.Length; i++)
             {
-                Codes[i] = Morton.EncodeMorton3(Coordinates[i]);
+                var coordinate = Coordinates[i];
+                Codes[i] = Morton.EncodeMorton3(coordinate[0], coordinate[1], coordinate[2]);
             }
         }
     }
@@ -42,7 +43,8 @@ namespace InfPoints.Octree.Morton
 
         public void Execute(int index)
         {
-            Codes[index] = Morton.EncodeMorton3(Coordinates[index]);
+            var coordinate = Coordinates[index];
+            Codes[index] = Morton.EncodeMorton3(coordinate[0], coordinate[1], coordinate[2]);
         }
     }
 
