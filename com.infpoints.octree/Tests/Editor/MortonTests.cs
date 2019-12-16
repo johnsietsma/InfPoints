@@ -1,24 +1,25 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using InfPoints.Octree.Jobs;
+using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.PerformanceTesting;
+using UnityEngine.TestTools.Constraints;
+using Is = NUnit.Framework.Is;
+using Random = Unity.Mathematics.Random;
 
 namespace InfPoints.Octree.Tests.Editor
 {
-    using Morton;
-    using NUnit.Framework;
-    using Unity.Collections;
-    using Unity.Mathematics;
-    using Unity.PerformanceTesting;
-    using UnityEngine.TestTools.Constraints;
-    using System.Diagnostics.CodeAnalysis;
-
     [SuppressMessage("ReSharper", "HeapView.BoxingAllocation")]
     public class MortonTests
     {
         static readonly int NUM_COORDS = 1000000;
 
-        private static uint3[] WellKnownCoordinates { get; } =
+        private static uint3[] WellKnownCoordinates32 { get; } =
         {
             new uint3(0, 0, 0),
             new uint3(1, 0, 0),
@@ -26,7 +27,7 @@ namespace InfPoints.Octree.Tests.Editor
             new uint3(0b0101, 0b1001, 0b0001)
         };
 
-        static readonly uint[] WellKnownCodes =
+        static readonly uint[] WellKnownCodes32 =
         {
             0,
             1,
@@ -103,43 +104,43 @@ namespace InfPoints.Octree.Tests.Editor
         [Test]
         public void WellKnownNumbers()
         {
-            for (int i = 0; i < WellKnownCodes.Length; i++)
+            for (int i = 0; i < WellKnownCodes32.Length; i++)
             {
-                var code = Morton.EncodeMorton32(WellKnownCoordinates[i]);
+                var code = Morton.EncodeMorton32(WellKnownCoordinates32[i]);
                 var decodedCoordinate = Morton.DecodeMorton32(code);
 
-                Assert.AreEqual(code, WellKnownCodes[i]);
-                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
+                Assert.AreEqual(code, WellKnownCodes32[i]);
+                Assert.AreEqual(WellKnownCoordinates32[i], decodedCoordinate);
             }
         }
-        
+
         [Test]
         public void WellKnownNumbers64()
         {
-            for (int i = 0; i < WellKnownCodes.Length; i++)
+            for (int i = 0; i < WellKnownCodes32.Length; i++)
             {
-                var code = Morton.EncodeMorton32(WellKnownCoordinates[i]);
+                var code = Morton.EncodeMorton32(WellKnownCoordinates32[i]);
                 var decodedCoordinate = Morton.DecodeMorton32(code);
 
-                Assert.AreEqual(code, WellKnownCodes[i]);
-                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
+                Assert.AreEqual(code, WellKnownCodes32[i]);
+                Assert.AreEqual(WellKnownCoordinates32[i], decodedCoordinate);
             }
-            
+
             for (int i = 0; i < WellKnownCodes64.Length; i++)
             {
-                var code = Morton.EncodeMorton64(WellKnownCoordinates[i]);
+                var code = Morton.EncodeMorton64(WellKnownCoordinates32[i]);
                 var decodedCoordinate = Morton.DecodeMorton64(code);
 
-                Assert.AreEqual(code, WellKnownCodes[i]);
-                Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
+                Assert.AreEqual(code, WellKnownCodes64[i]);
+                Assert.AreEqual(WellKnownCoordinates64[i], decodedCoordinate);
             }
         }
 
         [Test]
         public void WellKnownNumbers_Packed()
         {
-            var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
-                WellKnownCoordinates[2], WellKnownCoordinates[3]);
+            var packedCoordinatesIn = new uint3x4(WellKnownCoordinates32[0], WellKnownCoordinates32[1],
+                WellKnownCoordinates32[2], WellKnownCoordinates32[3]);
             var coordinates = math.transpose(packedCoordinatesIn);
             var packedCodes = Morton.EncodeMorton32(coordinates[0], coordinates[1], coordinates[2]);
             var packedCoordinatesOut = math.transpose(Morton.DecodeMorton32(packedCodes));
@@ -155,7 +156,7 @@ namespace InfPoints.Octree.Tests.Editor
                 {
                     Morton.EncodeMorton32(new uint3(0));
                     Morton.DecodeMorton32(0);
-                }, NUnit.Framework.Is.Not.AllocatingGCMemory());
+                }, Is.Not.AllocatingGCMemory());
         }
 
         [Test]

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace InfPoints.Octree.Morton
+// ReSharper disable once CheckNamespace
+// ReSharper disable once IdentifierTypo
+namespace InfPoints.Octree
 {
     using System.Runtime.CompilerServices;
     using Unity.Mathematics;
@@ -14,7 +16,14 @@ namespace InfPoints.Octree.Morton
     /// </summary>
     public static class Morton
     {
+        /// <summary>
+        /// The maximum value that a coordinate can be when encoding to a 32 bit morton code.
+        /// </summary>
         public static readonly uint MaxCoordinateValue32 = 0b0011_1111_1111;  // 1023
+        
+        /// <summary>
+        /// The maximum value that a coordinate can be when encoding to a 64 bit morton code.
+        /// </summary>
         public static readonly uint MaxCoordinateValue64 = 0b0011_1111_1111_1111_1111_1111;  // 4194303
         
         /// <summary>
@@ -30,7 +39,7 @@ namespace InfPoints.Octree.Morton
         }
 
         /// <summary>
-        /// SIMD verison. This will take the "packed" coordinates and Burst will auto-vectorise so four encodings
+        /// Vectorised version. This will take the "packed" coordinates and Burst will auto-vectorise so four encodings
         /// happen for the price of one. 
         /// </summary>
         /// <param name="coordinateX">(xxxx)</param>
