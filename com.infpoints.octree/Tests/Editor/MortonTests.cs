@@ -60,12 +60,12 @@ namespace InfPoints.Octree.Tests.Editor
             var r = new Random(1);
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                m_RandomCoordinates[i] = r.NextUInt3(Morton.MaxCoordinateValue);
+                m_RandomCoordinates[i] = r.NextUInt3(Morton.MaxCoordinateValue32);
             }
 
             for (int i = 0; i < m_RandomCoordinates.Length; i++)
             {
-                m_RandomCodes[i] = Morton.EncodeMorton3(m_RandomCoordinates[i]);
+                m_RandomCodes[i] = Morton.EncodeMorton32(m_RandomCoordinates[i]);
             }
 
             int coordinatesLength = m_RandomCoordinates.Length;
@@ -90,14 +90,14 @@ namespace InfPoints.Octree.Tests.Editor
         [Test]
         public void First8()
         {
-            Assert.AreEqual(Morton.DecodeMorton3(0), new uint3(0, 0, 0));
-            Assert.AreEqual(Morton.DecodeMorton3(1), new uint3(1, 0, 0));
-            Assert.AreEqual(Morton.DecodeMorton3(2), new uint3(0, 1, 0));
-            Assert.AreEqual(Morton.DecodeMorton3(3), new uint3(1, 1, 0));
-            Assert.AreEqual(Morton.DecodeMorton3(4), new uint3(0, 0, 1));
-            Assert.AreEqual(Morton.DecodeMorton3(5), new uint3(1, 0, 1));
-            Assert.AreEqual(Morton.DecodeMorton3(6), new uint3(0, 1, 1));
-            Assert.AreEqual(Morton.DecodeMorton3(7), new uint3(1, 1, 1));
+            Assert.AreEqual(Morton.DecodeMorton32(0), new uint3(0, 0, 0));
+            Assert.AreEqual(Morton.DecodeMorton32(1), new uint3(1, 0, 0));
+            Assert.AreEqual(Morton.DecodeMorton32(2), new uint3(0, 1, 0));
+            Assert.AreEqual(Morton.DecodeMorton32(3), new uint3(1, 1, 0));
+            Assert.AreEqual(Morton.DecodeMorton32(4), new uint3(0, 0, 1));
+            Assert.AreEqual(Morton.DecodeMorton32(5), new uint3(1, 0, 1));
+            Assert.AreEqual(Morton.DecodeMorton32(6), new uint3(0, 1, 1));
+            Assert.AreEqual(Morton.DecodeMorton32(7), new uint3(1, 1, 1));
         }
 
         [Test]
@@ -105,8 +105,8 @@ namespace InfPoints.Octree.Tests.Editor
         {
             for (int i = 0; i < WellKnownCodes.Length; i++)
             {
-                var code = Morton.EncodeMorton3(WellKnownCoordinates[i]);
-                var decodedCoordinate = Morton.DecodeMorton3(code);
+                var code = Morton.EncodeMorton32(WellKnownCoordinates[i]);
+                var decodedCoordinate = Morton.DecodeMorton32(code);
 
                 Assert.AreEqual(code, WellKnownCodes[i]);
                 Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
@@ -118,8 +118,8 @@ namespace InfPoints.Octree.Tests.Editor
         {
             for (int i = 0; i < WellKnownCodes.Length; i++)
             {
-                var code = Morton.EncodeMorton3(WellKnownCoordinates[i]);
-                var decodedCoordinate = Morton.DecodeMorton3(code);
+                var code = Morton.EncodeMorton32(WellKnownCoordinates[i]);
+                var decodedCoordinate = Morton.DecodeMorton32(code);
 
                 Assert.AreEqual(code, WellKnownCodes[i]);
                 Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
@@ -127,8 +127,8 @@ namespace InfPoints.Octree.Tests.Editor
             
             for (int i = 0; i < WellKnownCodes64.Length; i++)
             {
-                var code = Morton.EncodeMorton3_64(WellKnownCoordinates[i]);
-                var decodedCoordinate = Morton.DecodeMorton3_64(code);
+                var code = Morton.EncodeMorton64(WellKnownCoordinates[i]);
+                var decodedCoordinate = Morton.DecodeMorton64(code);
 
                 Assert.AreEqual(code, WellKnownCodes[i]);
                 Assert.AreEqual(WellKnownCoordinates[i], decodedCoordinate);
@@ -141,8 +141,8 @@ namespace InfPoints.Octree.Tests.Editor
             var packedCoordinatesIn = new uint3x4(WellKnownCoordinates[0], WellKnownCoordinates[1],
                 WellKnownCoordinates[2], WellKnownCoordinates[3]);
             var coordinates = math.transpose(packedCoordinatesIn);
-            var packedCodes = Morton.EncodeMorton3(coordinates[0], coordinates[1], coordinates[2]);
-            var packedCoordinatesOut = math.transpose(Morton.DecodeMorton3(packedCodes));
+            var packedCodes = Morton.EncodeMorton32(coordinates[0], coordinates[1], coordinates[2]);
+            var packedCoordinatesOut = math.transpose(Morton.DecodeMorton32(packedCodes));
 
             Assert.AreEqual(packedCoordinatesIn, packedCoordinatesOut);
         }
@@ -153,8 +153,8 @@ namespace InfPoints.Octree.Tests.Editor
             Assert.That(
                 () =>
                 {
-                    Morton.EncodeMorton3(new uint3(0));
-                    Morton.DecodeMorton3(0);
+                    Morton.EncodeMorton32(new uint3(0));
+                    Morton.DecodeMorton32(0);
                 }, NUnit.Framework.Is.Not.AllocatingGCMemory());
         }
 
@@ -162,11 +162,11 @@ namespace InfPoints.Octree.Tests.Editor
         [Conditional("DEBUG")]
         public void Limits()
         {
-            var maxCoordinate = new uint3(Morton.MaxCoordinateValue);
-            var maxMorton = Morton.EncodeMorton3(maxCoordinate);
+            var maxCoordinate = new uint3(Morton.MaxCoordinateValue32);
+            var maxMorton = Morton.EncodeMorton32(maxCoordinate);
             Assert.AreEqual(maxMorton, 1073741823);
-            Assert.AreEqual(maxCoordinate, Morton.DecodeMorton3(maxMorton));
-            Assert.Throws<OverflowException>(() => Morton.EncodeMorton3(new uint3(Morton.MaxCoordinateValue + 1)));
+            Assert.AreEqual(maxCoordinate, Morton.DecodeMorton32(maxMorton));
+            Assert.Throws<OverflowException>(() => Morton.EncodeMorton32(new uint3(Morton.MaxCoordinateValue32 + 1)));
         }
 
         [Test]
@@ -251,12 +251,12 @@ namespace InfPoints.Octree.Tests.Editor
         {
             for (int i = 0; i < m_Coordinates.Length; i++)
             {
-                m_Codes[i] = Morton.EncodeMorton3(m_Coordinates[i]);
+                m_Codes[i] = Morton.EncodeMorton32(m_Coordinates[i]);
             }
 
             for (int i = 0; i < m_Codes.Length; i++)
             {
-                m_CoordinatesDecoded[i] = Morton.DecodeMorton3(m_Codes[i]);
+                m_CoordinatesDecoded[i] = Morton.DecodeMorton32(m_Codes[i]);
             }
         }
 

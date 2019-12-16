@@ -14,19 +14,19 @@ namespace InfPoints.Octree.Morton
     /// </summary>
     public static class Morton
     {
-        public static readonly uint MaxCoordinateValue = 0b0011_1111_1111;  // 1023
+        public static readonly uint MaxCoordinateValue32 = 0b0011_1111_1111;  // 1023
         public static readonly uint MaxCoordinateValue64 = 0b0011_1111_1111_1111_1111_1111;  // 4194303
         
-        public static uint EncodeMorton3(uint3 coordinate)
+        /// <summary>
+        /// Encode a 3 dimensional coordinate to morton code.
+        /// Check MaxCoordinateVale32 for numeric limits.
+        /// </summary>
+        /// <param name="coordinate">x,y,z coordinate</param>
+        /// <returns>The morton code</returns>
+        public static uint EncodeMorton32(uint3 coordinate)
         {
             CheckLimits(coordinate);
             return (Part1By2(coordinate.z) << 2) + (Part1By2(coordinate.y) << 1) + Part1By2(coordinate.x);
-        }
-
-        public static ulong EncodeMorton3_64(uint3 coordinate)
-        {
-            CheckLimits64(coordinate);
-            return (Part1By2_64(coordinate.z) << 2) + (Part1By2_64(coordinate.y) << 1) + Part1By2_64(coordinate.x);
         }
 
         /// <summary>
@@ -36,40 +36,61 @@ namespace InfPoints.Octree.Morton
         /// <param name="coordinateX">(xxxx)</param>
         /// <param name="coordinateY">(yyyy)</param>
         /// <param name="coordinateZ">(zzzz)</param>
-        /// <returns></returns>
-        public static uint4 EncodeMorton3(uint4 coordinateX, uint4 coordinateY, uint4 coordinateZ)
+        /// <returns>The 4 morton codes</returns>
+        public static uint4 EncodeMorton32(uint4 coordinateX, uint4 coordinateY, uint4 coordinateZ)
         {
             //CheckLimits(coordinates);
             return (Part1By2(coordinateX) << 2) + (Part1By2(coordinateY) << 1) + Part1By2(coordinateZ);
         }
 
-        public static uint3 DecodeMorton3(uint code)
+        /// <summary>
+        /// 64bit version of EncodeMorton32. Produces a ulong rather then a uint.
+        /// </summary>
+        /// <param name="coordinate"></param>
+        /// <returns>The morton code</returns>
+        public static ulong EncodeMorton64(uint3 coordinate)
+        {
+            CheckLimits64(coordinate);
+            return (Part1By2_64(coordinate.z) << 2) + (Part1By2_64(coordinate.y) << 1) + Part1By2_64(coordinate.x);
+        }
+
+        /// <summary>
+        /// Transform a morton code to a (x,y,z) coordinate.
+        /// </summary>
+        /// <param name="code">The morton code</param>
+        /// <returns>The (x,y,z) coordinate</returns>
+        public static uint3 DecodeMorton32(uint code)
         {
             var x = Compact1By2(code);
             var y = Compact1By2(code >> 1);
             var z = Compact1By2(code >> 2);
             return new uint3(x, y, z);
         }
-        
-        public static uint3 DecodeMorton3_64(ulong code)
-        {
-            var x = Compact1By2_64(code);
-            var y = Compact1By2_64(code >> 1);
-            var z = Compact1By2_64(code >> 2);
-            return new uint3(x, y, z);
-        }
-        
+
         /// <summary>
         /// SIMD version. Pass in four codes as a single unit4, it will be auto-vectorised by Burst.
         /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        public static uint4x3 DecodeMorton3(uint4 code)
+        /// <param name="code">Four morton codes</param>
+        /// <returns>For sets of coordinates, packed as (x,x,x,x),(y,y,y,y),(z,z,z,z)</returns>
+        public static uint4x3 DecodeMorton32(uint4 code)
         {
             var z = Compact1By2(code);
             var y = Compact1By2(code >> 1);
             var x = Compact1By2(code >> 2);
             return new uint4x3(x, y, z);
+        }
+
+        /// <summary>
+        /// 64 bit version of DecodeMorton32.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public static uint3 DecodeMorton64(ulong code)
+        {
+            var x = Compact1By2_64(code);
+            var y = Compact1By2_64(code >> 1);
+            var z = Compact1By2_64(code >> 2);
+            return new uint3(x, y, z);
         }
 
         // "Insert" two 0 bits after each of the 10 low bits of x
@@ -181,10 +202,10 @@ namespace InfPoints.Octree.Morton
         
         static void CheckLimits(uint3 coordinates)
         {
-            if (math.cmax(coordinates) > MaxCoordinateValue)
+            if (math.cmax(coordinates) > MaxCoordinateValue32)
             {
                 throw new OverflowException(
-                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue}");
+                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
             }
         }
         
@@ -193,7 +214,7 @@ namespace InfPoints.Octree.Morton
             if (math.cmax(coordinates) > MaxCoordinateValue64)
             {
                 throw new OverflowException(
-                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue}");
+                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
             }
         }
     }

@@ -15,7 +15,7 @@ namespace InfPoints.Octree.Morton
         {
             for (int i = 0; i < Coordinates.Length; i++)
             {
-                Codes[i] = Morton.EncodeMorton3(Coordinates[i]);
+                Codes[i] = Morton.EncodeMorton32(Coordinates[i]);
             }
         }
     }
@@ -31,7 +31,7 @@ namespace InfPoints.Octree.Morton
             for (int i = 0; i < Coordinates.Length; i++)
             {
                 var coordinate = Coordinates[i];
-                Codes[i] = Morton.EncodeMorton3(coordinate[0], coordinate[1], coordinate[2]);
+                Codes[i] = Morton.EncodeMorton32(coordinate[0], coordinate[1], coordinate[2]);
             }
         }
     }
@@ -44,7 +44,7 @@ namespace InfPoints.Octree.Morton
         public void Execute(int index)
         {
             var coordinate = Coordinates[index];
-            Codes[index] = Morton.EncodeMorton3(coordinate[0], coordinate[1], coordinate[2]);
+            Codes[index] = Morton.EncodeMorton32(coordinate[0], coordinate[1], coordinate[2]);
         }
     }
 
@@ -59,7 +59,7 @@ namespace InfPoints.Octree.Morton
         {
             for (int i = 0; i < Codes.Length; i++)
             {
-                Coordinates[i] = Morton.DecodeMorton3(Codes[i]);
+                Coordinates[i] = Morton.DecodeMorton32(Codes[i]);
             }
         }
     }
@@ -74,7 +74,7 @@ namespace InfPoints.Octree.Morton
         {
             for (int i = 0; i < Codes.Length; i++)
             {
-                Coordinates[i] = Morton.DecodeMorton3(Codes[i]);
+                Coordinates[i] = Morton.DecodeMorton32(Codes[i]);
             }
         }
     }
@@ -86,7 +86,7 @@ namespace InfPoints.Octree.Morton
 
         public void Execute(int index)
         {
-            Coordinates[index] = Morton.DecodeMorton3(Codes[index]);
+            Coordinates[index] = Morton.DecodeMorton32(Codes[index]);
         }
     }
 
