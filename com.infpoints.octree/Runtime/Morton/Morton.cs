@@ -25,7 +25,7 @@ namespace InfPoints.Octree.Morton
         /// <returns>The morton code</returns>
         public static uint EncodeMorton32(uint3 coordinate)
         {
-            CheckLimits(coordinate);
+            DebugCheckLimits32(coordinate);
             return (Part1By2(coordinate.z) << 2) + (Part1By2(coordinate.y) << 1) + Part1By2(coordinate.x);
         }
 
@@ -39,19 +39,21 @@ namespace InfPoints.Octree.Morton
         /// <returns>The 4 morton codes</returns>
         public static uint4 EncodeMorton32(uint4 coordinateX, uint4 coordinateY, uint4 coordinateZ)
         {
-            //CheckLimits(coordinates);
+            DebugCheckLimits32(coordinateX);
+            DebugCheckLimits32(coordinateY);
+            DebugCheckLimits32(coordinateZ);
             return (Part1By2(coordinateX) << 2) + (Part1By2(coordinateY) << 1) + Part1By2(coordinateZ);
         }
 
         /// <summary>
         /// 64bit version of EncodeMorton32. Produces a ulong rather then a uint.
         /// </summary>
-        /// <param name="coordinate"></param>
+        /// <param name="coordinates"></param>
         /// <returns>The morton code</returns>
-        public static ulong EncodeMorton64(uint3 coordinate)
+        public static ulong EncodeMorton64(uint3 coordinates)
         {
-            CheckLimits64(coordinate);
-            return (Part1By2_64(coordinate.z) << 2) + (Part1By2_64(coordinate.y) << 1) + Part1By2_64(coordinate.x);
+            DebugCheckLimits64(coordinates);
+            return (Part1By2_64(coordinates.z) << 2) + (Part1By2_64(coordinates.y) << 1) + Part1By2_64(coordinates.x);
         }
 
         /// <summary>
@@ -81,7 +83,8 @@ namespace InfPoints.Octree.Morton
         }
 
         /// <summary>
-        /// 64 bit version of DecodeMorton32.
+        /// 64 bit version of <see cref="DecodeMorton32"/>
+        /// Burst will not auto-vectorise 64 bit types.
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
@@ -91,6 +94,36 @@ namespace InfPoints.Octree.Morton
             var y = Compact1By2_64(code >> 1);
             var z = Compact1By2_64(code >> 2);
             return new uint3(x, y, z);
+        }
+
+        [Conditional("DEBUG")]
+        static void DebugCheckLimits32(uint4 packedCoordinate)
+        {
+            if (math.cmax(packedCoordinate) > MaxCoordinateValue32)
+            {
+                throw new OverflowException(
+                    $"One of the coordinates in {packedCoordinate} is larger then the maximum {MaxCoordinateValue32}");
+            }
+        }
+        
+        [Conditional("DEBUG")]
+        static void DebugCheckLimits32(uint3 coordinates)
+        {
+            if (math.cmax(coordinates) > MaxCoordinateValue32)
+            {
+                throw new OverflowException(
+                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
+            }
+        }
+        
+        [Conditional("DEBUG")]
+        static void DebugCheckLimits64(uint3 coordinates)
+        {
+            if (math.cmax(coordinates) > MaxCoordinateValue64)
+            {
+                throw new OverflowException(
+                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
+            }
         }
 
         // "Insert" two 0 bits after each of the 10 low bits of x
@@ -182,40 +215,12 @@ namespace InfPoints.Octree.Morton
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static uint4 Compact1By2(uint4 x)
         {
-            x &= 0x09249249;                  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
-            x = (x ^ (x >> 2)) & 0x030c30c3;  // x = ---- --98 ---- 76-- --54 ---- 32-- --10
-            x = (x ^ (x >> 4)) & 0x0300f00f;  // x = ---- --98 ---- ---- 7654 ---- ---- 3210
-            x = (x ^ (x >> 8)) & 0xff0000ff;  // x = ---- --98 ---- ---- ---- ---- 7654 3210
+            x &= 0x09249249; // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
+            x = (x ^ (x >> 2)) & 0x030c30c3; // x = ---- --98 ---- 76-- --54 ---- 32-- --10
+            x = (x ^ (x >> 4)) & 0x0300f00f; // x = ---- --98 ---- ---- 7654 ---- ---- 3210
+            x = (x ^ (x >> 8)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
             x = (x ^ (x >> 16)) & 0x000003ff; // x = ---- ---- ---- ---- ---- --98 7654 3210
             return x;
-        }
-
-        [Conditional("DEBUG")]
-        static void CheckLimits(uint4x3 coordinates)
-        {
-            var transposedCoordinates = math.transpose(coordinates);
-            CheckLimits(transposedCoordinates[0]);
-            CheckLimits(transposedCoordinates[1]);
-            CheckLimits(transposedCoordinates[2]);
-            CheckLimits(transposedCoordinates[3]);
-        }
-        
-        static void CheckLimits(uint3 coordinates)
-        {
-            if (math.cmax(coordinates) > MaxCoordinateValue32)
-            {
-                throw new OverflowException(
-                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
-            }
-        }
-        
-        static void CheckLimits64(uint3 coordinates)
-        {
-            if (math.cmax(coordinates) > MaxCoordinateValue64)
-            {
-                throw new OverflowException(
-                    $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
-            }
         }
     }
 }
