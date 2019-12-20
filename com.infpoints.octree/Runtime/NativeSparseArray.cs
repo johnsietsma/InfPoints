@@ -11,9 +11,9 @@ namespace InfPoints.Octree
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
-    [DebuggerDisplay("Length = {Length}")]
-    [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
-    public struct NativeSparseArray<T> : IEnumerable<T>, IDisposable
+    //[DebuggerDisplay("Length = {Length}")]
+    //[DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
+    public struct NativeSparseArray<T>// : IEnumerable<T>, IDisposable
         where T : struct
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -27,7 +27,7 @@ namespace InfPoints.Octree
         NativeArray<int> m_Indices;
         
 
-        public NativeSparseArray<T>()
+        /*public NativeSparseArray()
         {
 #if !CSHARP_7_3_OR_NEWER
             if (!UnsafeUtility.IsUnmanaged<T>())
@@ -36,8 +36,8 @@ namespace InfPoints.Octree
                     "Only unmanaged types are supported");
             }
 #endif
-            
-            int length = length0 * length1;
+
+            int length = 0;//length0 * length1;
             if (length <= 0)
             {
                 throw new InvalidOperationException(
@@ -45,6 +45,6 @@ namespace InfPoints.Octree
             }
 
 
-        }
+        }*/
     }
 }
