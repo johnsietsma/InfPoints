@@ -35,7 +35,7 @@ namespace InfPoints.Octree
         public static uint EncodeMorton32(uint3 coordinate)
         {
             DebugCheckLimits32(coordinate);
-            return (Part1By2(coordinate.z) << 2) + (Part1By2(coordinate.y) << 1) + Part1By2(coordinate.x);
+            return (Part1By2_32(coordinate.z) << 2) + (Part1By2_32(coordinate.y) << 1) + Part1By2_32(coordinate.x);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace InfPoints.Octree
             DebugCheckLimits32(coordinateX);
             DebugCheckLimits32(coordinateY);
             DebugCheckLimits32(coordinateZ);
-            return (Part1By2(coordinateX) << 2) + (Part1By2(coordinateY) << 1) + Part1By2(coordinateZ);
+            return (Part1By2_32(coordinateZ) << 2) + (Part1By2_32(coordinateY) << 1) + Part1By2_32(coordinateX);
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace InfPoints.Octree
         /// <returns>The (x,y,z) coordinate</returns>
         public static uint3 DecodeMorton32(uint code)
         {
-            var x = Compact1By2(code);
-            var y = Compact1By2(code >> 1);
-            var z = Compact1By2(code >> 2);
+            var x = Compact1By2_32(code);
+            var y = Compact1By2_32(code >> 1);
+            var z = Compact1By2_32(code >> 2);
             return new uint3(x, y, z);
         }
 
@@ -85,15 +85,15 @@ namespace InfPoints.Octree
         /// <returns>For sets of coordinates, packed as (x,x,x,x),(y,y,y,y),(z,z,z,z)</returns>
         public static uint4x3 DecodeMorton32(uint4 code)
         {
-            var z = Compact1By2(code);
-            var y = Compact1By2(code >> 1);
-            var x = Compact1By2(code >> 2);
+            var x = Compact1By2_32(code);
+            var y = Compact1By2_32(code >> 1);
+            var z = Compact1By2_32(code >> 2);
             return new uint4x3(x, y, z);
         }
 
         /// <summary>
         /// 64 bit version of <see cref="DecodeMorton32"/>
-        /// Burst will not auto-vectorise 64 bit types.
+        /// There is no long4 type, so we can't take advantage of Burst auto-vectorisation of long types.
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
@@ -137,7 +137,7 @@ namespace InfPoints.Octree
 
         // "Insert" two 0 bits after each of the 10 low bits of x
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint Part1By2(uint x)
+        static uint Part1By2_32(uint x)
         {
             x &=                                           0b0011_1111_1111;  // x = ---- ---- ---- ---- ---- --98 7654 3210
             x = (x ^ (x << 16)) & 0b1111_1111_0000_0000_0000_0000_1111_1111;  // x = ---- --98 ---- ---- ---- ---- 7654 3210
@@ -164,7 +164,7 @@ namespace InfPoints.Octree
             x64 = (x64 ^ (x64 << 8)) &  0b0001_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111;  
             
             //                        x = ---0 ---- 98-- --76 ---- 54-- --32 ---- 10-- --98 ---- 76-- --54 ---- 32-- --10
-            x64 = (x64 ^ (x64 << 4)) &  0b0001_0000_0000_0000_0000_0000_0000_0000_0000_0011_0000_1100_0011_0000_1100_0011;  
+            x64 = (x64 ^ (x64 << 4)) &  0b0001_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011;  
             
             //                        x = ---1 --0- -9-- 8--7 --6- -5-- 4--3 --1- -0-- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
             x64 = (x64 ^ (x64 << 2)) &  0b0001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001;  
@@ -172,7 +172,7 @@ namespace InfPoints.Octree
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint Compact1By2(uint x)
+        static uint Compact1By2_32(uint x)
         {
             x &=                  0b0000_1001_0010_0100_1001_0010_0100_1001;  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
             x = (x ^ (x >> 2)) &  0b0000_0011_0000_1100_0011_0000_1100_0011;  // x = ---- --98 ---- 76-- --54 ---- 32-- --10
@@ -191,26 +191,26 @@ namespace InfPoints.Octree
             x &=                  0b0001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001;  
             
             //                  x = ---0 ---- 98-- --76 ---- 54-- --32 ---- 10-- --98 ---- 76-- --54 ---- 32-- --10
-            x = (x ^ (x >> 2)) &  0b0001_0000_0000_0000_0000_0000_0000_0000_0000_0011_0000_1100_0011_0000_1100_0011;
+            x = (x ^ (x >> 2)) &  0b0001_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011;
 
             //                  x = ---0 ---- ---- 9876 ---- ---- 5432 ---- ---- 1098 ---- ---- 7654 ---- ---- 3210
             x = (x ^ (x >> 4)) &  0b0001_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111;
             
-            //                  x = ---0 ---- ---- 9876 ---- ---- 5432 ---- ---- 1098 ---- ---- 7654 ---- ---- 3210
-            x = (x ^ (x >> 8)) &  0b0001_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111;
-            
             //                  x = ---- ---0 9876 ---- ---- ---- ---- 5432 1098 ---- ---- ---- ---- 7654 3210
-            x = (x ^ (x >> 16)) & 0b0000_0001_1111_0000_0000_0000_0000_1111_1111_0000_0000_0000_0000_1111_1111;
+            x = (x ^ (x >> 8)) &  0b0000_0001_1111_0000_0000_0000_0000_1111_1111_0000_0000_0000_0000_1111_1111;
             
             //                  x = ---- ---0 9876 ---- ---- ---- ---- ---- ---- ---- ---- 5432 1098 7654 3210
-            x = (x ^ (x >> 32)) & 0b0000_0001_1111_0000_0000_0000_0000_0000_0000_0000_0000_1111_1111_1111_1111;
+            x = (x ^ (x >> 16)) & 0b0000_0001_1111_0000_0000_0000_0000_0000_0000_0000_0000_1111_1111_1111_1111;
+
+            //                  x = ---- ---- ---- ---- ---- ---- ---- ---- ---- ---0 9876 5432 1098 7654 3210
+            x = (x ^ (x >> 32)) & 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_1111_1111_1111_1111_1111;
 
             return (uint)x;
         }
 
         // SIMD friendly version
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint4 Part1By2(uint4 x)
+        static uint4 Part1By2_32(uint4 x)
         {
             x &= 0x000003ff;                  // x = ---- ---- ---- ---- ---- --98 7654 3210
             x = (x ^ (x << 16)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
@@ -222,7 +222,7 @@ namespace InfPoints.Octree
 
         // SIMD friendly version
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint4 Compact1By2(uint4 x)
+        static uint4 Compact1By2_32(uint4 x)
         {
             x &= 0x09249249; // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
             x = (x ^ (x >> 2)) & 0x030c30c3; // x = ---- --98 ---- 76-- --54 ---- 32-- --10
