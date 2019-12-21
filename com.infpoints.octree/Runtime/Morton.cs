@@ -24,7 +24,7 @@ namespace InfPoints.Octree
         /// <summary>
         /// The maximum value that a coordinate can be when encoding to a 64 bit morton code.
         /// </summary>
-        public static readonly uint MaxCoordinateValue64 = 0b0011_1111_1111_1111_1111_1111;  // 4194303
+        public static readonly uint MaxCoordinateValue64 = 0b0001_1111_1111_1111_1111_1111;  // 2097151
         
         /// <summary>
         /// Encode a 3 dimensional coordinate to morton code.
