@@ -93,7 +93,7 @@ namespace InfPoints.Octree
 #endif
 
             int min = startIndex;
-            int max = startIndex + count - 1;
+            int max = startIndex + count;
             while (min <= max)
             {
                 int mid = min + (max - min >> 1);
