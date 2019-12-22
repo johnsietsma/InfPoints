@@ -17,7 +17,11 @@ namespace InfPoints.Octree
     [DebuggerDisplay("Length = {Length}")]
     [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
     public struct NativeSparseArray<T> : IEnumerable<T>, IDisposable
+#if CSHARP_7_3_OR_NEWER
+        where T : unmanaged
+#else
         where T : struct
+#endif
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         internal AtomicSafetyHandle m_Safety;
@@ -168,7 +172,12 @@ namespace InfPoints.Octree
         }
     }
 
-    sealed class NativeSparseArrayDebugView<T> where T : struct
+    sealed class NativeSparseArrayDebugView<T> 
+#if CSHARP_7_3_OR_NEWER
+        where T : unmanaged
+#else
+	   	where T : struct
+#endif
     {
         NativeSparseArray<T> m_Array;
 

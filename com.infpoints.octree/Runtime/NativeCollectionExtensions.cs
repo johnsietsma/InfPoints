@@ -15,7 +15,12 @@ namespace InfPoints.Octree
         /// <typeparam name="T">An unmanaged type</typeparam>
         /// <exception cref="ArgumentException">If the indices are the same</exception>
         /// <exception cref="ArgumentOutOfRangeException">If any of the indices are out of bounds of the container</exception>
-        public static void Swap<T>(this NativeArray<T> data, int i, int j) where T : struct
+        public static void Swap<T>(this NativeArray<T> data, int i, int j)
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+    		where T : struct
+#endif
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (i < 0 || i >= data.Length) throw new ArgumentOutOfRangeException(nameof(i));
@@ -27,7 +32,12 @@ namespace InfPoints.Octree
         /// <summary>
         /// See <see cref="Swap{T}(NativeArray{t},int,int)"/>
         /// </summary>
-        public static void Swap<T>(this NativeSlice<T> data, int i, int j) where T : struct
+        public static void Swap<T>(this NativeSlice<T> data, int i, int j) 
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (i < 0 || i >= data.Length) throw new ArgumentOutOfRangeException(nameof(i));
@@ -43,12 +53,22 @@ namespace InfPoints.Octree
         /// <param name="index">The index in which to insert</param>
         /// <param name="value">The value to insert</param>
         /// <typeparam name="T">An unmanaged type</typeparam>
-        public static void Insert<T>(this NativeArray<T> data, int index, T value) where T : struct
+        public static void Insert<T>(this NativeArray<T> data, int index, T value) 
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
         {
             NativeCollectionUnsafe.Insert(data.GetUnsafePtr(), index, data.Length, value);
         }
 
-        public static void Insert<T>(this NativeList<T> data, int index, T value) where T : struct
+        public static void Insert<T>(this NativeList<T> data, int index, T value) 
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
         {
             NativeCollectionUnsafe.Insert(data.GetUnsafePtr(), index, data.Length, value);
         }
@@ -60,12 +80,22 @@ namespace InfPoints.Octree
         /// <param name="data">The container to remove from</param>
         /// <param name="index">The index to remove</param>
         /// <typeparam name="T">An unmanaged type</typeparam>
-        public static void RemoveAt<T>(this NativeArray<T> data, int index) where T : struct
+        public static void RemoveAt<T>(this NativeArray<T> data, int index) 
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
         {
             NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
         }
-        
-        public static void RemoveAt<T>(this NativeSlice<T> data, int index) where T : struct
+
+        public static void RemoveAt<T>(this NativeSlice<T> data, int index) 
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
         {
             NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
         }
@@ -79,30 +109,54 @@ namespace InfPoints.Octree
         /// <typeparam name="T">An unmanaged type</typeparam>
         /// <returns>The 0 based index of the element or a negative number that is th bitwise complement of the index of
         /// the next largest element. This can be used to find an insertion point for elements not in the array.</returns>
-        public static int BinarySearch<T>(this NativeArray<T> data, T key) where T : struct, IComparable<T>
+        public static int BinarySearch<T>(this NativeArray<T> data, T key)
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+		    where T : struct
+#endif
+            , IComparable<T>
         {
             return data.BinarySearch(key, 0, data.Length);
         }
 
         public static int BinarySearch<T>(this NativeArray<T> data, T key, int startIndex, int count)
-            where T : struct, IComparable<T>
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
+            , IComparable<T>
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            if (startIndex+count > data.Length) throw new ArgumentOutOfRangeException(nameof(startIndex) + ":" + nameof(count));
+            if (startIndex + count > data.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex) + ":" + nameof(count));
 #endif
             return NativeCollectionUnsafe.BinarySearch(data.GetUnsafePtr(), key, startIndex, count);
         }
-        
-        public static int BinarySearch<T>(this NativeSlice<T> data, T key) where T : struct, IComparable<T>
+
+        public static int BinarySearch<T>(this NativeSlice<T> data, T key)
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
+            , IComparable<T>
         {
             return data.BinarySearch(key, 0, data.Length);
         }
 
         public static int BinarySearch<T>(this NativeSlice<T> data, T key, int startIndex, int count)
-            where T : struct, IComparable<T>
+#if CSHARP_7_3_OR_NEWER
+            where T : unmanaged
+#else
+	    	where T : struct
+#endif
+            , IComparable<T>
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            if (startIndex+count >= data.Length) throw new ArgumentOutOfRangeException(nameof(startIndex) + ":" + nameof(count));
+            if (startIndex + count >= data.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex) + ":" + nameof(count));
 #endif
             return NativeCollectionUnsafe.BinarySearch(data.GetUnsafePtr(), key, startIndex, count);
         }
