@@ -40,13 +40,12 @@ namespace InfPoints.Octree
             if (ptr == null) throw new ArgumentNullException(nameof(ptr));
             if (index < 0 || index >= length) throw new ArgumentOutOfRangeException(nameof(index));
 #endif
-
-            void* src = (byte*) ptr + index * UnsafeUtility.SizeOf<T>();
-            void* dest = (byte*) src + UnsafeUtility.SizeOf<T>();
-
-            long moveLength = length - index;
-            if (moveLength > 0) // Check for writing to the last element
+            if (index+1 != length) // Check for writing to the last element
             {
+                int sizeOfT = UnsafeUtility.SizeOf<T>();
+                void* src = (byte*) ptr + index * sizeOfT;
+                void* dest = (byte*) src + sizeOfT;
+                long moveLength = (length - index - 1) * sizeOfT;
                 UnsafeUtility.MemMove(dest, src, moveLength);
             }
 
@@ -93,12 +92,12 @@ namespace InfPoints.Octree
 #endif
 
             int min = startIndex;
-            int max = startIndex + count;
+            int max = startIndex + count - 1; // Inclusive
             while (min <= max)
             {
                 int mid = min + (max - min >> 1);
                 T midValue = UnsafeUtility.ReadArrayElement<T>(ptr, mid);
-                int compare = key.CompareTo(midValue);
+                int compare = midValue.CompareTo(key);
                 if (compare == 0)
                 {
                     return mid;

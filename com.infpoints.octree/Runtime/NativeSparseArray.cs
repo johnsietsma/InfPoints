@@ -33,6 +33,7 @@ namespace InfPoints.Octree
         static readonly int DisposeSentinelStackDepth = 2;
 #endif
 
+        public bool IsCreated => m_Data.IsCreated;
         public bool IsFull => UsedElementCount == Length;
         public int UsedElementCount => m_UsedElementCount;
         public int Length => m_Data.Length;
@@ -100,6 +101,7 @@ namespace InfPoints.Octree
             if (m_UsedElementCount != 0)
             {
                 dataIndex = FindDataIndex(sparseIndex);
+
                 if (dataIndex >= 0)
                 {
                     // Already exists
@@ -131,8 +133,9 @@ namespace InfPoints.Octree
             {
                 throw new ArgumentOutOfRangeException(nameof(sparseIndex));
             }
-#endif
+#else
             return false;
+#endif
         }
 
         public void RemoveAt(int sparseIndex)
@@ -145,6 +148,15 @@ namespace InfPoints.Octree
             m_UsedElementCount--;
         }
 
+        public void Dispose()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
+#endif
+            m_Indices.Dispose();
+            m_Data.Dispose();
+        }
+
         T FindDataOrThrow(int sparseIndex)
         {
             int dataIndex = FindDataIndex(sparseIndex);
@@ -155,59 +167,6 @@ namespace InfPoints.Octree
         int FindDataIndex(int sparseIndex)
         {
             return m_Indices.BinarySearch(sparseIndex, 0, m_UsedElementCount);
-        }
-
-        void Deallocate()
-        {
-            m_Indices.Dispose();
-            m_Data.Dispose();
-        }
-
-        public void Dispose()
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
-#endif
-            Deallocate();
-        }
-
-        /// <summary>
-        /// Safely disposes of this container and deallocate its memory when the jobs that use it have completed.
-        /// </summary>
-        /// <remarks>You can call this function dispose of the container immediately after scheduling the job. Pass
-        /// the [JobHandle](https://docs.unity3d.com/ScriptReference/Unity.Jobs.JobHandle.html) returned by
-        /// the [Job.Schedule](https://docs.unity3d.com/ScriptReference/Unity.Jobs.IJobExtensions.Schedule.html)
-        /// method using the `jobHandle` parameter so the job scheduler can dispose the container after all jobs
-        /// using it have run.</remarks>
-        /// <param name="jobHandle">The job handle or handles for any scheduled jobs that use this container.</param>
-        /// <returns>A new job handle containing the prior handles as well as the handle for the job that deletes
-        /// the container.</returns>
-        public JobHandle Dispose(JobHandle inputDeps)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            // [DeallocateOnJobCompletion] is not supported, but we want the deallocation
-            // to happen in a thread. DisposeSentinel needs to be cleared on main thread.
-            // AtomicSafetyHandle can be destroyed after the job was scheduled (Job scheduling
-            // will check that no jobs are writing to the container).
-            DisposeSentinel.Clear(ref m_DisposeSentinel);
-#endif
-            var jobHandle = new DisposeJob {Container = this}.Schedule(inputDeps);
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.Release(m_Safety);
-#endif
-            return jobHandle;
-        }
-
-        [BurstCompile]
-        struct DisposeJob : IJob
-        {
-            public NativeSparseArray<T> Container;
-
-            public void Execute()
-            {
-                Container.Deallocate();
-            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
