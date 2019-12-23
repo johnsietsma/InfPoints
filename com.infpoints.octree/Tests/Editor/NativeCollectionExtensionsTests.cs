@@ -30,21 +30,36 @@ namespace InfPoints.Octree.Tests.Editor
         {
             using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Temp))
             {
-                data.Insert(1, 5);
+                data.Insert(1, 5); // 1,5,2,3
                 Assert.AreEqual(5, data[1]);
                 Assert.AreEqual(2, data[2]);
 
                 // Test writing to the last element
-                data.Insert(3, 6);
+                data.Insert(3, 6); // 1,5,2,6
                 Assert.AreEqual(6, data[3]);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                Assert.Throws<ArgumentOutOfRangeException>(() => data.Insert(5, 0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => data.Insert(4, 0));
                 Assert.Throws<ArgumentOutOfRangeException>(() => data.Insert(-1, 0));
 #endif
             }
         }
-        
+
+        [Test]
+        public void InsertAscending()
+        {
+            using (var data = new NativeArray<int>(4, Allocator.Temp))
+            {
+                data.Insert(0,100);
+                data.Insert(1,200);
+                data.Insert(2,300);
+                
+                Assert.That(data[0], Is.EqualTo(100));
+                Assert.That(data[1], Is.EqualTo(200));
+                Assert.That(data[2], Is.EqualTo(300));
+            }
+        }
+
         [Test]
         public void RemoveAt()
         {
@@ -69,13 +84,26 @@ namespace InfPoints.Octree.Tests.Editor
         [Test]
         public void BinarySearch()
         {
-            using (var data = new NativeArray<int>(new int[] {5, 4, 2, 1}, Allocator.Temp))
+            using (var data = new NativeArray<int>(new int[] {1, 2, 4, 5}, Allocator.Temp))
             {
-                Assert.AreEqual(2, data.BinarySearch(2));
+                Assert.AreEqual(1, data.BinarySearch(2));
                 Assert.AreEqual(2, ~data.BinarySearch(3));
-                Assert.AreEqual(0, ~data.BinarySearch(6));
-                Assert.AreEqual(4, ~data.BinarySearch(0));
+                Assert.AreEqual(5, ~data.BinarySearch(6));
+                Assert.AreEqual(0, ~data.BinarySearch(0));
             }            
+        }
+
+        [Test]
+        public void BinarySearchInBounds()
+        {
+            using (var data = new NativeArray<int>( new []{100,200,300}, Allocator.Temp))
+            {
+                Assert.That(data.BinarySearch(100,0,1), Is.EqualTo(0));
+                Assert.That(data.BinarySearch(200,0,2), Is.EqualTo(1));
+                Assert.That(data.BinarySearch(300,0,3), Is.EqualTo(2));
+                Assert.That(data.BinarySearch(200,0,1), Is.EqualTo(~1));
+                Assert.That(data.BinarySearch(300,0,1), Is.EqualTo(~1));
+            }
         }
         
     }
