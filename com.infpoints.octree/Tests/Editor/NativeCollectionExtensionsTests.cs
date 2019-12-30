@@ -88,7 +88,7 @@ namespace InfPoints.Octree.Tests.Editor
             {
                 Assert.AreEqual(1, data.BinarySearch(2));
                 Assert.AreEqual(2, ~data.BinarySearch(3));
-                Assert.AreEqual(5, ~data.BinarySearch(6));
+                Assert.AreEqual(4, ~data.BinarySearch(6));
                 Assert.AreEqual(0, ~data.BinarySearch(0));
             }            
         }
