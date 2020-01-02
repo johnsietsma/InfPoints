@@ -26,4 +26,4 @@ Infinite Points is a point cloud renderer for Unity that solves these issues but
 * [InfPoints - Introduction](http://johnsietsma.com/2019/11/29/infinite-points-introduction/)
 * [Morton Order - Introduction](http://johnsietsma.com/2019/12/05/morton-order-introduction/)
 * [Morton Order - Burst](http://johnsietsma.com/2019/12/13/mordon-burst/)
-
+* [Native Sparse Array](http://johnsietsma.com/2020/01/02/native-sparse-array/)
