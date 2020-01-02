@@ -1,7 +1,6 @@
 {
   "dependencies": {
-    "com.infpoints.common": "file:../../com.infpoints.common",
-    "com.infpoints.octree": "file:../../com.infpoints.octree",
+    "com.infpoints": "file:../../com.infpoints",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.ads": "2.0.8",

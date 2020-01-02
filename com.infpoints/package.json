@@ -1,11 +1,11 @@
 {
-  "name": "com.infpoints.octree",
+  "name": "com.infpoints",
   "version": "0.0.1-preview",
-  "displayName": "InfPoints Octree",
-  "description": "DOTS ready Octree",
-  "unity": "2019.2",
+  "displayName": "Infinite Points",
+  "description": "DOTS ready out-of-core point clouds",
+  "unity": "2019.3",
   "keywords": [
-    "octree"
+    "point clouds"
   ],
   "author": {
     "name": "John Sietsma",

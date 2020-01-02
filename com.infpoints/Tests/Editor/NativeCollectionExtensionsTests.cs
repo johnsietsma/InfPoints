@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace InfPoints.Octree.Tests.Editor
+namespace InfPoints.Tests.Editor
 {
     public class NativeCollectionExtensionsTests
     {

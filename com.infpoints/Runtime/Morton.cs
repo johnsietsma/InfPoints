@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 // ReSharper disable once CheckNamespace
 // ReSharper disable once IdentifierTypo
-namespace InfPoints.Octree
+namespace InfPoints
 {
     using System.Runtime.CompilerServices;
     using Unity.Mathematics;

@@ -2,13 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using Debug = UnityEngine.Debug;
 
-namespace InfPoints.Octree
+namespace InfPoints
 {
     /// <summary>
     /// Store array data contiguously, while allowing indices that are far apart.
@@ -28,7 +25,7 @@ namespace InfPoints.Octree
 #endif
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-        internal AtomicSafetyHandle m_Safety;
+        AtomicSafetyHandle m_Safety;
 
         [NativeSetClassTypeToNullOnSchedule] DisposeSentinel m_DisposeSentinel;
         static readonly int DisposeSentinelStackDepth = 2;

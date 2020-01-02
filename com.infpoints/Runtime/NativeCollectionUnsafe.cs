@@ -2,7 +2,7 @@
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
-namespace InfPoints.Octree
+namespace InfPoints
 {
     /// <summary>
     /// Unsafe pointer algorithms. <see cref="NativeCollectionExtensions" for documentation./>

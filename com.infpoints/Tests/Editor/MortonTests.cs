@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using InfPoints.Octree.Jobs;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -12,7 +11,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
 using Random = Unity.Mathematics.Random;
 
-namespace InfPoints.Octree.Tests.Editor
+namespace InfPoints.Tests.Editor
 {
     [SuppressMessage("ReSharper", "HeapView.BoxingAllocation")]
     public class MortonTests

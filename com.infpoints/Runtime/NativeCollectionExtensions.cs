@@ -2,7 +2,7 @@
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace InfPoints.Octree
+namespace InfPoints
 {
     public static unsafe class NativeCollectionExtensions
     {
