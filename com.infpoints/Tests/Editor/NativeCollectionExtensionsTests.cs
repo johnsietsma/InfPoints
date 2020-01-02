@@ -9,7 +9,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void Swap()
         {
-            using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Temp))
+            using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Persistent))
             {
                 Assert.AreEqual(1, data[0]);
                 Assert.AreEqual(4, data[3]);
@@ -28,7 +28,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void Insert()
         {
-            using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Temp))
+            using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Persistent))
             {
                 data.Insert(1, 5); // 1,5,2,3
                 Assert.AreEqual(5, data[1]);
@@ -48,7 +48,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void InsertAscending()
         {
-            using (var data = new NativeArray<int>(4, Allocator.Temp))
+            using (var data = new NativeArray<int>(4, Allocator.Persistent))
             {
                 data.Insert(0,100);
                 data.Insert(1,200);
@@ -63,7 +63,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void RemoveAt()
         {
-            using (var data = new NativeArray<long>(new long[] {1, 2, 3, 4}, Allocator.Temp))
+            using (var data = new NativeArray<long>(new long[] {1, 2, 3, 4}, Allocator.Persistent))
             {
                 data.RemoveAt(1);
                 Assert.AreEqual(3, data[1]);
@@ -84,7 +84,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void BinarySearch()
         {
-            using (var data = new NativeArray<int>(new int[] {1, 2, 4, 5}, Allocator.Temp))
+            using (var data = new NativeArray<int>(new int[] {1, 2, 4, 5}, Allocator.Persistent))
             {
                 Assert.AreEqual(1, data.BinarySearch(2));
                 Assert.AreEqual(2, ~data.BinarySearch(3));
@@ -96,7 +96,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void BinarySearchInBounds()
         {
-            using (var data = new NativeArray<int>( new []{100,200,300}, Allocator.Temp))
+            using (var data = new NativeArray<int>( new []{100,200,300}, Allocator.Persistent))
             {
                 Assert.That(data.BinarySearch(100,0,1), Is.EqualTo(0));
                 Assert.That(data.BinarySearch(200,0,2), Is.EqualTo(1));

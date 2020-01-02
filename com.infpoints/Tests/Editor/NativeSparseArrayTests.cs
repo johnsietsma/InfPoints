@@ -22,10 +22,10 @@ namespace InfPoints.Tests.Editor
 
 
         [Test]
-        public void AddGivesCorrectValue()
+        public void AddValueGivesCorrectValue()
         {
             const int arrayLength = 2;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 const int sparseIndex = 999;
                 const int value = 5;
@@ -39,12 +39,33 @@ namespace InfPoints.Tests.Editor
                 Assert.That(array.UsedElementCount, Is.EqualTo(1));
             }
         }
-        
+
+        [Test]
+        public void AddUsingIndexingOperatorGivesCorrectValue()
+        {
+            var array = new NativeSparseArray<int>(1, Allocator.Persistent);
+            
+            array[100] = 200;
+            Assert.That(array[100], Is.EqualTo(200));
+            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+
+            array[100] = 300;
+            Assert.That(array[100], Is.EqualTo(300));
+            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+
+            #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            Assert.That(array.IsFull, Is.True);
+            array[101] = 201; // Silently fails
+            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+            #endif
+            array.Dispose();
+        }
+
         [Test]
         public void AddMultipleGivesCorrectValues()
         {
             const int arrayLength = 3;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 array.AddValue(1, 100);
                 array.AddValue(2, 200);
@@ -62,7 +83,7 @@ namespace InfPoints.Tests.Editor
         public void HandlesNonExistentSparseIndexes()
         {
             const int arrayLength = 2;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 const int sparseIndex = 999;
 
@@ -74,12 +95,12 @@ namespace InfPoints.Tests.Editor
                 Assert.That(array.UsedElementCount, Is.EqualTo(0));
             }
         }
-        
+
         [Test]
         public void AddFails()
         {
             const int arrayLength = 2;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 Assert.That(array.AddValue(1, 1), Is.True);
                 Assert.That(array.AddValue(2, 2), Is.True);
@@ -88,12 +109,12 @@ namespace InfPoints.Tests.Editor
                 Assert.That(array.IsFull, Is.True);
             }
         }
-        
+
         [Test]
         public void SetValue()
         {
             const int arrayLength = 50;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 const int sparseIndex = 12345;
                 const int value1 = 555;
@@ -111,7 +132,7 @@ namespace InfPoints.Tests.Editor
         public void RemoveAt()
         {
             const int arrayLength = 50;
-            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 array.AddValue(1, 100);
                 array.AddValue(2, 200);
@@ -126,7 +147,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void Dispose()
         {
-            var array = new NativeSparseArray<int>(1, Allocator.Temp);
+            var array = new NativeSparseArray<int>(1, Allocator.Persistent);
             array.Dispose();
 
             Assert.That(() => array.Dispose(), Throws.Exception.TypeOf<InvalidOperationException>());
@@ -136,7 +157,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void Enumerator()
         {
-            using (var array = new NativeSparseArray<int>(3, Allocator.Temp))
+            using (var array = new NativeSparseArray<int>(3, Allocator.Persistent))
             {
                 array.AddValue(1, 100);
                 array.AddValue(2, 200);

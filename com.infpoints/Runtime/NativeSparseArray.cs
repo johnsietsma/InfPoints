@@ -12,6 +12,8 @@ namespace InfPoints
     /// For a large amount of data a Dictionary may have better performance. Ideal for first populating and then
     /// processing the data as an array.
     /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks.
+    /// Prefer using the explicit interface `AddValue`, `IsFull` etc rather then the index operator. The index operator
+    /// may silently fail if the array is full and `ENABLE_UNITY_COLLECTIONS_CHECKS` is off.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
@@ -63,8 +65,8 @@ namespace InfPoints
         /// <summary>
         /// Create a new empty `SparseArray`.
         /// </summary>
-        /// <param name="length">The number of items the `SpraseArray` can hold</param>
-        /// <param name="allocator">The allocator, <see cref="NativeArray"/> constructor for documentation of the
+        /// <param name="length">The number of items the `SparseArray` can hold</param>
+        /// <param name="allocator">The allocator, <see cref="NativeArray<T>"/> constructor for documentation of the
         /// different allocator types.</param>
         public NativeSparseArray(int length, Allocator allocator)
         {
@@ -111,7 +113,8 @@ namespace InfPoints
             set
             {
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-                SetValue(value, sparseIndex);
+                if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
+                else SetValue(value, sparseIndex);
             }
         }
 
@@ -122,10 +125,10 @@ namespace InfPoints
         }
         
         /// <summary>
-        /// Explcitly add a new index and value to the `SparseArray`.
+        /// Explicitly add a new index and value to the `SparseArray`.
         /// </summary>
         /// <param name="value">The value to add</param>
-        /// <param name="sparseIndex">The sprase index of the data</param>
+        /// <param name="sparseIndex">The sparse index of the data</param>
         /// <returns>False if the array is full or the index has already been added.</returns>
         public bool AddValue(T value, int sparseIndex)
         {
@@ -163,7 +166,7 @@ namespace InfPoints
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled.
         /// </summary>
         /// <param name="value">The value to set</param>
-        /// <param name="sparseIndex">The sprase array index</param>
+        /// <param name="sparseIndex">The sparse array index</param>
         /// <returns>False if the index does not exist and `ENABLE_UNITY_COLLECTIONS_CHECKS` has not been set.</returns>
         public bool SetValue(T value, int sparseIndex)
         {
@@ -257,7 +260,9 @@ namespace InfPoints
         {
             m_Array = array;
         }
-
+        
+        // Used for the debugger inspector
+        // ReSharper disable once UnusedMember.Global
         public T[] Items => m_Array.Data.ToArray();
     }
 }
