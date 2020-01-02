@@ -88,9 +88,9 @@ namespace InfPoints
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (ptr == null) throw new ArgumentNullException(nameof(ptr));
             if (startIndex < 0) throw new ArgumentOutOfRangeException(nameof(startIndex));
-            if (count <= 0) throw new ArgumentOutOfRangeException(nameof(count));
 #endif
-
+            if (count == 0) return ~startIndex;
+            
             int min = startIndex;
             int max = startIndex + count - 1; // Inclusive
             while (min <= max)

@@ -20,6 +20,14 @@ namespace InfPoints.Tests.Editor
             Assert.That(array.IsCreated, Is.False);
         }
 
+        [Test]
+        public void Dispose()
+        {
+            var array = new NativeSparseArray<int>(1, Allocator.Persistent);
+            array.Dispose();
+            Assert.That(delegate { array.Dispose(); }, Throws.Exception.TypeOf<InvalidOperationException>());
+            Assert.That(() => array.AddValue(1, 2), Is.False);
+        }
 
         [Test]
         public void AddValueGivesCorrectValue()
@@ -142,16 +150,6 @@ namespace InfPoints.Tests.Editor
                 Assert.That(array.UsedElementCount, Is.EqualTo(2));
                 Assert.That(array.ContainsIndex(200), Is.False);
             }
-        }
-
-        [Test]
-        public void Dispose()
-        {
-            var array = new NativeSparseArray<int>(1, Allocator.Persistent);
-            array.Dispose();
-
-            Assert.That(() => array.Dispose(), Throws.Exception.TypeOf<InvalidOperationException>());
-            Assert.That(() => array.AddValue(1, 2), Throws.Exception.TypeOf<InvalidOperationException>());
         }
 
         [Test]

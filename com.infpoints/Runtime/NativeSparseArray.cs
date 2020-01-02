@@ -11,9 +11,13 @@ namespace InfPoints
     /// Store array data contiguously, while allowing indices that are far apart.
     /// For a large amount of data a Dictionary may have better performance. Ideal for first populating and then
     /// processing the data as an array.
+    ///
     /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks.
+    ///
     /// Prefer using the explicit interface `AddValue`, `IsFull` etc rather then the index operator. The index operator
     /// may silently fail if the array is full and `ENABLE_UNITY_COLLECTIONS_CHECKS` is off.
+    ///
+    /// There is no explicit thread safety and add or remove operations are not atomic. Use a read only within Jobs.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
@@ -32,35 +36,36 @@ namespace InfPoints
         [NativeSetClassTypeToNullOnSchedule] DisposeSentinel m_DisposeSentinel;
         static readonly int DisposeSentinelStackDepth = 2;
 #endif
+        
+        public bool IsCreated => m_NativeSparseArrayData.Data.IsCreated;
 
-        public bool IsCreated => m_Data.IsCreated;
         /// <summary>
         /// Have all the indices been filled.
         /// </summary>
-        public bool IsFull => UsedElementCount == Length;
+        public bool IsFull => m_NativeSparseArrayData.UsedElementCount == m_NativeSparseArrayData.Data.Length;
+
+        public int Length => m_NativeSparseArrayData.Data.Length;
+
         /// <summary>
         /// The number of array elements that have been used.
         /// Every time a unique index is used, this count goes up.
         /// When the `SparseArray` is full no more items can be added.
         /// </summary>
-        public int UsedElementCount => m_UsedElementCount;
-        public int Length => m_Data.Length;
-        
+        public int UsedElementCount => m_NativeSparseArrayData.UsedElementCount;
+
         /// <summary>
         /// The sorted indices of data in the `SparseArray`.
         /// These indices can be non-contiguous and far apart.
         /// </summary>
-        public NativeArray<int> Indices => m_Indices;
+        public NativeArray<int> Indices => m_NativeSparseArrayData.Indices;
         
         /// <summary>
         /// The data in the array.
         /// This data is store contiguously, even though the indices are far apart. 
         /// </summary>
-        public NativeArray<T> Data => m_Data;
+        public NativeArray<T> Data => m_NativeSparseArrayData.Data;
 
-        NativeArray<T> m_Data;
-        NativeArray<int> m_Indices;
-        int m_UsedElementCount;
+        NativeSparseArrayData<T> m_NativeSparseArrayData;
 
         /// <summary>
         /// Create a new empty `SparseArray`.
@@ -85,10 +90,8 @@ namespace InfPoints
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
 #endif
 
-            m_Indices = new NativeArray<int>(length, allocator, NativeArrayOptions.UninitializedMemory);
-            m_Data = new NativeArray<T>(length, allocator, NativeArrayOptions.UninitializedMemory);
-            m_UsedElementCount = 0;
-
+            m_NativeSparseArrayData = new NativeSparseArrayData<T>(length, allocator);
+            
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
@@ -108,7 +111,7 @@ namespace InfPoints
             get
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                return FindDataOrThrow(sparseIndex);
+                return FindDataOrThrow(sparseIndex, ref m_NativeSparseArrayData);
             }
             set
             {
@@ -121,9 +124,14 @@ namespace InfPoints
         public bool ContainsIndex(int sparseIndex)
         {
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            return m_UsedElementCount != 0 && FindDataIndex(sparseIndex) >= 0;
+            return ContainsIndex(sparseIndex, ref m_NativeSparseArrayData);
         }
         
+        public static bool ContainsIndex(int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            return data.UsedElementCount != 0 && FindDataIndex(sparseIndex, ref data) >= 0;
+        }
+
         /// <summary>
         /// Explicitly add a new index and value to the `SparseArray`.
         /// </summary>
@@ -132,30 +140,30 @@ namespace InfPoints
         /// <returns>False if the array is full or the index has already been added.</returns>
         public bool AddValue(T value, int sparseIndex)
         {
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            if (m_UsedElementCount == m_Data.Length)
+            return AddValue(value, sparseIndex, ref m_NativeSparseArrayData);
+        }
+        
+        public static bool AddValue(T value, int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            if (data.UsedElementCount == data.Data.Length)
             {
                 // Array is full
                 return false;
             }
 
-            int dataIndex = ~0;
-            if (m_UsedElementCount != 0)
-            {
-                dataIndex = FindDataIndex(sparseIndex);
+            int dataIndex = FindDataIndex(sparseIndex, ref data);
 
-                if (dataIndex >= 0)
-                {
-                    // Already exists
-                    return false;
-                }
+            if (dataIndex >= 0)
+            {
+                // Already exists
+                return false;
             }
 
             // Doesn't exist yet, insert it
             dataIndex = ~dataIndex; // Two's complement is the insertion point
-            m_Indices.Insert(dataIndex, sparseIndex);
-            m_Data.Insert(dataIndex, value);
-            m_UsedElementCount++;
+            data.Indices.Insert(dataIndex, sparseIndex);
+            data.Data.Insert(dataIndex, value);
+            data.UsedElementCount++;
 
             return true;
         }
@@ -171,11 +179,16 @@ namespace InfPoints
         public bool SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex >= 0 && dataIndex < m_Data.Length)
+            return SetValue(value, sparseIndex, ref m_NativeSparseArrayData);
+        }
+        
+        public static bool SetValue(T value, int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            int dataIndex = FindDataIndex(sparseIndex, ref data);
+            if (dataIndex >= 0 && dataIndex < data.Data.Length)
             {
                 // Update the data
-                m_Data[dataIndex] = value;
+                data.Data[dataIndex] = value;
                 return true;
             }
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -195,22 +208,42 @@ namespace InfPoints
         /// </summary>
         /// <param name="sparseIndex"></param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public void RemoveAt(int sparseIndex)
+        public bool RemoveAt(int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            int dataIndex = FindDataIndex(sparseIndex);
+            return RemoveAt(sparseIndex, ref m_NativeSparseArrayData);
+        }
+        
+        public static bool RemoveAt(int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            int dataIndex = FindDataIndex(sparseIndex, ref data);
 
             if (dataIndex < 0)
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 throw new ArgumentOutOfRangeException();
 #else
-                return;
+                return false;
 #endif
             }
-            m_Indices.RemoveAt(dataIndex);
-            m_Data.RemoveAt(dataIndex);
-            m_UsedElementCount--;
+
+            data.Indices.RemoveAt(dataIndex);
+            data.Data.RemoveAt(dataIndex);
+            data.UsedElementCount--;
+
+            return true;
+        }
+        
+        static T FindDataOrThrow(int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            int dataIndex = FindDataIndex(sparseIndex, ref data);
+            if (dataIndex < 0) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
+            return data.Data[dataIndex];
+        }
+
+        static int FindDataIndex(int sparseIndex, ref NativeSparseArrayData<T> data)
+        {
+            return data.Indices.BinarySearch(sparseIndex, 0, data.UsedElementCount);
         }
 
         public void Dispose()
@@ -220,30 +253,18 @@ namespace InfPoints
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif
-            m_Indices.Dispose();
-            m_Data.Dispose();
-        }
-
-        T FindDataOrThrow(int sparseIndex)
-        {
-            int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex < 0) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
-            return m_Data[dataIndex];
-        }
-
-        int FindDataIndex(int sparseIndex)
-        {
-            return m_Indices.BinarySearch(sparseIndex, 0, m_UsedElementCount);
+            
+            m_NativeSparseArrayData.Dispose();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return m_Data.GetEnumerator();
+            return m_NativeSparseArrayData.Data.GetEnumerator();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return m_Data.GetEnumerator();
+            return m_NativeSparseArrayData.Data.GetEnumerator();
         }
     }
 
@@ -260,7 +281,7 @@ namespace InfPoints
         {
             m_Array = array;
         }
-        
+
         // Used for the debugger inspector
         // ReSharper disable once UnusedMember.Global
         public T[] Items => m_Array.Data.ToArray();
