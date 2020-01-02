@@ -14,6 +14,7 @@ namespace InfPoints.Octree
     /// Store array data contiguously, while allowing indices that are far apart.
     /// For a large amount of data a Dictionary may have better performance. Ideal for first populating and then
     /// processing the data as an array.
+    /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
@@ -34,15 +35,40 @@ namespace InfPoints.Octree
 #endif
 
         public bool IsCreated => m_Data.IsCreated;
+        /// <summary>
+        /// Have all the indices been filled.
+        /// </summary>
         public bool IsFull => UsedElementCount == Length;
+        /// <summary>
+        /// The number of array elements that have been used.
+        /// Every time a unique index is used, this count goes up.
+        /// When the `SparseArray` is full no more items can be added.
+        /// </summary>
         public int UsedElementCount => m_UsedElementCount;
         public int Length => m_Data.Length;
+        
+        /// <summary>
+        /// The sorted indices of data in the `SparseArray`.
+        /// These indices can be non-contiguous and far apart.
+        /// </summary>
+        public NativeArray<int> Indices => m_Indices;
+        
+        /// <summary>
+        /// The data in the array.
+        /// This data is store contiguously, even though the indices are far apart. 
+        /// </summary>
         public NativeArray<T> Data => m_Data;
 
         NativeArray<T> m_Data;
         NativeArray<int> m_Indices;
         int m_UsedElementCount;
 
+        /// <summary>
+        /// Create a new empty `SparseArray`.
+        /// </summary>
+        /// <param name="length">The number of items the `SpraseArray` can hold</param>
+        /// <param name="allocator">The allocator, <see cref="NativeArray"/> constructor for documentation of the
+        /// different allocator types.</param>
         public NativeSparseArray(int length, Allocator allocator)
         {
             var totalSize = UnsafeUtility.SizeOf<T>() * (long) length;
@@ -69,6 +95,15 @@ namespace InfPoints.Octree
 #endif
         }
 
+        /// <summary>
+        /// Access an element of the SparseArray.
+        /// When assigning to a new index, this add a new entry to the array.
+        /// Prefer to use <see cref="IsFull"/>,<see cref="ContainsIndex"/> and <see cref="SetValue"/> to explicitly
+        /// write to the array.
+        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. 
+        /// </summary>
+        /// <param name="sparseIndex"></param>
         public T this[int sparseIndex]
         {
             get
@@ -83,11 +118,18 @@ namespace InfPoints.Octree
             }
         }
 
-        public bool Contains(int sparseIndex)
+        public bool ContainsIndex(int sparseIndex)
         {
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
             return m_UsedElementCount != 0 && FindDataIndex(sparseIndex) >= 0;
         }
         
+        /// <summary>
+        /// Explcitly add a new index and value to the `SparseArray`.
+        /// </summary>
+        /// <param name="value">The value to add</param>
+        /// <param name="sparseIndex">The sprase index of the data</param>
+        /// <returns>False if the array is full or the index has already been added.</returns>
         public bool AddValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -118,6 +160,14 @@ namespace InfPoints.Octree
             return true;
         }
 
+        /// <summary>
+        /// Set the value of an existing sparse array index.
+        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled.
+        /// </summary>
+        /// <param name="value">The value to set</param>
+        /// <param name="sparseIndex">The sprase array index</param>
+        /// <returns>False if the index does not exist and `ENABLE_UNITY_COLLECTIONS_CHECKS` has not been set.</returns>
         public bool SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -138,11 +188,26 @@ namespace InfPoints.Octree
 #endif
         }
 
+        /// <summary>
+        /// Remove the sparse array element.
+        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
+        /// </summary>
+        /// <param name="sparseIndex"></param>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex < 0) throw new ArgumentOutOfRangeException();
+
+            if (dataIndex < 0)
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                throw new ArgumentOutOfRangeException();
+#else
+                return;
+#endif
+            }
             m_Indices.RemoveAt(dataIndex);
             m_Data.RemoveAt(dataIndex);
             m_UsedElementCount--;
@@ -150,6 +215,8 @@ namespace InfPoints.Octree
 
         public void Dispose()
         {
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif

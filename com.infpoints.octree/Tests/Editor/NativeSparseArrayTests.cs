@@ -35,7 +35,7 @@ namespace InfPoints.Octree.Tests.Editor
                 bool ret = array.AddValue(value, sparseIndex);
                 Assert.That(ret, Is.True);
                 Assert.That(array[sparseIndex], Is.EqualTo(value));
-                Assert.That(array.Contains(sparseIndex), Is.True);
+                Assert.That(array.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(array.UsedElementCount, Is.EqualTo(1));
             }
         }
@@ -70,7 +70,7 @@ namespace InfPoints.Octree.Tests.Editor
                 {
                     var v = array[sparseIndex];
                 }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
-                Assert.That(array.Contains(sparseIndex), Is.False);
+                Assert.That(array.ContainsIndex(sparseIndex), Is.False);
                 Assert.That(array.UsedElementCount, Is.EqualTo(0));
             }
         }
@@ -119,7 +119,7 @@ namespace InfPoints.Octree.Tests.Editor
 
                 array.RemoveAt(200);
                 Assert.That(array.UsedElementCount, Is.EqualTo(2));
-                Assert.That(array.Contains(200), Is.False);
+                Assert.That(array.ContainsIndex(200), Is.False);
             }
         }
 
