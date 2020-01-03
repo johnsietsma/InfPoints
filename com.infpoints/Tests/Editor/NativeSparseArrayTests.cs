@@ -38,12 +38,12 @@ namespace InfPoints.Tests.Editor
                 const int sparseIndex = 999;
                 const int value = 5;
 
-                Assert.That(arrayLength, Is.EqualTo(array.Length));
+                Assert.That(arrayLength, Is.EqualTo(array.Capacity));
 
                 array.AddValue(value, sparseIndex);
                 Assert.That(array[sparseIndex], Is.EqualTo(value));
                 Assert.That(array.ContainsIndex(sparseIndex), Is.True);
-                Assert.That(array.UsedElementCount, Is.EqualTo(1));
+                Assert.That(array.Length, Is.EqualTo(1));
             }
         }
 
@@ -54,16 +54,16 @@ namespace InfPoints.Tests.Editor
 
             array[100] = 200;
             Assert.That(array[100], Is.EqualTo(200));
-            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+            Assert.That(array.Length, Is.EqualTo(1));
 
             array[100] = 300;
             Assert.That(array[100], Is.EqualTo(300));
-            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+            Assert.That(array.Length, Is.EqualTo(1));
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             Assert.That(array.IsFull, Is.True);
             Assert.That(() => { return array[101] = 201; }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(array.UsedElementCount, Is.EqualTo(1));
+            Assert.That(array.Length, Is.EqualTo(1));
 #endif
             array.Dispose();
         }
@@ -81,7 +81,7 @@ namespace InfPoints.Tests.Editor
                 Assert.That(array[100], Is.EqualTo(1));
                 Assert.That(array[200], Is.EqualTo(2));
                 Assert.That(array[300], Is.EqualTo(3));
-                Assert.That(array.UsedElementCount, Is.EqualTo(3));
+                Assert.That(array.Length, Is.EqualTo(3));
             }
         }
 
@@ -99,7 +99,7 @@ namespace InfPoints.Tests.Editor
                     var v = array[sparseIndex];
                 }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
                 Assert.That(array.ContainsIndex(sparseIndex), Is.False);
-                Assert.That(array.UsedElementCount, Is.EqualTo(0));
+                Assert.That(array.Length, Is.EqualTo(0));
             }
         }
 
@@ -110,17 +110,17 @@ namespace InfPoints.Tests.Editor
             using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
                 array.AddValue(1, 1);
-                Assert.That(array.UsedElementCount, Is.EqualTo(1));
+                Assert.That(array.Length, Is.EqualTo(1));
                 array.AddValue(2, 2);
-                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+                Assert.That(array.Length, Is.EqualTo(2));
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 Assert.That(() => array.AddValue(2, 2),
                     Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Already exists
-                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+                Assert.That(array.Length, Is.EqualTo(2));
                 Assert.That(() => array.AddValue(3, 3),
                     Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Array is full
-                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+                Assert.That(array.Length, Is.EqualTo(2));
                 Assert.That(array.IsFull, Is.True);
 #endif
             }
@@ -155,7 +155,7 @@ namespace InfPoints.Tests.Editor
                 array.AddValue(3, 300);
 
                 array.RemoveAt(200);
-                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+                Assert.That(array.Length, Is.EqualTo(2));
                 Assert.That(array.ContainsIndex(200), Is.False);
             }
         }

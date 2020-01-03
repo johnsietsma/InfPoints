@@ -23,7 +23,7 @@ namespace InfPoints
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
-    [DebuggerDisplay("Length = {Length}")]
+    [DebuggerDisplay("Length = {Capacity}")]
     [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
     public struct NativeSparseArray<T> : IEnumerable<T>, IDisposable
 #if CSHARP_7_3_OR_NEWER
@@ -44,16 +44,16 @@ namespace InfPoints
         /// <summary>
         /// Have all the indices been filled.
         /// </summary>
-        public bool IsFull => UsedElementCount == Data.Length;
+        public bool IsFull => Length == Data.Length;
 
-        public int Length => Data.Length;
+        public int Capacity => Data.Length;
 
         /// <summary>
         /// The number of array elements that have been used.
         /// Every time a unique index is used, this count goes up.
         /// When the `SparseArray` is full no more items can be added.
         /// </summary>
-        public int UsedElementCount { get; set; }
+        public int Length { get; set; }
 
         /// <summary>
         /// The sorted indices of data in the `SparseArray`.
@@ -70,30 +70,30 @@ namespace InfPoints
         /// <summary>
         /// Create a new empty `SparseArray`.
         /// </summary>
-        /// <param name="length">The number of items the `SparseArray` can hold</param>
+        /// <param name="capacity">The number of items the `SparseArray` can hold</param>
         /// <param name="allocator">The allocator, <see cref="NativeArray<T>"/> constructor for documentation of the
         /// different allocator types.</param>
-        public NativeSparseArray(int length, Allocator allocator)
+        public NativeSparseArray(int capacity, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Native allocation is only valid for Temp, Job and Persistent.
             if (allocator <= Allocator.None)
                 throw new ArgumentException("Allocator must be Temp, TempJob or Persistent", nameof(allocator));
-            if (length < 0)
-                throw new ArgumentOutOfRangeException(nameof(length), "Length must be >= 0");
+            if (capacity < 0)
+                throw new ArgumentOutOfRangeException(nameof(capacity), "Length must be >= 0");
 
-            var totalSize = UnsafeUtility.SizeOf<T>() * (long) length;
+            var totalSize = UnsafeUtility.SizeOf<T>() * (long) capacity;
             if (totalSize > int.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(length),
+                throw new ArgumentOutOfRangeException(nameof(capacity),
                     $"Capacity * sizeof(T) cannot exceed {int.MaxValue} bytes");
 
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
-            Indices = new NativeArray<int>(length, allocator, NativeArrayOptions.UninitializedMemory);
-            Data = new NativeArray<T>(length, allocator, NativeArrayOptions.UninitializedMemory);
-            UsedElementCount = 0;
+            Indices = new NativeArray<int>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
+            Data = new NativeArray<T>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
+            Length = 0;
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace InfPoints
         /// <param name="count"></param>
         public void IncrementUsedElementCount(int count)
         {
-            UsedElementCount += count;
+            Length += count;
         }
 
 
@@ -154,7 +154,7 @@ namespace InfPoints
             dataIndex = ~dataIndex; // Two's complement is the insertion point
             Indices.Insert(dataIndex, sparseIndex);
             Data.Insert(dataIndex, value);
-            UsedElementCount++;
+            Length++;
         }
 
         /// <summary>
@@ -188,12 +188,12 @@ namespace InfPoints
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
-            UsedElementCount--;
+            Length--;
         }
 
         int FindDataIndex(int sparseIndex)
         {
-            return Indices.BinarySearch(sparseIndex, 0, UsedElementCount);
+            return Indices.BinarySearch(sparseIndex, 0, Length);
         }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]

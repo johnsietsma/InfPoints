@@ -43,7 +43,7 @@ public class NativeSparseArrayConcurrentTests
 
             Assert.That(addJob.addedCount[0], Is.EqualTo(AddCount));
             array.IncrementUsedElementCount(addJob.addedCount[0]);
-            Assert.That(array.UsedElementCount, Is.EqualTo(AddCount));
+            Assert.That(array.Length, Is.EqualTo(AddCount));
         }
     }
 }
