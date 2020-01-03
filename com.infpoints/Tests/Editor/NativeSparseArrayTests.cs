@@ -26,7 +26,7 @@ namespace InfPoints.Tests.Editor
             var array = new NativeSparseArray<int>(1, Allocator.Persistent);
             array.Dispose();
             Assert.That(delegate { array.Dispose(); }, Throws.Exception.TypeOf<InvalidOperationException>());
-            Assert.That(() => array.AddValue(1, 2), Is.False);
+            Assert.That(() => array.AddValue(1, 2), Throws.Exception.TypeOf<InvalidOperationException>());
         }
 
         [Test]
@@ -40,8 +40,7 @@ namespace InfPoints.Tests.Editor
 
                 Assert.That(arrayLength, Is.EqualTo(array.Length));
 
-                bool ret = array.AddValue(value, sparseIndex);
-                Assert.That(ret, Is.True);
+                array.AddValue(value, sparseIndex);
                 Assert.That(array[sparseIndex], Is.EqualTo(value));
                 Assert.That(array.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(array.UsedElementCount, Is.EqualTo(1));
@@ -52,7 +51,7 @@ namespace InfPoints.Tests.Editor
         public void AddUsingIndexingOperatorGivesCorrectValue()
         {
             var array = new NativeSparseArray<int>(1, Allocator.Persistent);
-            
+
             array[100] = 200;
             Assert.That(array[100], Is.EqualTo(200));
             Assert.That(array.UsedElementCount, Is.EqualTo(1));
@@ -61,11 +60,11 @@ namespace InfPoints.Tests.Editor
             Assert.That(array[100], Is.EqualTo(300));
             Assert.That(array.UsedElementCount, Is.EqualTo(1));
 
-            #if ENABLE_UNITY_COLLECTIONS_CHECKS
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             Assert.That(array.IsFull, Is.True);
-            array[101] = 201; // Silently fails
+            Assert.That(() => { return array[101] = 201; }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
             Assert.That(array.UsedElementCount, Is.EqualTo(1));
-            #endif
+#endif
             array.Dispose();
         }
 
@@ -110,11 +109,20 @@ namespace InfPoints.Tests.Editor
             const int arrayLength = 2;
             using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
-                Assert.That(array.AddValue(1, 1), Is.True);
-                Assert.That(array.AddValue(2, 2), Is.True);
-                Assert.That(array.AddValue(2, 2), Is.False); // Already exists
-                Assert.That(array.AddValue(3, 3), Is.False); // Array is full
+                array.AddValue(1, 1);
+                Assert.That(array.UsedElementCount, Is.EqualTo(1));
+                array.AddValue(2, 2);
+                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                Assert.That(() => array.AddValue(2, 2),
+                    Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Already exists
+                Assert.That(array.UsedElementCount, Is.EqualTo(2));
+                Assert.That(() => array.AddValue(3, 3),
+                    Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Array is full
+                Assert.That(array.UsedElementCount, Is.EqualTo(2));
                 Assert.That(array.IsFull, Is.True);
+#endif
             }
         }
 

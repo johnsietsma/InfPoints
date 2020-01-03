@@ -12,7 +12,8 @@ namespace InfPoints
     /// For a large amount of data a Dictionary may have better performance. Ideal for first populating and then
     /// processing the data as an array.
     ///
-    /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks.
+    /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks. It will throw exceptions for any illegal array
+    /// access.
     ///
     /// Prefer using the explicit interface `AddValue`, `IsFull` etc rather then the index operator. The index operator
     /// may silently fail if the array is full and `ENABLE_UNITY_COLLECTIONS_CHECKS` is off.
@@ -74,28 +75,25 @@ namespace InfPoints
         /// different allocator types.</param>
         public NativeSparseArray(int length, Allocator allocator)
         {
-            var totalSize = UnsafeUtility.SizeOf<T>() * (long) length;
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Native allocation is only valid for Temp, Job and Persistent.
             if (allocator <= Allocator.None)
                 throw new ArgumentException("Allocator must be Temp, TempJob or Persistent", nameof(allocator));
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length), "Length must be >= 0");
+
+            var totalSize = UnsafeUtility.SizeOf<T>() * (long) length;
             if (totalSize > int.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(length),
                     $"Capacity * sizeof(T) cannot exceed {int.MaxValue} bytes");
 
-            CollectionHelper.CheckIsUnmanaged<T>();
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
+            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
             Indices = new NativeArray<int>(length, allocator, NativeArrayOptions.UninitializedMemory);
             Data = new NativeArray<T>(length, allocator, NativeArrayOptions.UninitializedMemory);
             UsedElementCount = 0;
-            
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
-#endif
         }
 
         /// <summary>
@@ -112,7 +110,9 @@ namespace InfPoints
             get
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                return FindDataOrThrow(sparseIndex);
+                CheckIndexExistsOrThrow(sparseIndex);
+                var dataIndex = FindDataIndex(sparseIndex);
+                return Data[dataIndex];
             }
             set
             {
@@ -137,62 +137,40 @@ namespace InfPoints
         {
             UsedElementCount += count;
         }
-        
+
 
         /// <summary>
         /// Explicitly add a new index and value to the `SparseArray`.
         /// </summary>
         /// <param name="value">The value to add</param>
         /// <param name="sparseIndex">The sparse index of the data</param>
-        /// <returns>False if the array is full or the index has already been added.</returns>
-        public bool AddValue(T value, int sparseIndex)
+        public void AddValue(T value, int sparseIndex)
         {
-            if (IsFull) 
-                return false;
-            
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+            CheckFullAndThrow();
+            CheckIndexDoesntExistOrThrow(sparseIndex);
+
             int dataIndex = FindDataIndex(sparseIndex);
-
-            if (dataIndex >= 0)
-            {
-                // Already exists
-                return false;
-            }
-
-            // Doesn't exist yet, insert it
             dataIndex = ~dataIndex; // Two's complement is the insertion point
             Indices.Insert(dataIndex, sparseIndex);
             Data.Insert(dataIndex, value);
             UsedElementCount++;
-
-            return true;
         }
 
         /// <summary>
         /// Set the value of an existing sparse array index.
-        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
-        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled.
         /// </summary>
         /// <param name="value">The value to set</param>
         /// <param name="sparseIndex">The sparse array index</param>
         /// <returns>False if the index does not exist and `ENABLE_UNITY_COLLECTIONS_CHECKS` has not been set.</returns>
-        public bool SetValue(T value, int sparseIndex)
+        public void SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+            CheckIndexExistsOrThrow(sparseIndex);
+
             int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex >= 0 && dataIndex < Data.Length)
-            {
-                // Update the data
-                Data[dataIndex] = value;
-                return true;
-            }
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(sparseIndex));
-            }
-#else
-            return false;
-#endif
+            // Update the data
+            Data[dataIndex] = value;
         }
 
         /// <summary>
@@ -202,37 +180,44 @@ namespace InfPoints
         /// </summary>
         /// <param name="sparseIndex"></param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public bool RemoveAt(int sparseIndex)
+        public void RemoveAt(int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+            CheckIndexExistsOrThrow(sparseIndex);
+            
             int dataIndex = FindDataIndex(sparseIndex);
-
-            if (dataIndex < 0)
-            {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                throw new ArgumentOutOfRangeException();
-#else
-                return false;
-#endif
-            }
-
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
             UsedElementCount--;
-
-            return true;
-        }
-
-        T FindDataOrThrow(int sparseIndex)
-        {
-            int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex < 0) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
-            return Data[dataIndex];
         }
 
         int FindDataIndex(int sparseIndex)
         {
             return Indices.BinarySearch(sparseIndex, 0, UsedElementCount);
+        }
+
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        void CheckFullAndThrow()
+        {
+            if (IsFull)
+                throw new ArgumentOutOfRangeException("Adding value to full array");
+        }
+
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        void CheckIndexDoesntExistOrThrow(int sparseIndex)
+        {
+            if (ContainsIndex(sparseIndex))
+                throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
+        }
+
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        void CheckIndexExistsOrThrow(int sparseIndex)
+        {
+            int dataIndex = FindDataIndex(sparseIndex);
+            if (dataIndex < 0 || dataIndex >= Data.Length)
+            {
+                throw new ArgumentOutOfRangeException($"Index {sparseIndex} does not exist");
+            }
         }
 
         public void Dispose()

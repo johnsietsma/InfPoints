@@ -9,20 +9,19 @@ using UnityEngine;
 public class NativeSparseArrayConcurrentTests
 {
     const int AddCount = 1000;
+
     public struct AddJob : IJob
     {
         public NativeSparseArray<int> array;
-        
+
         public NativeArray<int> addedCount;
-        
+
         public void Execute()
         {
             for (int i = 0; i < AddCount; i++)
             {
-                if (array.AddValue(i, i))
-                {
-                    addedCount[0]++;
-                }
+                array.AddValue(i, i);
+                addedCount[0]++;
             }
         }
     }
@@ -41,7 +40,7 @@ public class NativeSparseArrayConcurrentTests
 
             var jobData = addJob.Schedule();
             jobData.Complete();
-            
+
             Assert.That(addJob.addedCount[0], Is.EqualTo(AddCount));
             array.IncrementUsedElementCount(addJob.addedCount[0]);
             Assert.That(array.UsedElementCount, Is.EqualTo(AddCount));
