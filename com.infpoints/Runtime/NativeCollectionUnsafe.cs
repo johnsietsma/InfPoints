@@ -13,11 +13,7 @@ namespace InfPoints
         /// <see cref="NativeCollectionExtensions.Swap"/> 
         /// </summary>
         public static void Swap<T>(void* ptr, int i, int j) 
-#if CSHARP_7_3_OR_NEWER
             where T : unmanaged
-#else
-	    	where T : struct
-#endif
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (ptr == null) throw new ArgumentNullException(nameof(ptr));
@@ -30,11 +26,7 @@ namespace InfPoints
 
         /// <see cref="NativeCollectionExtensions.Insert"/> 
         public static void Insert<T>(void* ptr, int index, int length, T value) 
-#if CSHARP_7_3_OR_NEWER
             where T : unmanaged
-#else
-	    	where T : struct
-#endif
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (ptr == null) throw new ArgumentNullException(nameof(ptr));
@@ -54,11 +46,7 @@ namespace InfPoints
         
         /// <see cref="NativeCollectionExtensions.RemoveAt"/> 
         public static void RemoveAt<T>(void* ptr, int index, int length) 
-#if CSHARP_7_3_OR_NEWER
             where T : unmanaged
-#else
-	    	where T : struct
-#endif
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (ptr == null) throw new ArgumentNullException(nameof(ptr));
@@ -78,11 +66,7 @@ namespace InfPoints
         }
         
         public static int BinarySearch<T>(void* ptr, T key, int startIndex, int count)
-#if CSHARP_7_3_OR_NEWER
             where T : unmanaged
-#else
-	    	where T : struct
-#endif
             , IComparable<T>
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS

@@ -8,21 +8,23 @@ using Unity.Collections.LowLevel.Unsafe;
 namespace InfPoints
 {
     /// <summary>
-    /// Store array data contiguously, while allowing indices that are far apart.
+    /// Store data contiguously, while allowing indices that are far apart.
     /// For a large amount of data a Dictionary may have better performance. Ideal for first populating and then
-    /// processing the data as an array.
+    /// processing the data as an List.
     ///
-    /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks. It will throw exceptions for any illegal array
-    /// access.
+    /// Data is stored internally in <see cref="NativeLists"/>, and will have the same memory usage when the list is
+    /// past capacity.
+    ///
+    /// Turn on `ENABLE_UNITY_COLLECTIONS_CHECKS` for runtime checks. It will throw exceptions for any illegal access.
     ///
     /// There is no explicit thread safety and add or remove operations are not atomic. Can be used within an IJob, but
     /// not within an IJobParallelFor unless it is readonly.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
-    [DebuggerDisplay("Length = {Capacity}")]
-    [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
-    public struct NativeSparseArray<T> : IEnumerable<T>, IDisposable
+    [DebuggerDisplay("Length = {Length}, Capacity = {Capacity}")]
+    [DebuggerTypeProxy(typeof(NativeSparseListDebugView<>))]
+    public struct NativeSparseList<T> : IEnumerable<T>, IDisposable
         where T : unmanaged
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -34,66 +36,57 @@ namespace InfPoints
 
         public bool IsCreated => Data.IsCreated;
 
-        /// <summary>
-        /// Have all the indices been filled.
-        /// </summary>
-        public bool IsFull => Length == Data.Length;
-
-        public int Capacity => Data.Length;
+        public int Capacity => Data.Capacity;
 
         /// <summary>
-        /// The number of array elements that have been used.
+        /// The number of List elements that have been used.
         /// Every time a unique index is used, this count goes up.
-        /// When the `SparseArray` is full no more items can be added.
         /// </summary>
-        public int Length { get; set; }
+        public int Length => Data.Length;
 
         /// <summary>
-        /// The sorted indices of data in the `SparseArray`.
+        /// The sorted indices of data in the `SparseList`.
         /// These indices can be non-contiguous and far apart.
         /// </summary>
-        public NativeArray<int> Indices;
+        public NativeList<int> Indices;
 
         /// <summary>
-        /// The data in the array.
+        /// The data in the List.
         /// This data is store contiguously, even though the indices are far apart. 
         /// </summary>
-        public NativeArray<T> Data;
+        public NativeList<T> Data;
 
         /// <summary>
-        /// Create a new empty `SparseArray`.
+        /// Create a new empty `SparseList`.
         /// </summary>
-        /// <param name="capacity">The number of items the `SparseArray` can hold</param>
-        /// <param name="allocator">The allocator, <see cref="NativeArray<T>"/> constructor for documentation of the
+        /// <param name="initialCapacity">The initial number of items allocated in the `SparseList`</param>
+        /// <param name="allocator">The allocator, <see cref="NativeList<T>"/> constructor for documentation of the
         /// different allocator types.</param>
-        public NativeSparseArray(int capacity, Allocator allocator)
+        public NativeSparseList(int initialCapacity, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Native allocation is only valid for Temp, Job and Persistent.
             if (allocator <= Allocator.None)
                 throw new ArgumentException("Allocator must be Temp, TempJob or Persistent", nameof(allocator));
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity), "Length must be >= 0");
+            if (initialCapacity < 0)
+                throw new ArgumentOutOfRangeException(nameof(initialCapacity), "Length must be >= 0");
 
-            var totalSize = UnsafeUtility.SizeOf<T>() * (long) capacity;
+            var totalSize = UnsafeUtility.SizeOf<T>() * (long) initialCapacity;
             if (totalSize > int.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(capacity),
+                throw new ArgumentOutOfRangeException(nameof(initialCapacity),
                     $"Capacity * sizeof(T) cannot exceed {int.MaxValue} bytes");
 
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
-            Indices = new NativeArray<int>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
-            Data = new NativeArray<T>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
-            Length = 0;
+            Indices = new NativeList<int>(initialCapacity, allocator);
+            Data = new NativeList<T>(initialCapacity, allocator);
         }
 
         /// <summary>
-        /// Access an element of the SparseArray.
-        /// When assigning to a new index, this add a new entry to the array.
-        /// Prefer to use <see cref="IsFull"/>,<see cref="ContainsIndex"/> and <see cref="SetValue"/> to explicitly
-        /// write to the array to avoid silent add failures.
+        /// Access an element of the SparseList.
+        /// When assigning to a new index, this add a new entry to the List.
         /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. 
         /// </summary>
@@ -122,41 +115,34 @@ namespace InfPoints
         }
 
         /// <summary>
-        /// If a copy of this struct has elements added to it, then the `UsedElementCount` becomes out of date.
-        /// Use this to update the count if you are required to use a copy, in a job for example.
-        /// </summary>
-        /// <param name="count"></param>
-        public void IncrementUsedElementCount(int count)
-        {
-            Length += count;
-        }
-
-
-        /// <summary>
-        /// Explicitly add a new index and value to the `SparseArray`.
+        /// Explicitly add a new index and value to the `SparseList`.
+        /// The list will grow by one, allocating memory if it's beyond capacity.
         /// </summary>
         /// <param name="value">The value to add</param>
         /// <param name="sparseIndex">The sparse index of the data</param>
         public void AddValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckFullAndThrow();
             CheckIndexDoesntExistOrThrow(sparseIndex);
-
+            
             int dataIndex = FindDataIndex(sparseIndex);
             dataIndex = ~dataIndex; // Two's complement is the insertion point
+            
+            // Make room in the list to insert
+            Indices.Add(default); 
+            Data.Add(default); 
+
             Indices.Insert(dataIndex, sparseIndex);
             Data.Insert(dataIndex, value);
-            Length++;
         }
 
         /// <summary>
-        /// Set the value of an existing sparse array index.
+        /// Set the value of an existing sparse List index.
         /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
-        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
+        // `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
         /// <param name="value">The value to set</param>
-        /// <param name="sparseIndex">The sparse array index</param>
+        /// <param name="sparseIndex">The sparse List index</param>
         public void SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -168,7 +154,7 @@ namespace InfPoints
         }
 
         /// <summary>
-        /// Remove the sparse array element.
+        /// Remove the sparse List element.
         /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
@@ -178,24 +164,17 @@ namespace InfPoints
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             CheckIndexExistsOrThrow(sparseIndex);
-            
+
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
-            Length--;
         }
 
         int FindDataIndex(int sparseIndex)
         {
-            return Indices.BinarySearch(sparseIndex, 0, Length);
+            return Indices.BinarySearch(sparseIndex, 0, Indices.Length);
         }
 
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckFullAndThrow()
-        {
-            if (IsFull)
-                throw new ArgumentOutOfRangeException("Adding value to full array");
-        }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
         void CheckIndexDoesntExistOrThrow(int sparseIndex)
@@ -237,18 +216,22 @@ namespace InfPoints
         }
     }
 
-    sealed class NativeSparseArrayDebugView<T>
+    sealed class NativeSparseListDebugView<T>
+#if CSHARP_7_3_OR_NEWER
         where T : unmanaged
+#else
+	   	where T : struct
+#endif
     {
-        NativeSparseArray<T> m_Array;
+        NativeSparseList<T> m_List;
 
-        public NativeSparseArrayDebugView(NativeSparseArray<T> array)
+        public NativeSparseListDebugView(NativeSparseList<T> list)
         {
-            m_Array = array;
+            m_List = list;
         }
 
         // Used for the debugger inspector
         // ReSharper disable once UnusedMember.Global
-        public T[] Items => m_Array.Data.ToArray();
+        public T[] Items => m_List.Data.ToArray();
     }
 }

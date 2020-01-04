@@ -26,7 +26,7 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Insert()
+        public void InsertIntoArray()
         {
             using (var data = new NativeArray<int>(new int[] {1, 2, 3, 4}, Allocator.Persistent))
             {
@@ -46,6 +46,28 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
+        public void InsertIntoNativeList()
+        {
+            using (var list = new NativeList<int>(1, Allocator.Persistent))
+            {
+                var capacity = list.Capacity;
+                for (int i = 0; i < capacity; i++)
+                {
+                    list.Add(default);
+                    list.Insert(0, 100);
+                    Assert.That(list.Length, Is.EqualTo(i+1));
+                    Assert.That(list.Capacity, Is.EqualTo(capacity));
+                }
+
+                list.Add(default);
+                list.Insert(0,200);
+                Assert.That(list.Length, Is.EqualTo(capacity+1));
+                Assert.That(list.Capacity, Is.EqualTo(capacity*2));
+                Assert.That(list[0], Is.EqualTo(200));
+            }
+        }
+
+        [Test]
         public void InsertAscending()
         {
             using (var data = new NativeArray<int>(4, Allocator.Persistent))
@@ -61,7 +83,7 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void RemoveAt()
+        public void RemoveAtFromNativeArray()
         {
             using (var data = new NativeArray<long>(new long[] {1, 2, 3, 4}, Allocator.Persistent))
             {
@@ -78,6 +100,21 @@ namespace InfPoints.Tests.Editor
                 Assert.Throws<ArgumentOutOfRangeException>(() => data.RemoveAt(5));
                 Assert.Throws<ArgumentOutOfRangeException>(() => data.RemoveAt(-1));
 #endif
+            }
+        }
+
+        [Test]
+        public void RemoveAtFromNativeList()
+        {
+            using (var list = new NativeList<int>(5, Allocator.Persistent))
+            {
+                list.Add(1);
+                list.Add(2);
+                list.Add(3);
+                list.RemoveAt(1);
+                Assert.That(list[0], Is.EqualTo(1));
+                Assert.That(list[1], Is.EqualTo(3));
+                Assert.That(list.Length, Is.EqualTo(2));
             }
         }
 

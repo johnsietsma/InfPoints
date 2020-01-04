@@ -17,7 +17,6 @@ namespace InfPoints.Tests.Editor
             array = new NativeSparseArray<int>(10, Allocator.Persistent);
             Assert.That(array.IsCreated, Is.True);
             array.Dispose();
-            Assert.That(array.IsCreated, Is.False);
         }
 
         [Test]
@@ -25,6 +24,7 @@ namespace InfPoints.Tests.Editor
         {
             var array = new NativeSparseArray<int>(1, Allocator.Persistent);
             array.Dispose();
+            Assert.That(array.IsCreated, Is.False);
             Assert.That(delegate { array.Dispose(); }, Throws.Exception.TypeOf<InvalidOperationException>());
             Assert.That(() => array.AddValue(1, 2), Throws.Exception.TypeOf<InvalidOperationException>());
         }

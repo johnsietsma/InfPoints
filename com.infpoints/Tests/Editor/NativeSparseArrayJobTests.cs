@@ -6,44 +6,49 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
-public class NativeSparseArrayConcurrentTests
+namespace InfPoints.Tests.Editor
 {
-    const int AddCount = 1000;
 
-    public struct AddJob : IJob
+    public class NativeSparseArrayJobTests
     {
-        public NativeSparseArray<int> array;
+        const int AddCount = 1000;
 
-        public NativeArray<int> addedCount;
-
-        public void Execute()
+        public struct AddJob : IJob
         {
-            for (int i = 0; i < AddCount; i++)
+            public NativeSparseArray<int> array;
+
+            public NativeArray<int> addedCount;
+
+            public void Execute()
             {
-                array.AddValue(i, i);
-                addedCount[0]++;
+                for (int i = 0; i < AddCount; i++)
+                {
+                    array.AddValue(i, i);
+                    addedCount[0]++;
+                }
+            }
+        }
+
+        [Test]
+        public void AddJobAddsCorrectAmount()
+        {
+            using (var array = new NativeSparseArray<int>(AddCount, Allocator.TempJob))
+            using (var count = new NativeArray<int>(1, Allocator.TempJob))
+            {
+                var addJob = new AddJob()
+                {
+                    array = array,
+                    addedCount = count
+                };
+
+                var jobData = addJob.Schedule();
+                jobData.Complete();
+
+                Assert.That(addJob.addedCount[0], Is.EqualTo(AddCount));
+                array.IncrementUsedElementCount(addJob.addedCount[0]);
+                Assert.That(array.Length, Is.EqualTo(AddCount));
             }
         }
     }
 
-    [Test]
-    public void AddJobAddsCorrectAmount()
-    {
-        using (var array = new NativeSparseArray<int>(AddCount, Allocator.TempJob))
-        using (var count = new NativeArray<int>(1, Allocator.TempJob))
-        {
-            var addJob = new AddJob()
-            {
-                array = array,
-                addedCount = count
-            };
-
-            var jobData = addJob.Schedule();
-            jobData.Complete();
-
-            Assert.That(addJob.addedCount[0], Is.EqualTo(AddCount));
-            array.IncrementUsedElementCount(addJob.addedCount[0]);
-            Assert.That(array.Length, Is.EqualTo(AddCount));
-        }
-    }
 }
