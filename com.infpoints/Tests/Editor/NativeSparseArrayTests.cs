@@ -97,7 +97,7 @@ namespace InfPoints.Tests.Editor
                 Assert.That(() =>
                 {
                     var v = array[sparseIndex];
-                }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+                }, Throws.Exception.TypeOf<IndexOutOfRangeException>());
                 Assert.That(array.ContainsIndex(sparseIndex), Is.False);
                 Assert.That(array.Length, Is.EqualTo(0));
             }
@@ -137,7 +137,7 @@ namespace InfPoints.Tests.Editor
                 const int value2 = 666;
 
                 Assert.That(() => array.SetValue(value1, sparseIndex),
-                    Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+                    Throws.Exception.TypeOf<IndexOutOfRangeException>());
                 array.AddValue(value1, sparseIndex);
                 array.SetValue(value2, sparseIndex);
                 Assert.That(array[sparseIndex], Is.EqualTo(value2));

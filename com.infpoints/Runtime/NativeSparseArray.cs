@@ -69,17 +69,7 @@ namespace InfPoints
         public NativeSparseArray(int capacity, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            // Native allocation is only valid for Temp, Job and Persistent.
-            if (allocator <= Allocator.None)
-                throw new ArgumentException("Allocator must be Temp, TempJob or Persistent", nameof(allocator));
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity), "Length must be >= 0");
-
-            var totalSize = UnsafeUtility.SizeOf<T>() * (long) capacity;
-            if (totalSize > int.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(capacity),
-                    $"Capacity * sizeof(T) cannot exceed {int.MaxValue} bytes");
-
+            // Other checks happen in Data and Indices constructors
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
@@ -103,7 +93,6 @@ namespace InfPoints
             get
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                CheckIndexExistsOrThrow(sparseIndex);
                 var dataIndex = FindDataIndex(sparseIndex);
                 return Data[dataIndex];
             }
@@ -152,7 +141,7 @@ namespace InfPoints
 
         /// <summary>
         /// Set the value of an existing sparse array index.
-        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// Throws <exception cref="IndexOutOfRangeException"></exception> if the index does not exist and
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
         /// <param name="value">The value to set</param>
@@ -160,8 +149,6 @@ namespace InfPoints
         public void SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckIndexExistsOrThrow(sparseIndex);
-
             int dataIndex = FindDataIndex(sparseIndex);
             // Update the data
             Data[dataIndex] = value;
@@ -173,12 +160,10 @@ namespace InfPoints
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
         /// <param name="sparseIndex"></param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckIndexExistsOrThrow(sparseIndex);
-            
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
@@ -202,16 +187,6 @@ namespace InfPoints
         {
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
-        }
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckIndexExistsOrThrow(int sparseIndex)
-        {
-            int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex < 0 || dataIndex >= Data.Length)
-            {
-                throw new ArgumentOutOfRangeException($"Index {sparseIndex} does not exist");
-            }
         }
 
         public void Dispose()

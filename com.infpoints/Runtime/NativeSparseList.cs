@@ -87,7 +87,7 @@ namespace InfPoints
         /// <summary>
         /// Access an element of the SparseList.
         /// When assigning to a new index, this add a new entry to the List.
-        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// Throws <exception cref="IndexOutOfRangeException"></exception> if the index does not exist and
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. 
         /// </summary>
         /// <param name="sparseIndex"></param>
@@ -96,7 +96,6 @@ namespace InfPoints
             get
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                CheckIndexExistsOrThrow(sparseIndex);
                 var dataIndex = FindDataIndex(sparseIndex);
                 return Data[dataIndex];
             }
@@ -138,7 +137,7 @@ namespace InfPoints
 
         /// <summary>
         /// Set the value of an existing sparse List index.
-        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// Throws <exception cref="IndexOutOfRangeException"></exception> if the index does not exist and
         // `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
         /// <param name="value">The value to set</param>
@@ -146,8 +145,6 @@ namespace InfPoints
         public void SetValue(T value, int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckIndexExistsOrThrow(sparseIndex);
-
             int dataIndex = FindDataIndex(sparseIndex);
             // Update the data
             Data[dataIndex] = value;
@@ -159,12 +156,10 @@ namespace InfPoints
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
         /// </summary>
         /// <param name="sparseIndex"></param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckIndexExistsOrThrow(sparseIndex);
-
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
@@ -181,16 +176,6 @@ namespace InfPoints
         {
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
-        }
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckIndexExistsOrThrow(int sparseIndex)
-        {
-            int dataIndex = FindDataIndex(sparseIndex);
-            if (dataIndex < 0 || dataIndex >= Data.Length)
-            {
-                throw new ArgumentOutOfRangeException($"Index {sparseIndex} does not exist");
-            }
         }
 
         public void Dispose()
