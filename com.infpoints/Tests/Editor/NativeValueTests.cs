@@ -33,19 +33,24 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
+        public void DisposeValue()
+        {
+            var value = new NativeValue<int>(1, Allocator.Persistent);    
+            Assert.That(value.IsCreated, Is.True);
+            value.Dispose();
+            Assert.That(value.IsCreated, Is.False);
+            
+        }
+
+        [Test]
         public void DisposeValueInAJob()
         {
             var value = new NativeValue<int>(1, Allocator.Persistent);    
-
-            var writeJob = new WriteValueJob<int>()
-            {
-                value = value
-            };
-            var writeJobHandle = writeJob.Schedule();
-            var jobHandle = value.Dispose(writeJobHandle);
+            var jobHandle = value.Dispose(default);
             Assert.That(value.IsCreated, Is.True);
             jobHandle.Complete();
-            Assert.That(value.IsCreated, Is.False);
+            Assert.That(value.IsCreated, Is.True); // Job destroyed a copy, so buffer has not been set to null
+            Assert.That(()=>value.Dispose(), Throws.InvalidOperationException);
         }
         
     }
