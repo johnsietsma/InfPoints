@@ -14,7 +14,7 @@ namespace InfPoints.Tests.Editor
         {
             var octree = default(NativeSparseOctree<int>);
             Assert.That(octree.IsCreated, Is.False);
-            octree = new NativeSparseOctree<int>(Allocator.Persistent);
+            octree = new NativeSparseOctree<int>(1, Allocator.Persistent);
             Assert.That(octree.IsCreated, Is.True);
             octree.Dispose();
         }
@@ -32,10 +32,10 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void AddValueGivesCorrectValue()
         {
-            using (var octree = new NativeSparseOctree<int>(Allocator.Persistent))
+            using (var octree = new NativeSparseOctree<int>(1,Allocator.Persistent))
             {
                 Assert.That(octree.LevelCount, Is.EqualTo(0));
-                octree.AddLevel();
+                octree.AddLevel(1);
                 Assert.That(octree.LevelCount, Is.EqualTo(1));
             }
             

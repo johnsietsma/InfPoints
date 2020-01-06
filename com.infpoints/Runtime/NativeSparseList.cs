@@ -65,17 +65,6 @@ namespace InfPoints
         public NativeSparseList(int initialCapacity, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            // Native allocation is only valid for Temp, Job and Persistent.
-            if (allocator <= Allocator.None)
-                throw new ArgumentException("Allocator must be Temp, TempJob or Persistent", nameof(allocator));
-            if (initialCapacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(initialCapacity), "Length must be >= 0");
-
-            var totalSize = UnsafeUtility.SizeOf<T>() * (long) initialCapacity;
-            if (totalSize > int.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(initialCapacity),
-                    $"Capacity * sizeof(T) cannot exceed {int.MaxValue} bytes");
-
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
