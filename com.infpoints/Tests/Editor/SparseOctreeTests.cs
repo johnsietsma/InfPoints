@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -7,20 +6,10 @@ using Unity.Collections;
 
 namespace InfPoints.Tests.Editor
 {
-    public class NativeSparseOctreeTests
+    public class SparseOctreeTests
     {
         [Test]
-        public void Create()
-        {
-            var octree = default(NativeSparseOctree<int>);
-            Assert.That(octree.IsCreated, Is.False);
-            octree = new NativeSparseOctree<int>(1, Allocator.Persistent);
-            Assert.That(octree.IsCreated, Is.True);
-            octree.Dispose();
-        }
-
-        [Test]
-        public void Dispose()
+        public void CreateAndDispose()
         {
             var octree = new NativeSparseArray<int>(1, Allocator.Persistent);
             octree.Dispose();
@@ -32,7 +21,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void AddValueGivesCorrectValue()
         {
-            using (var octree = new NativeSparseOctree<int>(1,Allocator.Persistent))
+            using (var octree = new SparseOctree<int>(1,Allocator.Persistent))
             {
                 Assert.That(octree.LevelCount, Is.EqualTo(0));
                 octree.AddLevel(1);
