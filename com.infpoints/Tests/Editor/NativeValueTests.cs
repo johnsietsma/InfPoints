@@ -4,6 +4,7 @@ using Unity.Jobs;
 
 namespace InfPoints.Tests.Editor
 {
+    /*
     public class NativeValueTests
     {
         private struct WriteValueJob<T> : IJob where T : unmanaged
@@ -54,4 +55,5 @@ namespace InfPoints.Tests.Editor
         }
         
     }
+    */
 }
