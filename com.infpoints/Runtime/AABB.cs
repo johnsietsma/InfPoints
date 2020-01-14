@@ -23,12 +23,27 @@ namespace InfPoints
 
         public bool Contains(float3 position)
         {
+            return Contains(position.x, position.y, position.z);
+        }
+        
+        public bool Contains(float x, float y, float z)
+        {
             var min = Minimum;
             var max = Maximum;
             return
-                position.x >= min.x && position.x <= max.x &&
-                position.y >= min.y && position.y <= max.y &&
-                position.z >= min.z && position.z <= max.z;
+                x >= min.x && x <= max.x &&
+                y >= min.y && y <= max.y &&
+                z >= min.z && z <= max.z;
+        }
+        
+        public bool Contains(float4 x, float4 y, float4 z)
+        {
+            var min = Minimum;
+            var max = Maximum;
+            return
+                math.cmin(x) >= min.x && math.cmax(x) <= max.x &&
+                math.cmin(y) >= min.y && math.cmax(y) <= max.y &&
+                math.cmin(z) >= min.z && math.cmax(z) <= max.z;
         }
 
         public override string ToString()

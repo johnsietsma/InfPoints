@@ -1,9 +1,5 @@
 ﻿using NUnit.Framework;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Mathematics;
-using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace InfPoints.Tests.Editor
 {
