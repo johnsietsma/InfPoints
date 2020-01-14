@@ -1,4 +1,5 @@
 ﻿using System;
+using Unity.Collections;
 using Unity.Mathematics;
 
 namespace InfPoints
@@ -7,44 +8,38 @@ namespace InfPoints
     {
         public static uint3 PointToCoords(float3 point, int cellCount, AABB aabb)
         {
-            #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            if(!aabb.Contains(point)) throw new ArgumentOutOfRangeException(nameof(point));
-            #endif
-            
-            float cellSize = aabb.Size / cellCount;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (!aabb.Contains(point)) throw new ArgumentOutOfRangeException($"Point:{point} is not inside AABB:{aabb}");
+#endif
 
+            float cellSize = aabb.Size / cellCount;
+            point -= aabb.Minimum;
             uint3 coord = new uint3(
-                (uint)math.floor(point.x / cellSize),
-                (uint)math.floor(point.y / cellSize),
-                (uint)math.floor(point.z / cellSize)
+                (uint) math.floor(point.x / cellSize),
+                (uint) math.floor(point.y / cellSize),
+                (uint) math.floor(point.z / cellSize)
             );
-            
+
             return coord;
         }
-        
-        public static void PointToCoords(XYZSoA<float> pointsSoA, int cellCount, AABB aabb, XYZSoA<uint> coordsSoA)
+
+        public static void PointToCoords(NativeArray<float4x3> points, int cellCount, AABB aabb,
+            NativeArray<uint4x3> coords)
         {
-            var pointsX = pointsSoA.X.Reinterpret<float4>();
-            var pointsY = pointsSoA.X.Reinterpret<float4>();
-            var pointsZ = pointsSoA.X.Reinterpret<float4>();
-            
-            var coordsX = coordsSoA.X.Reinterpret<uint4>();
-            var coordsY = coordsSoA.X.Reinterpret<uint4>();
-            var coordsZ = coordsSoA.X.Reinterpret<uint4>();
-            
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            if(pointsX.Length!=pointsY.Length && pointsY.Length!=pointsZ.Length) throw new ArgumentException("X,Y and Z arrays are not equal length");
+            if (points.Length != coords.Length) throw new ArgumentException();
 #endif
-            
-            for (int i = 0; i < pointsX.Length; i++)
+
+            for (int i = 0; i < points.Length; i++)
             {
-                float4 x = pointsX[i];
-                float4 y = pointsY[i];
-                float4 z = pointsZ[i];
-                
-                
+                float4x3 point = points[i];
+                float4 x = point[0];
+                float4 y = point[1];
+                float4 z = point[2];
+
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if (!aabb.Contains(x,y,z)) throw new ArgumentOutOfRangeException();
+                if (!aabb.Contains(x, y, z)) throw new ArgumentOutOfRangeException();
 #endif
 
                 float cellSize = aabb.Size / cellCount;
@@ -53,9 +48,7 @@ namespace InfPoints
                 uint4 coordY = (uint4) math.floor(y / cellSize);
                 uint4 coordZ = (uint4) math.floor(z / cellSize);
 
-                coordsX[i] = coordX;
-                coordsY[i] = coordY;
-                coordsZ[i] = coordZ;
+                coords[i] = new uint4x3(coordX,coordY,coordZ);
             }
         }
     }
