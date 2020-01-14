@@ -19,12 +19,16 @@ namespace InfPoints
         public bool IsCreated => m_Levels != null;
 
         public int LevelCount { get; private set; }
+        
+        // ReSharper disable once InconsistentNaming
+        public AABB AABB { get; private set; }
 
-        Allocator m_Allocator;
+        readonly Allocator m_Allocator;
         List<NativeSparseArray<T>> m_Levels;
 
-        public SparseOctree(int initialLevelCount, Allocator allocator)
+        public SparseOctree(AABB aabb, int initialLevelCount, Allocator allocator)
         {
+            AABB = aabb;
             m_Allocator = allocator;
             m_Levels = new List<NativeSparseArray<T>>(initialLevelCount);
             LevelCount = 0;
@@ -38,6 +42,8 @@ namespace InfPoints
 
         public void Dispose()
         {
+            if (m_Levels == null) throw new InvalidOperationException();
+            
             for (int i = 0; i < LevelCount; i++)
             {
                 m_Levels[i].Dispose();
