@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace InfPoints.Tests.Editor
 {
-    public class UtilsTests
+    public class OctreeJobsTests
     {
         private static readonly float3[] InsidePoints = new[]
         {
@@ -32,10 +32,18 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void PointsToCoordsGivesCorrectResult()
         {
-            for (int i = 0; i < InsidePoints.Length; i++)
+            using (var points =
+                new NativeArray<float3>(InsidePoints, Allocator.Persistent))
+            using (var coords =
+                new NativeArray<uint3>(InsidePoints.Length, Allocator.Persistent))
             {
-                var coord = OctreeUtils.ConvertPointToCoord(aabb, CellCount, InsidePoints[i]);
-                Assert.That(coord, Is.EqualTo(InsideCoords[i]));
+                var jobHandle =
+                    OctreeJobs.ScheduleConvertPointsToCoordsJobs(points, coords, aabb, CellCount, 4);
+                jobHandle.Complete();
+                for (int i = 0; i < coords.Length; i++)
+                {
+                    Assert.That(coords[i], Is.EqualTo(InsideCoords[i]));
+                }
             }
         }
 
@@ -46,13 +54,17 @@ namespace InfPoints.Tests.Editor
                 new NativeArray<float3>(InsidePoints, Allocator.Persistent).Reinterpret<float4x3>(
                     UnsafeUtility.SizeOf<float3>()))
             using (var coords =
+                new NativeArray<uint4x3>(points.Length, Allocator.Persistent))
+            using (var coordsCompare =
                 new NativeArray<uint3>(InsideCoords, Allocator.Persistent).Reinterpret<uint4x3>(
                     UnsafeUtility.SizeOf<uint3>()))
             {
-                for (int i = 0; i < points.Length; i++)
+                var jobHandle =
+                    OctreeJobs.ScheduleConvertPointsToCoordsJobs(points, coords, aabb, CellCount, 4);
+                jobHandle.Complete();
+                for (int i = 0; i < coords.Length; i++)
                 {
-                    //var c = Utils.PointToCoords(points[i], CellCount, aabb);
-                    //Assert.That(c, Is.EqualTo(coords[i]));
+                    Assert.That(coords[i], Is.EqualTo(coordsCompare[i]));
                 }
             }
         }
@@ -70,11 +82,11 @@ namespace InfPoints.Tests.Editor
                 new float3(5, 5, 15),
             };
 
-            const int cellCount = 10;
+            //const int cellCount = 10;
             for (int i = 0; i < inPoints.Length; i++)
             {
                 //Assert.That(() => Utils.PointToCoords(inPoints[i], cellCount, aabb),
-                   // Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+                // Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
             }
         }
 #endif
