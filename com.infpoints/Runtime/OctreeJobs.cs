@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -6,15 +7,26 @@ namespace InfPoints
 {
     public static class OctreeJobs
     {
+        /// <summary>
+        /// Schedule jobs for converting points to coordinates.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="coords"></param>
+        /// <param name="aabb"></param>
+        /// <param name="cellCount"></param>
+        /// <param name="batchCount"></param>
+        /// <returns></returns>
         public static JobHandle ScheduleConvertPointsToCoordsJobs(NativeArray<float3> points, NativeArray<uint3> coords, AABB aabb,
             int cellCount, int batchCount)
         {
+            // Move the points relative to the AABB
             var addJob = new AddJob_float3()
             {
                 Add = -aabb.Minimum,
                 Data = points
             };
 
+            // Find out which cell the point is in
             var convertJob = new QuotientDivideJob()
             {
                 CellSize = aabb.Size / cellCount,
@@ -49,6 +61,7 @@ namespace InfPoints
     }
 
 
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct AddJob_float3 : IJobParallelFor
     {
         [ReadOnly] public float3 Add;
@@ -60,6 +73,7 @@ namespace InfPoints
         }
     }
     
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct AddJob_float4x3 : IJobParallelFor
     {
         [ReadOnly] public float4x3 Add;
@@ -71,6 +85,7 @@ namespace InfPoints
         }
     }
     
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct QuotientDivideJob : IJobParallelFor
     {
         [ReadOnly] public float CellSize;
@@ -84,6 +99,7 @@ namespace InfPoints
         }
     }
     
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct QuotientDivideWideJob : IJobParallelFor
     {
         [ReadOnly] public float CellSize;

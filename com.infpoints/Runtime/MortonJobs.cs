@@ -51,6 +51,7 @@ namespace InfPoints
         }
     }
 
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton32EncodeJob_PackedFor : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint4x3> Coordinates;
@@ -109,6 +110,7 @@ namespace InfPoints
         }
     }
 
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton32DecodeJob_PackedFor : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint4> Codes;
