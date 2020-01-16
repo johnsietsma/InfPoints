@@ -10,7 +10,7 @@ namespace InfPoints.Tests.Editor
 {
     public class OctreeJobsTests
     {
-        private static readonly float3[] InsidePoints = new[]
+        static readonly float3[] InsidePoints = new[]
         {
             new float3(0, 0, 0),
             new float3(-5, -5, -5),
@@ -18,7 +18,7 @@ namespace InfPoints.Tests.Editor
             new float3(1, 1, 1),
         };
 
-        private static readonly uint3[] InsideCoords = new[]
+        static readonly uint3[] InsideCoords = new[]
         {
             new uint3(5, 5, 5),
             new uint3(0, 0, 0),
@@ -50,6 +50,8 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void WidePointsToCoordsGivesCorrectResult()
         {
+            // Just using the data as is. The points should be transposed to give the same points as in the source arrays.
+            // But it doesn't make a difference here
             using (var points =
                 new NativeArray<float3>(InsidePoints, Allocator.Persistent).Reinterpret<float4x3>(
                     UnsafeUtility.SizeOf<float3>()))
@@ -68,27 +70,5 @@ namespace InfPoints.Tests.Editor
                 }
             }
         }
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-
-        [Test]
-        public void PointsOutsideAABBThrowException()
-        {
-            AABB aabb = new AABB(0, 10);
-
-            float3[] inPoints = new[]
-            {
-                new float3(-11, -5, -5),
-                new float3(5, 5, 15),
-            };
-
-            //const int cellCount = 10;
-            for (int i = 0; i < inPoints.Length; i++)
-            {
-                //Assert.That(() => Utils.PointToCoords(inPoints[i], cellCount, aabb),
-                // Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
-            }
-        }
-#endif
     }
 }
