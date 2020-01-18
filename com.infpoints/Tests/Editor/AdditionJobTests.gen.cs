@@ -13,6 +13,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 // Disable warnings due to naming with numeric types and generated members not being used
+// ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -25,14 +26,14 @@ namespace InfPoints.Tests.Editor
 
 
         [Test]
-        public void AddingdoubleGivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double()
         {
             double[] values = new double[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -47,14 +48,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double2()
         {
             double2[] values = new double2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -69,14 +70,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble2x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double2x2()
         {
             double2x2[] values = new double2x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double2x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double2x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -91,14 +92,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble2x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double2x3()
         {
             double2x3[] values = new double2x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double2x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double2x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -113,14 +114,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble2x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double2x4()
         {
             double2x4[] values = new double2x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double2x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double2x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -135,14 +136,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double3()
         {
             double3[] values = new double3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -157,14 +158,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble3x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double3x2()
         {
             double3x2[] values = new double3x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double3x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double3x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -179,14 +180,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble3x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double3x3()
         {
             double3x3[] values = new double3x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double3x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double3x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -201,14 +202,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble3x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double3x4()
         {
             double3x4[] values = new double3x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double3x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double3x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -223,14 +224,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double4()
         {
             double4[] values = new double4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -245,14 +246,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble4x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double4x2()
         {
             double4x2[] values = new double4x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double4x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double4x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -267,14 +268,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble4x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double4x3()
         {
             double4x3[] values = new double4x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double4x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double4x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -289,14 +290,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingdouble4x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_double4x4()
         {
             double4x4[] values = new double4x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<double4x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_double4x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -311,14 +312,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void AddingfloatGivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float()
         {
             float[] values = new float[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -333,14 +334,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float2()
         {
             float2[] values = new float2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -355,14 +356,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat2x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float2x2()
         {
             float2x2[] values = new float2x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float2x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float2x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -377,14 +378,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat2x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float2x3()
         {
             float2x3[] values = new float2x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float2x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float2x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -399,14 +400,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat2x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float2x4()
         {
             float2x4[] values = new float2x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float2x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float2x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -421,14 +422,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float3()
         {
             float3[] values = new float3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -443,14 +444,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat3x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float3x2()
         {
             float3x2[] values = new float3x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float3x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float3x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -465,14 +466,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat3x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float3x3()
         {
             float3x3[] values = new float3x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float3x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float3x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -487,14 +488,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat3x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float3x4()
         {
             float3x4[] values = new float3x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float3x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float3x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -509,14 +510,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float4()
         {
             float4[] values = new float4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -531,14 +532,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat4x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float4x2()
         {
             float4x2[] values = new float4x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float4x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float4x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -553,14 +554,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat4x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float4x3()
         {
             float4x3[] values = new float4x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float4x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float4x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -575,14 +576,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingfloat4x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_float4x4()
         {
             float4x4[] values = new float4x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<float4x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_float4x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -597,14 +598,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void AddingintGivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int()
         {
             int[] values = new int[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -619,14 +620,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int2()
         {
             int2[] values = new int2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -641,14 +642,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint2x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int2x2()
         {
             int2x2[] values = new int2x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int2x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int2x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -663,14 +664,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint2x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int2x3()
         {
             int2x3[] values = new int2x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int2x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int2x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -685,14 +686,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint2x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int2x4()
         {
             int2x4[] values = new int2x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int2x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int2x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -707,14 +708,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int3()
         {
             int3[] values = new int3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -729,14 +730,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint3x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int3x2()
         {
             int3x2[] values = new int3x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int3x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int3x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -751,14 +752,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint3x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int3x3()
         {
             int3x3[] values = new int3x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int3x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int3x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -773,14 +774,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint3x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int3x4()
         {
             int3x4[] values = new int3x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int3x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int3x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -795,14 +796,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int4()
         {
             int4[] values = new int4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -817,14 +818,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint4x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int4x2()
         {
             int4x2[] values = new int4x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int4x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int4x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -839,14 +840,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint4x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int4x3()
         {
             int4x3[] values = new int4x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int4x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int4x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -861,14 +862,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addingint4x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_int4x4()
         {
             int4x4[] values = new int4x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<int4x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_int4x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -883,14 +884,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void AddinguintGivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint()
         {
             uint[] values = new uint[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -905,14 +906,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint2()
         {
             uint2[] values = new uint2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -927,14 +928,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint2x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint2x2()
         {
             uint2x2[] values = new uint2x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint2x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint2x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -949,14 +950,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint2x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint2x3()
         {
             uint2x3[] values = new uint2x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint2x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint2x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -971,14 +972,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint2x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint2x4()
         {
             uint2x4[] values = new uint2x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint2x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint2x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -993,14 +994,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint3()
         {
             uint3[] values = new uint3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1015,14 +1016,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint3x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint3x2()
         {
             uint3x2[] values = new uint3x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint3x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint3x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1037,14 +1038,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint3x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint3x3()
         {
             uint3x3[] values = new uint3x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint3x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint3x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1059,14 +1060,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint3x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint3x4()
         {
             uint3x4[] values = new uint3x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint3x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint3x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1081,14 +1082,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint4()
         {
             uint4[] values = new uint4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1103,14 +1104,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint4x2GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint4x2()
         {
             uint4x2[] values = new uint4x2[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint4x2>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint4x2()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1125,14 +1126,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint4x3GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint4x3()
         {
             uint4x3[] values = new uint4x3[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint4x3>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint4x3()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 
@@ -1147,14 +1148,14 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
-        public void Addinguint4x4GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_uint4x4()
         {
             uint4x4[] values = new uint4x4[] {0, 1, 2};
             using (var valuesArray = new NativeArray<uint4x4>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_uint4x4()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 

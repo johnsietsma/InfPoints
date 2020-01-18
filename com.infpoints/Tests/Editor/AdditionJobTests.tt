@@ -16,6 +16,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 // Disable warnings due to naming with numeric types and generated members not being used
+// ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -42,14 +43,14 @@ namespace InfPoints.Tests.Editor
 #>
 
         [Test]
-        public void Adding<#=TYPE_FULL#>GivesTheCorrectResult()
+        public void AddingGivesTheCorrectResult_<#=TYPE_FULL#>()
         {
             <#=TYPE_FULL#>[] values = new <#=TYPE_FULL#>[] {0, 1, 2};
             using (var valuesArray = new NativeArray<<#=TYPE_FULL#>>(values, Allocator.Persistent))
             {
                 var addJob = new AdditionJob_<#=TYPE_FULL#>()
                 {
-                    Data = valuesArray,
+                    Values = valuesArray,
                     NumberToAdd = 5
                 };
 

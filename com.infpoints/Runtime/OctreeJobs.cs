@@ -5,6 +5,7 @@ using Unity.Mathematics;
 
 namespace InfPoints
 {
+    /*
     public static class OctreeJobs
     {
         /// <summary>
@@ -20,7 +21,7 @@ namespace InfPoints
             int cellCount, int batchCount)
         {
             // Move the points relative to the AABB
-            var addJob = new AddJob_float3()
+            var addJob = new AdditionJob_float3()
             {
                 NumberToAdd = -aabb.Minimum,
                 Data = points
@@ -42,7 +43,7 @@ namespace InfPoints
             int cellCount, int batchCount)
         {
             float3 min = -aabb.Minimum;
-            var addJob = new AddJob_float4x3()
+            var addJob = new AdditionJob_float4x3()
             {
                 NumberToAdd = new float4x3(min.x, min.y, min.z), 
                 Data = points
@@ -59,32 +60,5 @@ namespace InfPoints
             return convertJob.Schedule(points.Length, batchCount, addJobData);
         }
     }
-    
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct QuotientDivideJob : IJobParallelFor
-    {
-        [ReadOnly] public float CellSize;
-        [ReadOnly] public NativeArray<float3> Points;
-
-        public NativeArray<uint3> Coords;
-
-        public void Execute(int index)
-        {
-            Coords[index] = Points[index].QuotientDivide(CellSize);
-        }
-    }
-    
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct QuotientDivideWideJob : IJobParallelFor
-    {
-        [ReadOnly] public float CellSize;
-        [ReadOnly] public NativeArray<float4x3> Points;
-
-        public NativeArray<uint4x3> Coords;
-
-        public void Execute(int index)
-        {
-            Coords[index] = Points[index].QuotientDivide(CellSize);
-        }
-    }
+*/
 }

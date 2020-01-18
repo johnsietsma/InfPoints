@@ -29,11 +29,11 @@ namespace InfPoints
     public struct AdditionJob_double : IJobParallelFor
     {
         [ReadOnly] public double NumberToAdd;
-        public NativeArray<double> Data;
+        public NativeArray<double> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -43,11 +43,11 @@ namespace InfPoints
     public struct AdditionJob_double2 : IJobParallelFor
     {
         [ReadOnly] public double2 NumberToAdd;
-        public NativeArray<double2> Data;
+        public NativeArray<double2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -57,11 +57,11 @@ namespace InfPoints
     public struct AdditionJob_double2x2 : IJobParallelFor
     {
         [ReadOnly] public double2x2 NumberToAdd;
-        public NativeArray<double2x2> Data;
+        public NativeArray<double2x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -71,11 +71,11 @@ namespace InfPoints
     public struct AdditionJob_double2x3 : IJobParallelFor
     {
         [ReadOnly] public double2x3 NumberToAdd;
-        public NativeArray<double2x3> Data;
+        public NativeArray<double2x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -85,11 +85,11 @@ namespace InfPoints
     public struct AdditionJob_double2x4 : IJobParallelFor
     {
         [ReadOnly] public double2x4 NumberToAdd;
-        public NativeArray<double2x4> Data;
+        public NativeArray<double2x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -99,11 +99,11 @@ namespace InfPoints
     public struct AdditionJob_double3 : IJobParallelFor
     {
         [ReadOnly] public double3 NumberToAdd;
-        public NativeArray<double3> Data;
+        public NativeArray<double3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -113,11 +113,11 @@ namespace InfPoints
     public struct AdditionJob_double3x2 : IJobParallelFor
     {
         [ReadOnly] public double3x2 NumberToAdd;
-        public NativeArray<double3x2> Data;
+        public NativeArray<double3x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -127,11 +127,11 @@ namespace InfPoints
     public struct AdditionJob_double3x3 : IJobParallelFor
     {
         [ReadOnly] public double3x3 NumberToAdd;
-        public NativeArray<double3x3> Data;
+        public NativeArray<double3x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -141,11 +141,11 @@ namespace InfPoints
     public struct AdditionJob_double3x4 : IJobParallelFor
     {
         [ReadOnly] public double3x4 NumberToAdd;
-        public NativeArray<double3x4> Data;
+        public NativeArray<double3x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -155,11 +155,11 @@ namespace InfPoints
     public struct AdditionJob_double4 : IJobParallelFor
     {
         [ReadOnly] public double4 NumberToAdd;
-        public NativeArray<double4> Data;
+        public NativeArray<double4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -169,11 +169,11 @@ namespace InfPoints
     public struct AdditionJob_double4x2 : IJobParallelFor
     {
         [ReadOnly] public double4x2 NumberToAdd;
-        public NativeArray<double4x2> Data;
+        public NativeArray<double4x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -183,11 +183,11 @@ namespace InfPoints
     public struct AdditionJob_double4x3 : IJobParallelFor
     {
         [ReadOnly] public double4x3 NumberToAdd;
-        public NativeArray<double4x3> Data;
+        public NativeArray<double4x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -197,11 +197,11 @@ namespace InfPoints
     public struct AdditionJob_double4x4 : IJobParallelFor
     {
         [ReadOnly] public double4x4 NumberToAdd;
-        public NativeArray<double4x4> Data;
+        public NativeArray<double4x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -211,11 +211,11 @@ namespace InfPoints
     public struct AdditionJob_float : IJobParallelFor
     {
         [ReadOnly] public float NumberToAdd;
-        public NativeArray<float> Data;
+        public NativeArray<float> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -225,11 +225,11 @@ namespace InfPoints
     public struct AdditionJob_float2 : IJobParallelFor
     {
         [ReadOnly] public float2 NumberToAdd;
-        public NativeArray<float2> Data;
+        public NativeArray<float2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -239,11 +239,11 @@ namespace InfPoints
     public struct AdditionJob_float2x2 : IJobParallelFor
     {
         [ReadOnly] public float2x2 NumberToAdd;
-        public NativeArray<float2x2> Data;
+        public NativeArray<float2x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -253,11 +253,11 @@ namespace InfPoints
     public struct AdditionJob_float2x3 : IJobParallelFor
     {
         [ReadOnly] public float2x3 NumberToAdd;
-        public NativeArray<float2x3> Data;
+        public NativeArray<float2x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -267,11 +267,11 @@ namespace InfPoints
     public struct AdditionJob_float2x4 : IJobParallelFor
     {
         [ReadOnly] public float2x4 NumberToAdd;
-        public NativeArray<float2x4> Data;
+        public NativeArray<float2x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -281,11 +281,11 @@ namespace InfPoints
     public struct AdditionJob_float3 : IJobParallelFor
     {
         [ReadOnly] public float3 NumberToAdd;
-        public NativeArray<float3> Data;
+        public NativeArray<float3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -295,11 +295,11 @@ namespace InfPoints
     public struct AdditionJob_float3x2 : IJobParallelFor
     {
         [ReadOnly] public float3x2 NumberToAdd;
-        public NativeArray<float3x2> Data;
+        public NativeArray<float3x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -309,11 +309,11 @@ namespace InfPoints
     public struct AdditionJob_float3x3 : IJobParallelFor
     {
         [ReadOnly] public float3x3 NumberToAdd;
-        public NativeArray<float3x3> Data;
+        public NativeArray<float3x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -323,11 +323,11 @@ namespace InfPoints
     public struct AdditionJob_float3x4 : IJobParallelFor
     {
         [ReadOnly] public float3x4 NumberToAdd;
-        public NativeArray<float3x4> Data;
+        public NativeArray<float3x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -337,11 +337,11 @@ namespace InfPoints
     public struct AdditionJob_float4 : IJobParallelFor
     {
         [ReadOnly] public float4 NumberToAdd;
-        public NativeArray<float4> Data;
+        public NativeArray<float4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -351,11 +351,11 @@ namespace InfPoints
     public struct AdditionJob_float4x2 : IJobParallelFor
     {
         [ReadOnly] public float4x2 NumberToAdd;
-        public NativeArray<float4x2> Data;
+        public NativeArray<float4x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -365,11 +365,11 @@ namespace InfPoints
     public struct AdditionJob_float4x3 : IJobParallelFor
     {
         [ReadOnly] public float4x3 NumberToAdd;
-        public NativeArray<float4x3> Data;
+        public NativeArray<float4x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -379,11 +379,11 @@ namespace InfPoints
     public struct AdditionJob_float4x4 : IJobParallelFor
     {
         [ReadOnly] public float4x4 NumberToAdd;
-        public NativeArray<float4x4> Data;
+        public NativeArray<float4x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -393,11 +393,11 @@ namespace InfPoints
     public struct AdditionJob_int : IJobParallelFor
     {
         [ReadOnly] public int NumberToAdd;
-        public NativeArray<int> Data;
+        public NativeArray<int> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -407,11 +407,11 @@ namespace InfPoints
     public struct AdditionJob_int2 : IJobParallelFor
     {
         [ReadOnly] public int2 NumberToAdd;
-        public NativeArray<int2> Data;
+        public NativeArray<int2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -421,11 +421,11 @@ namespace InfPoints
     public struct AdditionJob_int2x2 : IJobParallelFor
     {
         [ReadOnly] public int2x2 NumberToAdd;
-        public NativeArray<int2x2> Data;
+        public NativeArray<int2x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -435,11 +435,11 @@ namespace InfPoints
     public struct AdditionJob_int2x3 : IJobParallelFor
     {
         [ReadOnly] public int2x3 NumberToAdd;
-        public NativeArray<int2x3> Data;
+        public NativeArray<int2x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -449,11 +449,11 @@ namespace InfPoints
     public struct AdditionJob_int2x4 : IJobParallelFor
     {
         [ReadOnly] public int2x4 NumberToAdd;
-        public NativeArray<int2x4> Data;
+        public NativeArray<int2x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -463,11 +463,11 @@ namespace InfPoints
     public struct AdditionJob_int3 : IJobParallelFor
     {
         [ReadOnly] public int3 NumberToAdd;
-        public NativeArray<int3> Data;
+        public NativeArray<int3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -477,11 +477,11 @@ namespace InfPoints
     public struct AdditionJob_int3x2 : IJobParallelFor
     {
         [ReadOnly] public int3x2 NumberToAdd;
-        public NativeArray<int3x2> Data;
+        public NativeArray<int3x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -491,11 +491,11 @@ namespace InfPoints
     public struct AdditionJob_int3x3 : IJobParallelFor
     {
         [ReadOnly] public int3x3 NumberToAdd;
-        public NativeArray<int3x3> Data;
+        public NativeArray<int3x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -505,11 +505,11 @@ namespace InfPoints
     public struct AdditionJob_int3x4 : IJobParallelFor
     {
         [ReadOnly] public int3x4 NumberToAdd;
-        public NativeArray<int3x4> Data;
+        public NativeArray<int3x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -519,11 +519,11 @@ namespace InfPoints
     public struct AdditionJob_int4 : IJobParallelFor
     {
         [ReadOnly] public int4 NumberToAdd;
-        public NativeArray<int4> Data;
+        public NativeArray<int4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -533,11 +533,11 @@ namespace InfPoints
     public struct AdditionJob_int4x2 : IJobParallelFor
     {
         [ReadOnly] public int4x2 NumberToAdd;
-        public NativeArray<int4x2> Data;
+        public NativeArray<int4x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -547,11 +547,11 @@ namespace InfPoints
     public struct AdditionJob_int4x3 : IJobParallelFor
     {
         [ReadOnly] public int4x3 NumberToAdd;
-        public NativeArray<int4x3> Data;
+        public NativeArray<int4x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -561,11 +561,11 @@ namespace InfPoints
     public struct AdditionJob_int4x4 : IJobParallelFor
     {
         [ReadOnly] public int4x4 NumberToAdd;
-        public NativeArray<int4x4> Data;
+        public NativeArray<int4x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -575,11 +575,11 @@ namespace InfPoints
     public struct AdditionJob_uint : IJobParallelFor
     {
         [ReadOnly] public uint NumberToAdd;
-        public NativeArray<uint> Data;
+        public NativeArray<uint> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -589,11 +589,11 @@ namespace InfPoints
     public struct AdditionJob_uint2 : IJobParallelFor
     {
         [ReadOnly] public uint2 NumberToAdd;
-        public NativeArray<uint2> Data;
+        public NativeArray<uint2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -603,11 +603,11 @@ namespace InfPoints
     public struct AdditionJob_uint2x2 : IJobParallelFor
     {
         [ReadOnly] public uint2x2 NumberToAdd;
-        public NativeArray<uint2x2> Data;
+        public NativeArray<uint2x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -617,11 +617,11 @@ namespace InfPoints
     public struct AdditionJob_uint2x3 : IJobParallelFor
     {
         [ReadOnly] public uint2x3 NumberToAdd;
-        public NativeArray<uint2x3> Data;
+        public NativeArray<uint2x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -631,11 +631,11 @@ namespace InfPoints
     public struct AdditionJob_uint2x4 : IJobParallelFor
     {
         [ReadOnly] public uint2x4 NumberToAdd;
-        public NativeArray<uint2x4> Data;
+        public NativeArray<uint2x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -645,11 +645,11 @@ namespace InfPoints
     public struct AdditionJob_uint3 : IJobParallelFor
     {
         [ReadOnly] public uint3 NumberToAdd;
-        public NativeArray<uint3> Data;
+        public NativeArray<uint3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -659,11 +659,11 @@ namespace InfPoints
     public struct AdditionJob_uint3x2 : IJobParallelFor
     {
         [ReadOnly] public uint3x2 NumberToAdd;
-        public NativeArray<uint3x2> Data;
+        public NativeArray<uint3x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -673,11 +673,11 @@ namespace InfPoints
     public struct AdditionJob_uint3x3 : IJobParallelFor
     {
         [ReadOnly] public uint3x3 NumberToAdd;
-        public NativeArray<uint3x3> Data;
+        public NativeArray<uint3x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -687,11 +687,11 @@ namespace InfPoints
     public struct AdditionJob_uint3x4 : IJobParallelFor
     {
         [ReadOnly] public uint3x4 NumberToAdd;
-        public NativeArray<uint3x4> Data;
+        public NativeArray<uint3x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -701,11 +701,11 @@ namespace InfPoints
     public struct AdditionJob_uint4 : IJobParallelFor
     {
         [ReadOnly] public uint4 NumberToAdd;
-        public NativeArray<uint4> Data;
+        public NativeArray<uint4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -715,11 +715,11 @@ namespace InfPoints
     public struct AdditionJob_uint4x2 : IJobParallelFor
     {
         [ReadOnly] public uint4x2 NumberToAdd;
-        public NativeArray<uint4x2> Data;
+        public NativeArray<uint4x2> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -729,11 +729,11 @@ namespace InfPoints
     public struct AdditionJob_uint4x3 : IJobParallelFor
     {
         [ReadOnly] public uint4x3 NumberToAdd;
-        public NativeArray<uint4x3> Data;
+        public NativeArray<uint4x3> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
@@ -743,11 +743,11 @@ namespace InfPoints
     public struct AdditionJob_uint4x4 : IJobParallelFor
     {
         [ReadOnly] public uint4x4 NumberToAdd;
-        public NativeArray<uint4x4> Data;
+        public NativeArray<uint4x4> Values;
 
         public void Execute(int index)
         {
-            Data[index] = Data[index] + NumberToAdd;
+            Values[index] += NumberToAdd;
         }
     }
 
