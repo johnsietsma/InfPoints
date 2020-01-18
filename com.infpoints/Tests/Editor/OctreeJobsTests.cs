@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace InfPoints.Tests.Editor
 {
+    /*
     public class OctreeJobsTests
     {
         static readonly float3[] InsidePoints = new[]
@@ -70,5 +71,5 @@ namespace InfPoints.Tests.Editor
                 }
             }
         }
-    }
+    }*/
 }

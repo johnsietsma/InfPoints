@@ -22,7 +22,7 @@ namespace InfPoints
             // Move the points relative to the AABB
             var addJob = new AddJob_float3()
             {
-                Add = -aabb.Minimum,
+                NumberToAdd = -aabb.Minimum,
                 Data = points
             };
 
@@ -34,8 +34,8 @@ namespace InfPoints
                 Coords = coords
             };
 
-            var addJobData = addJob.Schedule(points.Length, batchCount);
-            return convertJob.Schedule(points.Length, batchCount, addJobData);
+            return addJob.Schedule(points.Length, batchCount);
+            //return convertJob.Schedule(points.Length, batchCount, addJobData);
         }
         
         public static JobHandle ScheduleConvertPointsToCoordsJobs(NativeArray<float4x3> points, NativeArray<uint4x3> coords, AABB aabb,
@@ -44,7 +44,7 @@ namespace InfPoints
             float3 min = -aabb.Minimum;
             var addJob = new AddJob_float4x3()
             {
-                Add = new float4x3(min.x, min.y, min.z), 
+                NumberToAdd = new float4x3(min.x, min.y, min.z), 
                 Data = points
             };
             
@@ -57,31 +57,6 @@ namespace InfPoints
 
             var addJobData = addJob.Schedule(points.Length, batchCount);
             return convertJob.Schedule(points.Length, batchCount, addJobData);
-        }
-    }
-
-
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct AddJob_float3 : IJobParallelFor
-    {
-        [ReadOnly] public float3 Add;
-        public NativeArray<float3> Data;
-
-        public void Execute(int index)
-        {
-            Data[index] = Data[index] + Add;
-        }
-    }
-    
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct AddJob_float4x3 : IJobParallelFor
-    {
-        [ReadOnly] public float4x3 Add;
-        public NativeArray<float4x3> Data;
-
-        public void Execute(int index)
-        {
-            Data[index] = Data[index] + Add;
         }
     }
     

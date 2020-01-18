@@ -27,7 +27,7 @@ using Unity.Mathematics;
 namespace InfPoints 
 {
 <#
-var TYPES = new string[]{"double","float","int","uint"};
+var TYPES = new []{"double","float","int","uint"};
 foreach (var TYPE in TYPES)
 {
     for (int i = 1; i <= 4; i++)
