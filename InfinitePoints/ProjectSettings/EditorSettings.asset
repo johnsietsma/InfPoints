@@ -16,8 +16,8 @@ EditorSettings:
   m_EtcTextureFastCompressor: 1
   m_EtcTextureNormalCompressor: 2
   m_EtcTextureBestCompressor: 4
-  m_ProjectGenerationIncludedExtensions: txt;xml;fnt;cd;asmdef;asmref;rsp
-  m_ProjectGenerationRootNamespace: 
+  m_ProjectGenerationIncludedExtensions: txt;xml;fnt;cd;asmdef;asmref;rsp;tt
+  m_ProjectGenerationRootNamespace: InfPoints
   m_CollabEditorSettings:
     inProgressEnabled: 1
   m_EnableTextureStreamingInEditMode: 1
