@@ -47,7 +47,7 @@ namespace InfPoints.Tests.Editor
             <#=TYPE_FULL#>[] values = new <#=TYPE_FULL#>[] {0, 1, 2};
             using (var valuesArray = new NativeArray<<#=TYPE_FULL#>>(values, Allocator.Persistent))
             {
-                var addJob = new AddJob_<#=TYPE_FULL#>()
+                var addJob = new AdditionJob_<#=TYPE_FULL#>()
                 {
                     Data = valuesArray,
                     NumberToAdd = 5

@@ -43,7 +43,7 @@ foreach (var TYPE in TYPES)
     /// Add a number to every element of a NativeArray.
     /// The addition is done in place.
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct AddJob_<#=TYPE_FULL#> : IJobParallelFor
+    public struct AdditionJob_<#=TYPE_FULL#> : IJobParallelFor
     {
         [ReadOnly] public <#=TYPE_FULL#> NumberToAdd;
         public NativeArray<<#=TYPE_FULL#>> Data;
