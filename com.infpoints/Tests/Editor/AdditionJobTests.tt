@@ -12,8 +12,10 @@
 
 using NUnit.Framework;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.PerformanceTesting;
 
 // Disable warnings due to naming with numeric types and generated members not being used
 // ReSharper disable IdentifierTypo
@@ -27,6 +29,48 @@ namespace InfPoints.Tests.Editor
     public class AddJobTests
     {
 
+        [Test]
+        [Performance]
+        public void PerformanceAddingFloat()
+        {
+                const int valuesCount = 5_000_000;
+                using (var values = new NativeArray<float>(valuesCount, Allocator.Persistent))
+                {
+                    Measure.Method(() =>
+                    {
+                        var addJob = new AdditionJob_float()
+                        {
+                            Values = values,
+                            NumberToAdd = 5
+                        };
+
+                        var addJobHandle = addJob.Schedule(values.Length, 1024);
+                        addJobHandle.Complete();
+                    }).IterationsPerMeasurement(15).Run();
+                }
+        }
+        
+        [Test]
+        [Performance]
+        public void PerformanceAddingFloat4()
+        {
+            const int valuesCount = 5_000_000;
+            using (var values = new NativeArray<float>(valuesCount, Allocator.Persistent))
+            {
+                var valuesWide = values.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                Measure.Method(() =>
+                {
+                    var addJob = new AdditionJob_float4()
+                    {
+                        Values = valuesWide,
+                        NumberToAdd = 5
+                    };
+
+                    var addJobHandle = addJob.Schedule(valuesWide.Length, 1024);
+                    addJobHandle.Complete();
+                }).IterationsPerMeasurement(15).Run();
+            }
+        }
 <#
             var TYPES = new [] {"double", "float", "int", "uint"};
             foreach (var TYPE in TYPES)
@@ -54,7 +98,7 @@ namespace InfPoints.Tests.Editor
                     NumberToAdd = 5
                 };
 
-                var addJobHandle = addJob.Schedule(valuesArray.Length, 4);
+                var addJobHandle = addJob.Schedule(values.Length, 1024);
                 addJobHandle.Complete();
 
                 for (int i = 0; i < values.Length; i++)
