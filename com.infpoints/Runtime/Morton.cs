@@ -106,16 +106,6 @@ namespace InfPoints
         }
 
         [Conditional("DEBUG")]
-        static void DebugCheckLimits32(uint4 packedCoordinate)
-        {
-            if (math.cmax(packedCoordinate) > MaxCoordinateValue32)
-            {
-                throw new OverflowException(
-                    $"One of the coordinates in {packedCoordinate} is larger then the maximum {MaxCoordinateValue32}");
-            }
-        }
-        
-        [Conditional("DEBUG")]
         static void DebugCheckLimits32(uint3 coordinates)
         {
             if (math.cmax(coordinates) > MaxCoordinateValue32)
@@ -124,7 +114,17 @@ namespace InfPoints
                     $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
             }
         }
-        
+
+        [Conditional("DEBUG")]
+        static void DebugCheckLimits32(uint4 packedCoordinate)
+        {
+            if (math.cmax(packedCoordinate) > MaxCoordinateValue32)
+            {
+                throw new OverflowException(
+                    $"One of the coordinates in {packedCoordinate} is larger then the maximum {MaxCoordinateValue32}");
+            }
+        }
+
         [Conditional("DEBUG")]
         static void DebugCheckLimits64(uint3 coordinates)
         {
@@ -132,6 +132,16 @@ namespace InfPoints
             {
                 throw new OverflowException(
                     $"An element of coordinates {coordinates} is larger then the maximum {MaxCoordinateValue32}");
+            }
+        }
+        
+        [Conditional("DEBUG")]
+        static void DebugCheckLimits64(uint4 packedCoordinate)
+        {
+            if (math.cmax(packedCoordinate) > MaxCoordinateValue64)
+            {
+                throw new OverflowException(
+                    $"An element of coordinates {packedCoordinate} is larger then the maximum {MaxCoordinateValue32}");
             }
         }
 
@@ -144,6 +154,18 @@ namespace InfPoints
             x = (x ^ (x << 8)) &  0b0000_0011_0000_0000_1111_0000_0000_1111;  // x = ---- --98 ---- ---- 7654 ---- ---- 3210
             x = (x ^ (x << 4)) &  0b0000_0011_0000_1100_0011_0000_1100_0011;  // x = ---- --98 ---- 76-- --54 ---- 32-- --10
             x = (x ^ (x << 2)) &  0b0000_1001_0010_0100_1001_0010_0100_1001;  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
+            return x;
+        }
+        
+        // SIMD friendly version
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static uint4 Part1By2_32(uint4 x)
+        {
+            x &= 0x000003ff;                  // x = ---- ---- ---- ---- ---- --98 7654 3210
+            x = (x ^ (x << 16)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
+            x = (x ^ (x << 8)) & 0x0300f00f;  // x = ---- --98 ---- ---- 7654 ---- ---- 3210
+            x = (x ^ (x << 4)) & 0x030c30c3;  // x = ---- --98 ---- 76-- --54 ---- 32-- --10
+            x = (x ^ (x << 2)) & 0x09249249;  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
             return x;
         }
         
@@ -170,7 +192,7 @@ namespace InfPoints
             x64 = (x64 ^ (x64 << 2)) &  0b0001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001;  
             return x64;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static uint Compact1By2_32(uint x)
         {
@@ -181,45 +203,7 @@ namespace InfPoints
             x = (x ^ (x >> 16)) & 0b0000_0000_0000_0000_0000_0011_1111_1111;  // x = ---- ---- ---- ---- ---- --98 7654 3210
             return x;
         }
-
-
-        // Inverse of Part1By2 - "delete" all bits not at positions divisible by 3
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint Compact1By2_64(ulong x)
-        {
-            //                  x = ---1 --0- -9-- 8--7 --6- -5-- 4--3 --1- -0-- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
-            x &=                  0b0001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001;  
-            
-            //                  x = ---0 ---- 98-- --76 ---- 54-- --32 ---- 10-- --98 ---- 76-- --54 ---- 32-- --10
-            x = (x ^ (x >> 2)) &  0b0001_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011;
-
-            //                  x = ---0 ---- ---- 9876 ---- ---- 5432 ---- ---- 1098 ---- ---- 7654 ---- ---- 3210
-            x = (x ^ (x >> 4)) &  0b0001_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111;
-            
-            //                  x = ---- ---0 9876 ---- ---- ---- ---- 5432 1098 ---- ---- ---- ---- 7654 3210
-            x = (x ^ (x >> 8)) &  0b0000_0001_1111_0000_0000_0000_0000_1111_1111_0000_0000_0000_0000_1111_1111;
-            
-            //                  x = ---- ---0 9876 ---- ---- ---- ---- ---- ---- ---- ---- 5432 1098 7654 3210
-            x = (x ^ (x >> 16)) & 0b0000_0001_1111_0000_0000_0000_0000_0000_0000_0000_0000_1111_1111_1111_1111;
-
-            //                  x = ---- ---- ---- ---- ---- ---- ---- ---- ---- ---0 9876 5432 1098 7654 3210
-            x = (x ^ (x >> 32)) & 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_1111_1111_1111_1111_1111;
-
-            return (uint)x;
-        }
-
-        // SIMD friendly version
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static uint4 Part1By2_32(uint4 x)
-        {
-            x &= 0x000003ff;                  // x = ---- ---- ---- ---- ---- --98 7654 3210
-            x = (x ^ (x << 16)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
-            x = (x ^ (x << 8)) & 0x0300f00f;  // x = ---- --98 ---- ---- 7654 ---- ---- 3210
-            x = (x ^ (x << 4)) & 0x030c30c3;  // x = ---- --98 ---- 76-- --54 ---- 32-- --10
-            x = (x ^ (x << 2)) & 0x09249249;  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
-            return x;
-        }
-
+        
         // SIMD friendly version
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static uint4 Compact1By2_32(uint4 x)
@@ -230,6 +214,31 @@ namespace InfPoints
             x = (x ^ (x >> 8)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
             x = (x ^ (x >> 16)) & 0x000003ff; // x = ---- ---- ---- ---- ---- --98 7654 3210
             return x;
+        }
+
+        // Inverse of Part1By2 - "delete" all bits not at positions divisible by 3
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static uint Compact1By2_64(ulong x)
+        {
+            //                  x = ---1 --0- -9-- 8--7 --6- -5-- 4--3 --1- -0-- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
+            x &= 0b0001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001_0010_0100_1001;
+
+            //                  x = ---0 ---- 98-- --76 ---- 54-- --32 ---- 10-- --98 ---- 76-- --54 ---- 32-- --10
+            x = (x ^ (x >> 2)) & 0b0001_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011_0000_1100_0011;
+
+            //                  x = ---0 ---- ---- 9876 ---- ---- 5432 ---- ---- 1098 ---- ---- 7654 ---- ---- 3210
+            x = (x ^ (x >> 4)) & 0b0001_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111_0000_0000_1111;
+
+            //                  x = ---- ---0 9876 ---- ---- ---- ---- 5432 1098 ---- ---- ---- ---- 7654 3210
+            x = (x ^ (x >> 8)) & 0b0000_0001_1111_0000_0000_0000_0000_1111_1111_0000_0000_0000_0000_1111_1111;
+
+            //                  x = ---- ---0 9876 ---- ---- ---- ---- ---- ---- ---- ---- 5432 1098 7654 3210
+            x = (x ^ (x >> 16)) & 0b0000_0001_1111_0000_0000_0000_0000_0000_0000_0000_0000_1111_1111_1111_1111;
+
+            //                  x = ---- ---- ---- ---- ---- ---- ---- ---- ---- ---0 9876 5432 1098 7654 3210
+            x = (x ^ (x >> 32)) & 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0001_1111_1111_1111_1111_1111;
+
+            return (uint) x;
         }
     }
 }
