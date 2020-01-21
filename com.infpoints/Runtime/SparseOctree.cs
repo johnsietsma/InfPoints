@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace InfPoints
 {
@@ -16,6 +17,8 @@ namespace InfPoints
     /// </summary>
     public class SparseOctree<T> : IDisposable where T : unmanaged
     {
+        public const int MaxLevelCount = 7;
+            
         public bool IsCreated => m_Levels != null;
 
         public int LevelCount { get; private set; }
@@ -26,12 +29,17 @@ namespace InfPoints
         readonly Allocator m_Allocator;
         List<NativeSparseArray<T>> m_Levels;
 
-        public SparseOctree(AABB aabb, int initialLevelCount, Allocator allocator)
+        public SparseOctree(AABB aabb, Allocator allocator)
         {
             AABB = aabb;
             m_Allocator = allocator;
-            m_Levels = new List<NativeSparseArray<T>>(initialLevelCount);
+            m_Levels = new List<NativeSparseArray<T>>(MaxLevelCount);
             LevelCount = 0;
+        }
+        
+        public static int GetCellCount(int levelIndex)
+        {
+            return (int)math.pow(2, levelIndex);
         }
 
         public void AddLevel(int maxNodeCountForLevel)
