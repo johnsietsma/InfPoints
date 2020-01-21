@@ -85,6 +85,7 @@ namespace InfPoints.Tests.Editor
     public class MortonTests
     {
         static readonly int NUM_COORDS = 1000000;
+        const int InnerLoopBatchCont = 64;
 
         private static uint3[] WellKnownCoordinates32 { get; } =
         {
@@ -371,8 +372,8 @@ namespace InfPoints.Tests.Editor
                 Coordinates = m_Coordinates32Decoded
             };
 
-            var encodeJobHandle = encodeJob.Schedule();
-            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+            var encodeJobHandle = encodeJob.Schedule(m_Coordinates32.Length, InnerLoopBatchCont);
+            var decodeJobHandle = decodeJob.Schedule(m_Codes32.Length, InnerLoopBatchCont, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }
@@ -391,8 +392,8 @@ namespace InfPoints.Tests.Editor
                 Coordinates = m_Coordinates64Decoded
             };
 
-            var encodeJobHandle = encodeJob.Schedule();
-            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+            var encodeJobHandle = encodeJob.Schedule(m_Coordinates64.Length, InnerLoopBatchCont);
+            var decodeJobHandle = decodeJob.Schedule(m_Codes64.Length, InnerLoopBatchCont, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }

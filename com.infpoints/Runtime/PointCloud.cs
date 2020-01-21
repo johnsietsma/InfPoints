@@ -20,17 +20,21 @@ namespace InfPoints
         public void AddPoints(XYZSoA<float> points)
         {
             int levelIndex = 0;
+
             var pointsWide = points.Reinterpret<float4>();
-            
-            var transformHandle = TransformPoints(pointsWide, -m_Octree.AABB.Minimum);
+            var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob);
+            var coordinatesWide = coordinates.Reinterpret<uint4>();
+            var codes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
 
             int cellCount = SparseOctree<int>.GetCellCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
-            var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob);
-            var coordinatesWide = coordinates.Reinterpret<uint4>();
-            var pointsToCoordinatesHandle = PointsToCoordinates(pointsWide, coordinatesWide, cellCount, transformHandle);
+
+            var transformHandle = TransformPoints(pointsWide, -m_Octree.AABB.Minimum);
+            var pointsToCoordinatesHandle = PointsToCoordinates(pointsWide, coordinatesWide, cellWidth, transformHandle);
+            var mortonCodeHandle = CoordinatesToMortonCode(coordinates, codes, pointsToCoordinatesHandle);
             
             coordinates.Dispose();
+            codes.Dispose();
         }
 
         static JobHandle TransformPoints(XYZSoA<float4> pointsWide, float3 numberToAdd)
@@ -55,7 +59,7 @@ namespace InfPoints
             return JobUtils.ScheduleMultiple(pointsWide.X.Length, InnerLoopBatchCount, spaceConvertJobX, spaceConvertJobY, spaceConvertJobZ);
         }
 
-        static JobHandle PointsToCoordinates(XYZSoA<float4> points, XYZSoA<uint4> coordinates, float divisionAmount, JobHandle jobDeps)
+        static JobHandle PointsToCoordinates(XYZSoA<float4> points, XYZSoA<uint4> coordinates, float divisionAmount, JobHandle dependsOn)
         {
             var convertJobX = new IntegerDivisionJob_float4_uint4()
             {
@@ -78,8 +82,21 @@ namespace InfPoints
                 Quotients = coordinates.Z
             };
 
-            return JobUtils.ScheduleMultiple(points.Length, InnerLoopBatchCount, jobDeps, convertJobX, convertJobY,
+            return JobUtils.ScheduleMultiple(points.Length, InnerLoopBatchCount, dependsOn, convertJobX, convertJobY,
                 convertJobZ);
+        }
+        
+        static JobHandle CoordinatesToMortonCode(XYZSoA<uint> coordinates, NativeArray<ulong> codes, JobHandle dependsOn)
+        {
+            var mortonEncodeJob = new Morton64SoAEncodeJob()
+            {
+                CoordinatesX = coordinates.X,
+                CoordinatesY = coordinates.Y,
+                CoordinatesZ = coordinates.Z,
+                Codes = codes
+            };
+
+            return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount, dependsOn);
         }
     }
 }
