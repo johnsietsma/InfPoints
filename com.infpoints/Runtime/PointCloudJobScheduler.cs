@@ -1,4 +1,5 @@
 ﻿using InfPoints.Jobs;
+using JacksonDunstan.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -73,7 +74,7 @@ namespace InfPoints
             return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount);
         }
 
-        public static JobHandle ScheduleCollectUniqueMortonCodes(NativeArray<ulong> codes, NativeHashMap<ulong, int> uniqueHash)
+        public static JobHandle ScheduleCollectUniqueMortonCodes(NativeArray<ulong> codes, NativeHashSet<ulong> uniqueHash)
         {
             return new CollectUniqueJob<ulong>()
             {

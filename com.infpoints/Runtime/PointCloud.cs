@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using JacksonDunstan.NativeCollections;
+using Unity.Collections;
 using Unity.Mathematics;
 
 namespace InfPoints
@@ -25,7 +26,7 @@ namespace InfPoints
             var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob);
             var coordinatesWide = coordinates.Reinterpret<uint4>();
             var codes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
-            var uniqueCodes = new NativeHashMap<ulong,int>(cellCount, Allocator.TempJob);
+            var uniqueCodes = new NativeHashSet<ulong>(cellCount, Allocator.TempJob);
             var indices = new NativeList<int>();
 
             var transformHandle = PointCloudJobScheduler.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
