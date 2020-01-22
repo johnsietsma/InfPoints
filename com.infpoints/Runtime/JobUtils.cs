@@ -1,6 +1,5 @@
 ﻿using Unity.Collections;
 using Unity.Jobs;
-using UnityEditor;
 
 namespace InfPoints
 {
