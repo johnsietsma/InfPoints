@@ -26,12 +26,13 @@ namespace InfPoints
             var coordinatesWide = coordinates.Reinterpret<uint4>();
             var codes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
             var uniqueCodes = new NativeHashMap<ulong,int>(cellCount, Allocator.TempJob);
-
+            var indices = new NativeList<int>();
 
             var transformHandle = PointCloudJobScheduler.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
             var pointsToCoordinatesHandle = PointCloudJobScheduler.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
             var mortonCodeHandle = PointCloudJobScheduler.ScheduleCoordinatesToMortonCode(coordinates, codes);
-            var uniqueCodesHandle = PointCloudJobScheduler.ScheduleCollectUniqueMortonCode(codes, uniqueCodes);
+            var uniqueCodesHandle = PointCloudJobScheduler.ScheduleCollectUniqueMortonCodes(codes, uniqueCodes);
+            var uniqueFilteredCodeHandle = PointCloudJobScheduler.ScheduleAppendNodeFullFilter(m_PointStorage.GetValueArray(Allocator.Temp), uniqueCodesHandle, indices);
             
             coordinates.Dispose();
             codes.Dispose();

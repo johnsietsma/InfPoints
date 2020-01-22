@@ -7,7 +7,7 @@ namespace InfPoints
 {
     public static class PointCloudJobScheduler
     {
-        const int InnerLoopBatchCount = 1024;
+        const int InnerLoopBatchCount = 128;
 
         public static JobHandle ScheduleTransformPoints(XYZSoA<float4> pointsWide, float3 numberToAdd)
         {
@@ -73,16 +73,21 @@ namespace InfPoints
             return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount);
         }
 
-        public static JobHandle ScheduleCollectUniqueMortonCode(NativeArray<ulong> codes,
-            NativeHashMap<ulong, int> uniqueHash)
+        public static JobHandle ScheduleCollectUniqueMortonCodes(NativeArray<ulong> codes, NativeHashMap<ulong, int> uniqueHash)
         {
-            var uniqueJob = new CollectUniqueJob<ulong>()
+            return new CollectUniqueJob<ulong>()
             {
                 Values = codes,
                 UniqueValues = uniqueHash
-            };
+            }.Schedule();
+        }
 
-            return uniqueJob.Schedule();
+        public static JobHandle ScheduleAppendNodeFullFilter(NativeArray<NodeStorage> nodeStorage, JobHandle uniqueCodesHandle, NativeList<int> indices)
+        {
+            return new FilterFullNodesJob()
+            {
+                NodeStorage = nodeStorage
+            }.ScheduleAppend(indices, nodeStorage.Length, InnerLoopBatchCount, uniqueCodesHandle);
         }
     }
 }

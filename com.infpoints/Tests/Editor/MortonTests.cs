@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using InfPoints.Jobs;
 using NUnit.Framework;
 using Unity.Burst;
 using Unity.Collections;
