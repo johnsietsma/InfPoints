@@ -32,7 +32,7 @@ namespace InfPoints
         }
 
         public static JobHandle SchedulePointsToCoordinates(XYZSoA<float4> points, XYZSoA<uint4> coordinates,
-            float divisionAmount, JobHandle dependsOn)
+            float divisionAmount)
         {
             var convertJobX = new IntegerDivisionJob_float4_uint4()
             {
@@ -55,12 +55,11 @@ namespace InfPoints
                 Quotients = coordinates.Z
             };
 
-            return JobUtils.ScheduleMultiple(points.Length, InnerLoopBatchCount, dependsOn, convertJobX, convertJobY,
+            return JobUtils.ScheduleMultiple(points.Length, InnerLoopBatchCount, convertJobX, convertJobY,
                 convertJobZ);
         }
 
-        public static JobHandle ScheduleCoordinatesToMortonCode(XYZSoA<uint> coordinates, NativeArray<ulong> codes,
-            JobHandle dependsOn)
+        public static JobHandle ScheduleCoordinatesToMortonCode(XYZSoA<uint> coordinates, NativeArray<ulong> codes)
         {
             var mortonEncodeJob = new Morton64SoAEncodeJob()
             {
@@ -70,7 +69,19 @@ namespace InfPoints
                 Codes = codes
             };
 
-            return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount, dependsOn);
+            return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount);
+        }
+
+        public static JobHandle ScheduleCollectUniqueMortonCode(NativeArray<ulong> codes,
+            NativeHashMap<ulong, int> uniqueHash)
+        {
+            var uniqueJob = new CollectUniqueJob<ulong>()
+            {
+                Values = codes,
+                UniqueValues = uniqueHash
+            };
+
+            return uniqueJob.Schedule();
         }
     }
 }
