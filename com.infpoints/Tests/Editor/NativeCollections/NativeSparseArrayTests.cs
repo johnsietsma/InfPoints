@@ -6,7 +6,7 @@ using Unity.Collections;
 
 // ReSharper disable HeapView.BoxingAllocation
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.NativeCollections
 {
     public class NativeSparseArrayTests
     {

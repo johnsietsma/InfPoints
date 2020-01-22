@@ -7,7 +7,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.NativeCollections
 {
 
     public class NativeSparseArrayJobTests

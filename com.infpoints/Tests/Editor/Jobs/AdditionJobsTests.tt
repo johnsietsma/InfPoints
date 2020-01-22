@@ -10,6 +10,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using InfPoints.Jobs;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -24,7 +25,7 @@ using Unity.PerformanceTesting;
 // ReSharper disable UnassignedField.Global
 // ReSharper disable UnusedType.Global
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.Jobs
 {
     public class AddJobTests
     {

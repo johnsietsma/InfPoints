@@ -21,36 +21,34 @@ using Unity.Mathematics;
 // ReSharper disable UnassignedField.Global
 // ReSharper disable UnusedType.Global
 
-/// ParallelFor Jobs for simple addition of numbers to elements of NativeArrays.
-/// Each numeric type of Unity.Mathematics is supported; double, float, int and uint.
-/// Each dimension is supported 2,3,4,2x2,2x3,2x4, etc.
-namespace InfPoints 
+namespace InfPoints.Jobs
 {
 <#
-var TYPES = new []{"double","float","int","uint"};
+var TYPES = new []{"double","float"};
 foreach (var TYPE in TYPES)
 {
-    for (int i = 1; i <= 4; i++)
+    for (int DIM = 1; DIM <= 4; DIM++)
     {
-        for (int j = 1; j <= 4; j++)
+        for (int SIGNED = 0; SIGNED < 2; SIGNED++)
         {
-            string NUM1 = i==1 ? "" : i.ToString();
-            if (i == 1 && j > 1) break;
-            string SEP = j==1 ? "" : "x";
-            string NUM2 = j==1 ? "" : j.ToString();
-            var TYPE_FULL = $"{TYPE}{NUM1}{SEP}{NUM2}";
+            string NUM = DIM == 1 ? "" : DIM.ToString();
+            var TYPE_FULL = $"{TYPE}{NUM}";
+            var SIGNED_PREFIX = SIGNED == 0 ? "" : "u";
+            var QUOTIENT = $"{SIGNED_PREFIX}int{NUM}";
 #>
-    /// Add a number to every element of a NativeArray.
-    /// The addition is done in place.
+    /// Divide all the values in the array by a divisor, storing the quotient.
+    /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
+    /// For example `IntegerDivision_float3_uint3`.
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct AdditionJob_<#=TYPE_FULL#> : IJobParallelFor
+    public struct IntegerDivisionJob_<#=TYPE_FULL #>_<#=QUOTIENT #> : IJobParallelFor
     {
-        [ReadOnly] public <#=TYPE_FULL#> NumberToAdd;
-        public NativeArray<<#=TYPE_FULL#>> Values;
+        [ReadOnly] public <#=TYPE_FULL #> Divisor;
+        [ReadOnly] public NativeArray<<#=TYPE_FULL #>> Values;
+        public NativeArray<<#=QUOTIENT #>> Quotients;
 
         public void Execute(int index)
         {
-            Values[index] += NumberToAdd;
+            Quotients[index] = (<#=QUOTIENT #>) math.floor(Values[index] / Divisor);
         }
     }
 

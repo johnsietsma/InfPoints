@@ -3,7 +3,7 @@ using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.NativeCollections
 {
     public class NativeCollectionExtensionsTests
     {

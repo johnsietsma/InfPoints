@@ -18,7 +18,7 @@ using Unity.Mathematics;
 // ReSharper disable UnassignedField.Global
 // ReSharper disable UnusedType.Global
 
-namespace InfPoints 
+namespace InfPoints.Jobs
 {
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.

@@ -7,6 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using InfPoints.Jobs;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -21,7 +22,7 @@ using Unity.PerformanceTesting;
 // ReSharper disable UnassignedField.Global
 // ReSharper disable UnusedType.Global
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.Jobs
 {
     public class AddJobTests
     {
@@ -63,7 +64,7 @@ namespace InfPoints.Tests.Editor
                         NumberToAdd = 5
                     };
 
-                    var addJobHandle = addJob.Schedule(valuesWide.Length, 1024/4);
+                    var addJobHandle = addJob.Schedule(valuesWide.Length, 1024);
                     addJobHandle.Complete();
                 }).IterationsPerMeasurement(15).Run();
             }

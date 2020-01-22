@@ -21,7 +21,7 @@ using Unity.Mathematics;
 /// ParallelFor Jobs for simple addition of numbers to elements of NativeArrays.
 /// Each numeric type of Unity.Mathematics is supported; double, float, int and uint.
 /// Each dimension is supported 2,3,4,2x2,2x3,2x4, etc.
-namespace InfPoints 
+namespace InfPoints.Jobs 
 {
     /// Add a number to every element of a NativeArray.
     /// The addition is done in place.

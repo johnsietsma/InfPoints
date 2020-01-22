@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
+﻿using InfPoints.Jobs;
+using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace InfPoints.Tests.Editor
+namespace InfPoints.Tests.Editor.Jobs
 {
     public class CollectUniqueJobTests
     {
@@ -22,13 +23,11 @@ namespace InfPoints.Tests.Editor
 
                 var uniqueValues = new NativeList<int>(uniqueMap.Length, Allocator.Persistent);
 
-                var toArrayJob = new NativeHashMapGetValuesJob<int>()
-                {
-                    UniqueHash = uniqueMap,
-                    UniqueValues = uniqueValues
-                };
+                var toArrayJob = new NativeHashMapGetValuesJob<int>();
+                toArrayJob.UniqueHash = uniqueMap;
+                toArrayJob.UniqueValues = uniqueValues;
 
-                
+
                 var collectUniqueJobHandle = uniqueJob.Schedule();
                 collectUniqueJobHandle.Complete();
 
