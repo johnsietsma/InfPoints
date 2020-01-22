@@ -43,7 +43,6 @@ namespace InfPoints.Jobs
         }
     }
 
-
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton32DecodeJob : IJobParallelFor
     {

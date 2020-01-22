@@ -10,85 +10,42 @@ namespace InfPoints
     {
         const int InnerLoopBatchCount = 128;
 
-        public static JobHandle ScheduleTransformPoints(XYZSoA<float4> pointsWide, float3 numberToAdd)
+        public static JobHandle ScheduleTransformPoints(Float3SoA<float4> float3, float3 numberToAdd)
         {
-            // Convert points to Octree AABB space
-            var spaceConvertJobX = new AdditionJob_float4()
+            NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(3, Allocator.Temp); 
+            for (int index=0; index<3; index++)
             {
-                Values = pointsWide.X,
-                NumberToAdd = -numberToAdd.x
-            };
-            var spaceConvertJobY = new AdditionJob_float4()
-            {
-                Values = pointsWide.Y,
-                NumberToAdd = -numberToAdd.y
-            };
-            var spaceConvertJobZ = new AdditionJob_float4()
-            {
-                Values = pointsWide.Z,
-                NumberToAdd = -numberToAdd.z
-            };
+                // Convert points to Octree AABB space
+                jobHandles[index] = new AdditionJob_float4()
+                {
+                    Values = float3[index],
+                    NumberToAdd = -numberToAdd[index]
+                }.Schedule(float3.Length, InnerLoopBatchCount);
+            }
 
-            return JobUtils.ScheduleMultiple(pointsWide.X.Length, InnerLoopBatchCount, spaceConvertJobX,
-                spaceConvertJobY, spaceConvertJobZ);
+            var combinedHandle = JobHandle.CombineDependencies(jobHandles);
+            jobHandles.Dispose();
+            return combinedHandle;
         }
 
-        public static JobHandle SchedulePointsToCoordinates(XYZSoA<float4> points, XYZSoA<uint4> coordinates,
+        public static JobHandle SchedulePointsToCoordinates(Float3SoA<float4> float3, Float3SoA<uint4> coordinates,
             float divisionAmount)
         {
-            var convertJobX = new IntegerDivisionJob_float4_uint4()
+            NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(3, Allocator.Temp); 
+            for (int index=0; index<3; index++)
             {
-                Values = points.X,
-                Divisor = divisionAmount,
-                Quotients = coordinates.X
-            };
+                // Convert points to Octree AABB space
+                jobHandles[index] = new IntegerDivisionJob_float4_uint4()
+                {
+                    Values = float3[index],
+                    Divisor = divisionAmount,
+                    Quotients = coordinates[index]
+                }.Schedule(float3.Length, InnerLoopBatchCount);
+            }
 
-            var convertJobY = new IntegerDivisionJob_float4_uint4()
-            {
-                Values = points.Y,
-                Divisor = divisionAmount,
-                Quotients = coordinates.Y
-            };
-
-            var convertJobZ = new IntegerDivisionJob_float4_uint4()
-            {
-                Values = points.Z,
-                Divisor = divisionAmount,
-                Quotients = coordinates.Z
-            };
-
-            return JobUtils.ScheduleMultiple(points.Length, InnerLoopBatchCount, convertJobX, convertJobY,
-                convertJobZ);
-        }
-
-        public static JobHandle ScheduleCoordinatesToMortonCode(XYZSoA<uint> coordinates, NativeArray<ulong> codes)
-        {
-            var mortonEncodeJob = new Morton64SoAEncodeJob()
-            {
-                CoordinatesX = coordinates.X,
-                CoordinatesY = coordinates.Y,
-                CoordinatesZ = coordinates.Z,
-                Codes = codes
-            };
-
-            return mortonEncodeJob.Schedule(coordinates.Length, InnerLoopBatchCount);
-        }
-
-        public static JobHandle ScheduleCollectUniqueMortonCodes(NativeArray<ulong> codes, NativeHashSet<ulong> uniqueHash)
-        {
-            return new CollectUniqueJob<ulong>()
-            {
-                Values = codes,
-                UniqueValues = uniqueHash
-            }.Schedule();
-        }
-
-        public static JobHandle ScheduleAppendNodeFullFilter(NativeArray<NodeStorage> nodeStorage, JobHandle uniqueCodesHandle, NativeList<int> indices)
-        {
-            return new FilterFullNodesJob()
-            {
-                NodeStorage = nodeStorage
-            }.ScheduleAppend(indices, nodeStorage.Length, InnerLoopBatchCount, uniqueCodesHandle);
+            var combinedHandle = JobHandle.CombineDependencies(jobHandles);
+            jobHandles.Dispose();
+            return combinedHandle;
         }
     }
 }
