@@ -25,9 +25,16 @@ namespace InfPoints
             return new XYZSoA<U>()
             {
                 X = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
-                Y = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
-                Z = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>())
+                Y = Y.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
+                Z = Z.Reinterpret<U>(UnsafeUtility.SizeOf<T>())
             };
+        }
+
+        public void CopyFrom(XYZSoA<T> array)
+        {
+            X.CopyFrom(array.X);
+            Y.CopyFrom(array.Y);
+            Z.CopyFrom(array.Z);
         }
 
         public void Dispose()

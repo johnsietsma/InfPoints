@@ -5,14 +5,14 @@ namespace InfPoints
 {
     public class PointCloud
     {
-        SparseOctree<int> m_Octree;
-        NativeHashMap<int, int> m_PointStorage;
+        SparseOctree<Node> m_Octree;
+        NativeHashMap<Node, NodeStorage> m_PointStorage;
 
 
         public PointCloud(AABB aabb)
         {
-            m_Octree = new SparseOctree<int>(aabb, Allocator.Persistent);
-            m_PointStorage = new NativeHashMap<int, int>(1024, Allocator.Persistent);
+            m_Octree = new SparseOctree<Node>(aabb, Allocator.Persistent);
+            m_PointStorage = new NativeHashMap<Node, NodeStorage>(1024, Allocator.Persistent);
         }
 
         public void AddPoints(XYZSoA<float> points)
@@ -36,6 +36,5 @@ namespace InfPoints
             coordinates.Dispose();
             codes.Dispose();
         }
-        
     }
 }
