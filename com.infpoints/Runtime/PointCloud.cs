@@ -28,10 +28,10 @@ namespace InfPoints
             var uniqueCodes = new NativeHashMap<ulong,int>(cellCount, Allocator.TempJob);
 
 
-            var transformHandle = PointCloudJobs.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
-            var pointsToCoordinatesHandle = PointCloudJobs.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
-            var mortonCodeHandle = PointCloudJobs.ScheduleCoordinatesToMortonCode(coordinates, codes);
-            var uniqueCodesHandle = PointCloudJobs.ScheduleCollectUniqueMortonCode(codes, uniqueCodes);
+            var transformHandle = PointCloudJobScheduler.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
+            var pointsToCoordinatesHandle = PointCloudJobScheduler.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
+            var mortonCodeHandle = PointCloudJobScheduler.ScheduleCoordinatesToMortonCode(coordinates, codes);
+            var uniqueCodesHandle = PointCloudJobScheduler.ScheduleCollectUniqueMortonCode(codes, uniqueCodes);
             
             coordinates.Dispose();
             codes.Dispose();

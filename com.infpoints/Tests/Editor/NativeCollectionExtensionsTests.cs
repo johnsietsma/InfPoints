@@ -1,4 +1,5 @@
 ﻿using System;
+using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 

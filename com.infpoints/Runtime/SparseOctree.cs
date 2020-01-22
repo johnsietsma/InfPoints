@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Mathematics;
 

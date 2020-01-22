@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace InfPoints
+namespace InfPoints.NativeCollections
 {
     public static unsafe class NativeCollectionExtensions
     {

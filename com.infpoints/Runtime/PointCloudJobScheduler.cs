@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace InfPoints
 {
-    public static class PointCloudJobs
+    public static class PointCloudJobScheduler
     {
         const int InnerLoopBatchCount = 1024;
 

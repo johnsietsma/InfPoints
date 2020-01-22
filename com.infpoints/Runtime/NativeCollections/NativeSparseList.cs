@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 

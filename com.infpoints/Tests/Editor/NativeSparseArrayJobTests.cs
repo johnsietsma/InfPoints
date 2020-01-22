@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using InfPoints;
+using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;

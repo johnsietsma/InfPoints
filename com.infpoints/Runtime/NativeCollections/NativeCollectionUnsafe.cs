@@ -1,8 +1,7 @@
 ﻿using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-namespace InfPoints
+namespace InfPoints.NativeCollections
 {
     /// <summary>
     /// Unsafe pointer algorithms. <see cref="NativeCollectionExtensions" for documentation./>
