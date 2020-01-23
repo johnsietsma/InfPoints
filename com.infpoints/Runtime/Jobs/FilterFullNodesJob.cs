@@ -5,11 +5,14 @@ namespace InfPoints.Jobs
 {
     public struct FilterFullNodesJob : IJobParallelForFilter
     {
-        [ReadOnly] public NativeArray<NodeStorage> NodeStorage;
+        [ReadOnly] public NativeHashMap<Node,NodeStorage> PointsStorage;
+        [ReadOnly] public NativeArray<ulong> MortonCodes;
+        [ReadOnly] public int LevelIndex;
         
-        public bool Execute(int index)
+        public void Execute(int index)
         {
-            return NodeStorage[index].IsFull;
+            var node = new Node() {LevelIndex = LevelIndex, MortonCode = MortonCodes[index]};
+            PointsStorage[index].IsFull;
         }
     }
 }

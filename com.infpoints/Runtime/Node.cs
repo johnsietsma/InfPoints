@@ -5,7 +5,7 @@ namespace InfPoints
     public struct Node : IEquatable<Node>
     {
         public int LevelIndex;
-        public long MortonCode;
+        public ulong MortonCode;
 
         public bool Equals(Node other)
         {

@@ -26,7 +26,7 @@ namespace InfPoints.Jobs
     }
     
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct FilterUint3SoAJob : IJobParallelForFilter
+    public struct FilterUniqueUint3SoAJob : IJobParallelForFilter
     {
         [ReadOnly] public NativeArray<uint> X;
         [ReadOnly] public NativeArray<uint> Y;

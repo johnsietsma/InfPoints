@@ -25,27 +25,26 @@ namespace InfPoints
             int cellCount = SparseOctree<int>.GetCellCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
 
-            var pointsWide = points.Reinterpret<float4>();
-            var coordinates = new Float3SoA<uint>(points.Length, Allocator.TempJob);
-            var coordinatesWide = coordinates.Reinterpret<uint4>();
-            var codes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
-            var uniqueCoordinatesHashSet = new NativeHashSet<uint3>(cellCount, Allocator.TempJob);
-            var uniqueNodesIndices = new NativeList<int>();
-
             // Transform points from world to Octree AABB space
+            var pointsWide = points.Reinterpret<float4>();
             var transformHandle = PointCloudJobScheduler.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
             
             // Convert all points to node coordinates
+            var coordinates = new Float3SoA<uint>(points.Length, Allocator.TempJob);
+            var coordinatesWide = coordinates.Reinterpret<uint4>();
             var pointsToCoordinatesHandle = PointCloudJobScheduler.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
             
             // Get all unique coordinates
-            var uniqueCoordinatesHandle = new FilterUint3SoAJob()
+            var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
+            var uniqueNodesIndices = new NativeList<int>();
+            var uniqueCoordinatesHashSet = new NativeHashSet<uint3>(cellCount, Allocator.TempJob);
+            var uniqueCoordinatesHandle = new FilterUniqueUint3SoAJob()
             {
                 X = coordinates.X,
                 Y = coordinates.Y,
                 Z = coordinates.Z,
                 UniqueValues = uniqueCoordinatesHashSet
-            }.ScheduleAppend(uniqueNodesIndices, codes.Length, InnerLoopBatchCount);
+            }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
 
             var uniqueCoordinates = uniqueCoordinatesHashSet.ToNativeArray();
             
@@ -53,21 +52,22 @@ namespace InfPoints
             var mortonCodeHandle = new Morton64EncodeJob()
             {
                 Coordinates = uniqueCoordinates,
-                Codes = codes
+                Codes = mortonCodes
             }.Schedule(uniqueCoordinates.Length, InnerLoopBatchCount);
 
-            var nodeStorage = new NativeArray<NodeStorage>(uniqueCoordinatesHashSet.Length, Allocator.TempJob);
-
+            // Filter full nodes
             var uniqueFilteredCodeHandle = new FilterFullNodesJob()
             {
-                NodeStorage = nodeStorage
-            }.ScheduleAppend(uniqueNodesIndices, nodeStorage.Length, InnerLoopBatchCount, uniqueCoordinatesHandle);
+                PointsStorage = m_PointStorage,
+                MortonCodes = mortonCodes,
+                LevelIndex = levelIndex
+            }.Schedule(mortonCodes.Length, InnerLoopBatchCount);
 
             uniqueCoordinates.Dispose();
             uniqueCoordinatesHashSet.Dispose();
             nodeStorage.Dispose();
             coordinates.Dispose();
-            codes.Dispose();
+            mortonCodes.Dispose();
         }
     }
 }
