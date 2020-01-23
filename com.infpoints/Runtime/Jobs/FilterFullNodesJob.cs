@@ -9,10 +9,10 @@ namespace InfPoints.Jobs
         [ReadOnly] public NativeArray<ulong> MortonCodes;
         [ReadOnly] public int LevelIndex;
         
-        public void Execute(int index)
+        public bool Execute(int index)
         {
             var node = new Node() {LevelIndex = LevelIndex, MortonCode = MortonCodes[index]};
-            PointsStorage[index].IsFull;
+            return PointsStorage[node].IsFull;
         }
     }
 }

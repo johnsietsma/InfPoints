@@ -61,11 +61,10 @@ namespace InfPoints
                 PointsStorage = m_PointStorage,
                 MortonCodes = mortonCodes,
                 LevelIndex = levelIndex
-            }.Schedule(mortonCodes.Length, InnerLoopBatchCount);
+            }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
 
             uniqueCoordinates.Dispose();
             uniqueCoordinatesHashSet.Dispose();
-            nodeStorage.Dispose();
             coordinates.Dispose();
             mortonCodes.Dispose();
         }
