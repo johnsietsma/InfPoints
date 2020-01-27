@@ -14,7 +14,7 @@ namespace InfPoints
             
         }
 
-        public static JobHandle ScheduleTransformPoints(Float3SoA<float4> float3, float3 numberToAdd)
+        public static JobHandle ScheduleTransformPoints(XYZSoA<float4> xyz, float3 numberToAdd)
         {
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(3, Allocator.Temp); 
             for (int index=0; index<3; index++)
@@ -22,9 +22,9 @@ namespace InfPoints
                 // Convert points to Octree AABB space
                 jobHandles[index] = new AdditionJob_float4()
                 {
-                    Values = float3[index],
+                    Values = xyz[index],
                     NumberToAdd = -numberToAdd[index]
-                }.Schedule(float3.Length, InnerLoopBatchCount);
+                }.Schedule(xyz.Length, InnerLoopBatchCount);
             }
 
             var combinedHandle = JobHandle.CombineDependencies(jobHandles);
@@ -32,7 +32,7 @@ namespace InfPoints
             return combinedHandle;
         }
 
-        public static JobHandle SchedulePointsToCoordinates(Float3SoA<float4> float3, Float3SoA<uint4> coordinates,
+        public static JobHandle SchedulePointsToCoordinates(XYZSoA<float4> xyz, XYZSoA<uint4> coordinates,
             float divisionAmount)
         {
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(3, Allocator.Temp); 
@@ -41,10 +41,10 @@ namespace InfPoints
                 // Convert points to Octree AABB space
                 jobHandles[index] = new IntegerDivisionJob_float4_uint4()
                 {
-                    Values = float3[index],
+                    Values = xyz[index],
                     Divisor = divisionAmount,
                     Quotients = coordinates[index]
-                }.Schedule(float3.Length, InnerLoopBatchCount);
+                }.Schedule(xyz.Length, InnerLoopBatchCount);
             }
 
             var combinedHandle = JobHandle.CombineDependencies(jobHandles);

@@ -8,23 +8,23 @@ using UnityEngine;
 
 namespace InfPoints
 {
-    public struct Float3SoA<T>: IDisposable where T : unmanaged
+    public struct XYZSoA<T>: IDisposable where T : unmanaged
     {
         public int Length => X.Length;
         public NativeArray<T> X;
         public NativeArray<T> Y;
         public NativeArray<T> Z;
 
-        public Float3SoA(int length, Allocator allocator, NativeArrayOptions options=NativeArrayOptions.ClearMemory)
+        public XYZSoA(int length, Allocator allocator, NativeArrayOptions options=NativeArrayOptions.ClearMemory)
         {
             X = new NativeArray<T>(length, allocator, options);
             Y = new NativeArray<T>(length, allocator, options);
             Z = new NativeArray<T>(length, allocator, options);
         }
         
-        public Float3SoA<U> Reinterpret<U>() where U : unmanaged
+        public XYZSoA<U> Reinterpret<U>() where U : unmanaged
         {
-            return new Float3SoA<U>()
+            return new XYZSoA<U>()
             {
                 X = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
                 Y = Y.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
@@ -46,11 +46,22 @@ namespace InfPoints
             }
         }
 
-        public void CopyFrom(Float3SoA<T> array)
+        public void CopyFrom(XYZSoA<T> array)
         {
             X.CopyFrom(array.X);
             Y.CopyFrom(array.Y);
             Z.CopyFrom(array.Z);
+        }
+
+        public static void Copy(XYZSoA<T> src,
+            int srcIndex,
+            XYZSoA<T> dst,
+            int dstIndex,
+            int length)
+        {
+            NativeArray<T>.Copy(src.X, srcIndex, dst.X, dstIndex, length);
+            NativeArray<T>.Copy(src.Y, srcIndex, dst.Y, dstIndex, length);
+            NativeArray<T>.Copy(src.Z, srcIndex, dst.Y, dstIndex, length);
         }
 
         public void Dispose()

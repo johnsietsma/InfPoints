@@ -29,6 +29,7 @@ namespace InfPoints
 
         readonly Allocator m_Allocator;
         List<NativeSparseArray<T>> m_Levels;
+        NodePointsMap m_NodesPointsMap;
 
         public SparseOctree(AABB aabb, Allocator allocator)
         {
@@ -36,6 +37,7 @@ namespace InfPoints
             m_Allocator = allocator;
             m_Levels = new List<NativeSparseArray<T>>(MaxLevelCount);
             LevelCount = 0;
+            m_NodesPointsMap= new NodePointsMap(1, allocator);
         }
         
         public static int GetCellCount(int levelIndex)
@@ -60,6 +62,7 @@ namespace InfPoints
 
             LevelCount = 0;
             m_Levels = null;
+            m_NodesPointsMap.Dispose();
         }
 
 

@@ -8,17 +8,19 @@ namespace InfPoints
     public class PointCloud
     {
         SparseOctree<Node> m_Octree;
-        NativeHashMap<Node, NodeStorage> m_PointStorage;
+        
+        // A way to get from a node to its points
+        NativeHashMap<Node, PointsStorage> m_PointStorage;
 
         const int InnerLoopBatchCount = 128;
 
         public PointCloud(AABB aabb)
         {
             m_Octree = new SparseOctree<Node>(aabb, Allocator.Persistent);
-            m_PointStorage = new NativeHashMap<Node, NodeStorage>(1024, Allocator.Persistent);
+            m_PointStorage = new NativeHashMap<Node, PointsStorage>(1024, Allocator.Persistent);
         }
 
-        public void AddPoints(Float3SoA<float> points)
+        public void AddPoints(XYZSoA<float> points)
         {
             int levelIndex = 0;
             int cellCount = SparseOctree<int>.GetCellCount(levelIndex);
@@ -29,7 +31,7 @@ namespace InfPoints
             var transformHandle = PointCloudUtils.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
             
             // Convert all points to node coordinates
-            var coordinates = new Float3SoA<uint>(points.Length, Allocator.TempJob);
+            var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob);
             var coordinatesWide = coordinates.Reinterpret<uint4>();
             var pointsToCoordinatesHandle = PointCloudUtils.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
             
@@ -55,13 +57,14 @@ namespace InfPoints
             }.Schedule(uniqueCoordinates.Length, InnerLoopBatchCount);
 
             // Filter full nodes
+            /*
             var uniqueFilteredCodeHandle = new FilterFullNodesJob()
             {
-                PointsStorage = m_PointStorage,
+                NodePointsMap = m_PointStorage,
                 MortonCodes = mortonCodes,
                 LevelIndex = levelIndex
             }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
-
+*/
             uniqueCoordinates.Dispose();
             uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();
