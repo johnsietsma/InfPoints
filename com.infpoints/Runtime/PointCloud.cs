@@ -1,5 +1,4 @@
 ﻿using InfPoints.Jobs;
-using JacksonDunstan.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -27,26 +26,26 @@ namespace InfPoints
 
             // Transform points from world to Octree AABB space
             var pointsWide = points.Reinterpret<float4>();
-            var transformHandle = PointCloudJobScheduler.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
+            var transformHandle = PointCloudUtils.ScheduleTransformPoints(pointsWide, -m_Octree.AABB.Minimum);
             
             // Convert all points to node coordinates
             var coordinates = new Float3SoA<uint>(points.Length, Allocator.TempJob);
             var coordinatesWide = coordinates.Reinterpret<uint4>();
-            var pointsToCoordinatesHandle = PointCloudJobScheduler.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
+            var pointsToCoordinatesHandle = PointCloudUtils.SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth);
             
             // Get all unique coordinates
             var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob);
             var uniqueNodesIndices = new NativeList<int>();
-            var uniqueCoordinatesHashSet = new NativeHashSet<uint3>(cellCount, Allocator.TempJob);
+            var uniqueCoordinatesMap = new NativeHashMap<uint3,uint>(cellCount, Allocator.TempJob);
             var uniqueCoordinatesHandle = new FilterUniqueUint3SoAJob()
             {
                 X = coordinates.X,
                 Y = coordinates.Y,
                 Z = coordinates.Z,
-                UniqueValues = uniqueCoordinatesHashSet
+                UniqueValues = uniqueCoordinatesMap
             }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
 
-            var uniqueCoordinates = uniqueCoordinatesHashSet.ToNativeArray();
+            var uniqueCoordinates = uniqueCoordinatesMap.GetKeyArray(Allocator.TempJob);
             
             // Convert unique coordinates to morton codes
             var mortonCodeHandle = new Morton64EncodeJob()
@@ -64,7 +63,7 @@ namespace InfPoints
             }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
 
             uniqueCoordinates.Dispose();
-            uniqueCoordinatesHashSet.Dispose();
+            uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();
             mortonCodes.Dispose();
         }

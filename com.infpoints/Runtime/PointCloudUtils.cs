@@ -1,14 +1,18 @@
 ﻿using InfPoints.Jobs;
-using JacksonDunstan.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace InfPoints
 {
-    public static class PointCloudJobScheduler
+    public static class PointCloudUtils
     {
         const int InnerLoopBatchCount = 128;
+
+        public static void FilterMortonCodes()
+        {
+            
+        }
 
         public static JobHandle ScheduleTransformPoints(Float3SoA<float4> float3, float3 numberToAdd)
         {
