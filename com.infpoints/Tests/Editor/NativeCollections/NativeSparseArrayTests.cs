@@ -36,7 +36,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
             const int arrayLength = 2;
             using (var array = new NativeSparseArray<int>(arrayLength, Allocator.Persistent))
             {
-                const int sparseIndex = 999;
+                const ulong sparseIndex = ulong.MaxValue;
                 const int value = 5;
 
                 Assert.That(arrayLength, Is.EqualTo(array.Capacity));

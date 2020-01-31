@@ -52,7 +52,7 @@ namespace InfPoints.NativeCollections
         /// The sorted indices of data in the `SparseArray`.
         /// These indices can be non-contiguous and far apart.
         /// </summary>
-        public NativeArray<int> Indices;
+        public NativeArray<ulong> Indices;
 
         /// <summary>
         /// The data in the array.
@@ -74,7 +74,7 @@ namespace InfPoints.NativeCollections
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
-            Indices = new NativeArray<int>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
+            Indices = new NativeArray<ulong>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             Data = new NativeArray<T>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             Length = 0;
         }
@@ -93,6 +93,22 @@ namespace InfPoints.NativeCollections
             get
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+                var dataIndex = FindDataIndex((ulong)sparseIndex);
+                return Data[dataIndex];
+            }
+            set
+            {
+                AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+                if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
+                else SetValue(value, sparseIndex);
+            }
+        }
+        
+        public T this[ulong sparseIndex]
+        {
+            get
+            {
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
                 var dataIndex = FindDataIndex(sparseIndex);
                 return Data[dataIndex];
             }
@@ -105,6 +121,11 @@ namespace InfPoints.NativeCollections
         }
 
         public bool ContainsIndex(int sparseIndex)
+        {
+            return ContainsIndex((ulong) sparseIndex);
+        }
+        
+        public bool ContainsIndex(ulong sparseIndex)
         {
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
             return FindDataIndex(sparseIndex) >= 0;
@@ -128,6 +149,11 @@ namespace InfPoints.NativeCollections
         /// <param name="sparseIndex">The sparse index of the data</param>
         public void AddValue(T value, int sparseIndex)
         {
+            AddValue(value, (ulong)sparseIndex);
+        }
+        
+        public void AddValue(T value, ulong sparseIndex)
+        {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             CheckFullAndThrow();
             CheckIndexDoesntExistOrThrow(sparseIndex);
@@ -148,6 +174,11 @@ namespace InfPoints.NativeCollections
         /// <param name="sparseIndex">The sparse array index</param>
         public void SetValue(T value, int sparseIndex)
         {
+            SetValue(value, (ulong)sparseIndex);   
+        }
+        
+        public void SetValue(T value, ulong sparseIndex)
+        {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             int dataIndex = FindDataIndex(sparseIndex);
             // Update the data
@@ -163,6 +194,11 @@ namespace InfPoints.NativeCollections
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
+            RemoveAt((ulong)sparseIndex);
+        }
+        
+        public void RemoveAt(ulong sparseIndex)
+        {
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
@@ -170,7 +206,7 @@ namespace InfPoints.NativeCollections
             Length--;
         }
 
-        int FindDataIndex(int sparseIndex)
+        int FindDataIndex(ulong sparseIndex)
         {
             return Indices.BinarySearch(sparseIndex, 0, Length);
         }
@@ -183,7 +219,7 @@ namespace InfPoints.NativeCollections
         }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckIndexDoesntExistOrThrow(int sparseIndex)
+        void CheckIndexDoesntExistOrThrow(ulong sparseIndex)
         {
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
