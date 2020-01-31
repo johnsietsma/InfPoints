@@ -88,6 +88,10 @@ namespace InfPoints.NativeCollections
         /// <param name="data">The data to add</param>
         public void AddData(ulong sparseIndex, NativeArray<T> data)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if( data==default) throw new ArgumentNullException(nameof(data));
+            if(m_MemorySpans.Length==m_Capacity) throw new InvalidOperationException("At capacity");
+#endif
             if (!m_MemorySpans.ContainsIndex(sparseIndex))
             {
                 AddSpan(sparseIndex);
