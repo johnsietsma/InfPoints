@@ -30,12 +30,8 @@ namespace InfPoints.Tests.Editor.NativeCollections
             using (var array = new SparseMemorySpanArray<int>(capacity, spanCapacity, Allocator.Persistent))
             using( var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
-                var span = array.AddSpan(sparseIndex);
-                Assert.That(array.Length, Is.EqualTo(1));
-                Assert.That(span.DataIndex, Is.EqualTo(0));
-                
-                array.AddData(ref span, data);
-                var returnedData = array.AsArray(span);
+                array.AddData(sparseIndex, data);
+                var returnedData = array.AsArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length));
 
                 for (int index = 0; index < array.Length; index++)
