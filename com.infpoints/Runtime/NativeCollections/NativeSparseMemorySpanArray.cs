@@ -86,7 +86,7 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="sparseIndex">The sparse index at add the data to</param>
         /// <param name="data">The data to add</param>
-        public void AddData(int sparseIndex, NativeArray<T> data)
+        public void AddData(ulong sparseIndex, NativeArray<T> data)
         {
             if (!m_MemorySpans.ContainsIndex(sparseIndex))
             {
@@ -102,6 +102,7 @@ namespace InfPoints.NativeCollections
             void* source = data.GetUnsafeReadOnlyPtr();
             UnsafeUtility.MemCpy(destination, source, UnsafeUtility.SizeOf<T>() * data.Length);
             span.Length += data.Length;
+            m_MemorySpans[sparseIndex] = span;
         }
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="sparseIndex">The sparse index to retrieve</param>
         /// <returns>A <see cref="NativeArray{T}"/>containing the data</returns>
-        public NativeArray<T> AsArray(int sparseIndex)
+        public NativeArray<T> AsArray(ulong sparseIndex)
         {
             var span = m_MemorySpans[sparseIndex];
             void* dataPointer = m_Data[span.DataIndex] + span.StartIndex * UnsafeUtility.SizeOf<T>();
@@ -131,7 +132,7 @@ namespace InfPoints.NativeCollections
             UnsafeUtility.Free(m_Data, m_Allocator);
         }
 
-        void AddSpan(int sparseIndex)
+        void AddSpan(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (m_MemorySpans.ContainsIndex(sparseIndex))

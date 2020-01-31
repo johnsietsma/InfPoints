@@ -25,12 +25,13 @@ namespace InfPoints.Tests.Editor.NativeCollections
         {
             int capacity = 5;
             int spanCapacity = 10;
-            int sparseIndex = 12345;
+            ulong sparseIndex = 12345;
             int[] dataArray = {1, 2, 3, 4, 5};
             using (var array = new SparseMemorySpanArray<int>(capacity, spanCapacity, Allocator.Persistent))
             using( var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
                 array.AddData(sparseIndex, data);
+                Assert.That(array.Length, Is.EqualTo(1));
                 var returnedData = array.AsArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length));
 
@@ -43,7 +44,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         }
 
         [Test]
-        public void DoulbeDisposeThrowsException()
+        public void DoubleDisposeThrowsException()
         {
             
         }
