@@ -215,7 +215,7 @@ namespace InfPoints.NativeCollections
         void CheckFullAndThrow()
         {
             if (IsFull)
-                throw new ArgumentOutOfRangeException("Adding value to full array");
+                throw new InvalidOperationException("Adding value to full array");
         }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
