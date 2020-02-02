@@ -35,7 +35,9 @@ namespace InfPoints.Tests.Editor.NativeCollections
             {
                 Assert.That(array.Length, Is.EqualTo(0));
                 Assert.That(array.MaximumPageCount, Is.EqualTo(1));
+                Assert.That(array.ContainsIndex(sparseIndex), Is.False);
                 array.AddIndex(sparseIndex);
+                Assert.That(array.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(array.Length, Is.EqualTo(1));
             }
         }
@@ -59,11 +61,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(array.Length, Is.EqualTo(1));
                 var returnedData = array.AsArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length));
-
-                for (int index = 0; index < array.Length; index++)
-                {
-                    Assert.That(data[index], Is.EqualTo(returnedData[index]));
-                }
+                Assert.That(returnedData.ToArray(), Is.EqualTo(dataArray));
             }
         }
 
@@ -76,7 +74,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         }
 
         [Test]
-        public void AddingDataTwiceGivesCorrectResult()
+        public void AddingDataTwiceToTheSamePageGivesCorrectResult()
         {
             int allocationSize = 10;
             int pageSize = 10;
@@ -89,9 +87,9 @@ namespace InfPoints.Tests.Editor.NativeCollections
             {
                 array.AddIndex(sparseIndex);
                 array.AddRange(sparseIndex, data);
-                Assert.That(array.Length, Is.EqualTo(1));
                 array.AddRange(sparseIndex, data);
                 Assert.That(array.Length, Is.EqualTo(1));
+                Assert.That(array.PageCount, Is.EqualTo(1));
                 var returnedData = array.AsArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length * 2));
 
@@ -103,7 +101,32 @@ namespace InfPoints.Tests.Editor.NativeCollections
             }
         }
 
+        [Test]
+        public void AddingDataTwiceToTheDifferentPagesGivesCorrectResult()
+        {
+            int allocationSize = 5;
+            int pageSize = 5;
+            int maximumPageCount = 2;
+            ulong sparseIndex1 = 12345;
+            ulong sparseIndex2 = 54321;
+            int[] dataArray = {1, 2, 3, 4, 5};
+            using (var array =
+                new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
+            using (var data = new NativeArray<int>(dataArray, Allocator.Persistent))
+            {
+                array.AddIndex(sparseIndex1);
+                array.AddRange(sparseIndex1, data);
+                Assert.That(array.Length, Is.EqualTo(1));
+                array.AddIndex(sparseIndex2);
+                array.AddRange(sparseIndex2, data);
+                Assert.That(array.PageCount, Is.EqualTo(2));
+                var returnedData1 = array.AsArray(sparseIndex1);
+                var returnedData2 = array.AsArray(sparseIndex2);
+                Assert.That(returnedData1.ToArray(), Is.EqualTo(returnedData2.ToArray()));
+            }
+        }
 
+        
         [Test]
         public void AddingNullDataThrowsException()
         {

@@ -6,7 +6,6 @@ using Unity.Mathematics;
 
 namespace InfPoints
 {
-
     /// <summary>
     /// The first level of the Octree is the root node, which has an AABB which encapsulates the entire tree.
     /// Each level down has 8 nodes, each with its own AABB.
@@ -19,53 +18,59 @@ namespace InfPoints
     public class SparseOctree<T> : IDisposable where T : unmanaged
     {
         public const int MaxLevelCount = 7;
-            
-        public bool IsCreated => m_Levels != null;
+
+        public bool IsCreated => m_NodesPerLevel != null;
 
         public int LevelCount { get; private set; }
-        
+
         // ReSharper disable once InconsistentNaming
         public AABB AABB { get; private set; }
 
+        const int NodesPerPage = 4;
+        readonly int m_MaximumPointsPerNode;
+        readonly int m_StoragePageSize;
         readonly Allocator m_Allocator;
-        List<NativeSparseArray<T>> m_Levels;
-        NodePointsMap m_NodesPointsMap;
+        List<NativeSparseArray<T>> m_NodesPerLevel;
+        List<NativeSparsePagedArray<T>> m_LevelStorage;
 
-        public SparseOctree(AABB aabb, Allocator allocator)
+        public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {
             AABB = aabb;
+            m_MaximumPointsPerNode = maximumPointsPerNode;
+            m_StoragePageSize = maximumPointsPerNode * NodesPerPage;
             m_Allocator = allocator;
-            m_Levels = new List<NativeSparseArray<T>>(MaxLevelCount);
+            m_NodesPerLevel = new List<NativeSparseArray<T>>(MaxLevelCount);
             LevelCount = 0;
-            m_NodesPointsMap= new NodePointsMap(1, allocator);
-        }
-        
-        public static int GetCellCount(int levelIndex)
-        {
-            return (int)math.pow(2, levelIndex);
+            m_LevelStorage = new List<NativeSparsePagedArray<T>>(MaxLevelCount);
         }
 
-        public void AddLevel(int maxNodeCountForLevel)
+        public static int GetNodeCount(int levelIndex)
         {
-            m_Levels.Add(new NativeSparseArray<T>(maxNodeCountForLevel, m_Allocator));
+            return (int) math.pow(2, levelIndex);
+        }
+
+        public void AddLevel(int maximumPointsPerNode)
+        {
+            var nodeCount = GetNodeCount(LevelCount);
+            m_NodesPerLevel.Add(new NativeSparseArray<T>(nodeCount, m_Allocator));
+            int maximumPageCount = nodeCount / NodesPerPage;
+            m_LevelStorage.Add(new NativeSparsePagedArray<T>(m_MaximumPointsPerNode, m_StoragePageSize,
+                maximumPageCount, m_Allocator));
             LevelCount++;
         }
 
         public void Dispose()
         {
-            if (m_Levels == null) throw new InvalidOperationException();
-            
+            if (m_NodesPerLevel == null) throw new InvalidOperationException();
+
             for (int i = 0; i < LevelCount; i++)
             {
-                m_Levels[i].Dispose();
+                m_NodesPerLevel[i].Dispose();
+                m_LevelStorage[i].Dispose();
             }
 
             LevelCount = 0;
-            m_Levels = null;
-            m_NodesPointsMap.Dispose();
+            m_NodesPerLevel = null;
         }
-
-
     }
-
 }

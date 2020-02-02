@@ -57,6 +57,7 @@ namespace InfPoints.NativeCollections
         readonly int m_PageSize;
         readonly int m_MaximumPageCount;
         int m_PageCount;
+        PageAllocation m_LastPageAllocation;
 
         readonly Allocator m_Allocator;
 
@@ -67,7 +68,7 @@ namespace InfPoints.NativeCollections
         /// <summary>
         /// Only page pointers are allocated during construction. The actual page memory is only allocated as needed. 
         /// </summary>
-        /// <param name="aloocationSize">The size of each allocation from a page</param>
+        /// <param name="allocationSize">The size of each allocation from a page</param>
         /// <param name="pageSize">The size of each allocated page</param>
         /// <param name="maximumPageCount">The maximum number of pages that can be allocated</param>
         /// <param name="allocator">The <see cref="Unity.Collections.Allocator"/> to use to allocate each <see cref="PageAllocation"/></param>
@@ -87,9 +88,10 @@ namespace InfPoints.NativeCollections
             m_Pages = (T**) UnsafeUtility.Malloc(IntPtr.Size * maximumPageCount, UnsafeUtility.AlignOf<T>(), allocator);
             m_Allocator = allocator;
             m_PageCount = 0;
+            m_LastPageAllocation = default;
         }
 
-        bool ContainsIndex(ulong sparseIndex)
+        public bool ContainsIndex(ulong sparseIndex)
         {
             return m_PageAllocations.ContainsIndex(sparseIndex);
         }
@@ -99,6 +101,8 @@ namespace InfPoints.NativeCollections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentException($"Sparse index {sparseIndex} already exists.", nameof(sparseIndex));
+            if (m_PageAllocations.Length == m_PageAllocations.Capacity)
+                throw new InvalidOperationException("Page allocations at capacity. Increase maximum page count.");
 #endif
 
             int pageIndex = -1;
@@ -107,11 +111,10 @@ namespace InfPoints.NativeCollections
             // See if a new allocation will fit in the current page
             if (Length > 0)
             {
-                var lastAllocation = m_PageAllocations[m_PageAllocations.Length - 1];
-                if (lastAllocation.StartIndex + lastAllocation.Capacity + m_AllocationSize < m_PageSize)
+                if (m_LastPageAllocation.StartIndex + m_LastPageAllocation.Capacity + m_AllocationSize < m_PageSize)
                 {
-                    pageIndex = lastAllocation.PageIndex;
-                    startIndex = lastAllocation.StartIndex + lastAllocation.Capacity;
+                    pageIndex = m_LastPageAllocation.PageIndex;
+                    startIndex = m_LastPageAllocation.StartIndex + m_LastPageAllocation.Capacity;
                 }
             }
 
@@ -157,6 +160,7 @@ namespace InfPoints.NativeCollections
             UnsafeUtility.MemCpy(destination, source, UnsafeUtility.SizeOf<T>() * data.Length);
             pageAllocation.Length += data.Length;
             m_PageAllocations[sparseIndex] = pageAllocation;
+            m_LastPageAllocation = pageAllocation;
         }
 
         /// <summary>

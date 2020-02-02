@@ -94,6 +94,9 @@ namespace InfPoints.NativeCollections
             {
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
                 var dataIndex = FindDataIndex((ulong)sparseIndex);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                if(dataIndex==-1) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
+#endif
                 return Data[dataIndex];
             }
             set

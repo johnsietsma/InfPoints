@@ -13,17 +13,18 @@ namespace InfPoints
         NativeHashMap<Node, PointsStorage> m_PointStorage;
 
         const int InnerLoopBatchCount = 128;
+        const int MaximumPointsPerNode = 1024 * 1024;
 
         public PointCloud(AABB aabb)
         {
-            m_Octree = new SparseOctree<Node>(aabb, Allocator.Persistent);
+            m_Octree = new SparseOctree<Node>(aabb, MaximumPointsPerNode, Allocator.Persistent);
             m_PointStorage = new NativeHashMap<Node, PointsStorage>(1024, Allocator.Persistent);
         }
 
         public void AddPoints(XYZSoA<float> points)
         {
             int levelIndex = 0;
-            int cellCount = SparseOctree<int>.GetCellCount(levelIndex);
+            int cellCount = SparseOctree<int>.GetNodeCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
 
             // Transform points from world to Octree AABB space
