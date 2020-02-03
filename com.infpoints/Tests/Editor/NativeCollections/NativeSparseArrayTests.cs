@@ -63,7 +63,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             Assert.That(array.IsFull, Is.True);
-            Assert.That(() => { return array[101] = 201; }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(() => { return array[101] = 201; }, Throws.InvalidOperationException);
             Assert.That(array.Length, Is.EqualTo(1));
 #endif
             array.Dispose();
@@ -98,7 +98,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(() =>
                 {
                     var v = array[sparseIndex];
-                }, Throws.Exception.TypeOf<IndexOutOfRangeException>());
+                }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
                 Assert.That(array.ContainsIndex(sparseIndex), Is.False);
                 Assert.That(array.Length, Is.EqualTo(0));
             }
@@ -116,11 +116,9 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(array.Length, Is.EqualTo(2));
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                Assert.That(() => array.AddValue(2, 2),
-                    Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Already exists
+                Assert.That(() => array.AddValue(2, 2), Throws.InvalidOperationException); // Already exists
                 Assert.That(array.Length, Is.EqualTo(2));
-                Assert.That(() => array.AddValue(3, 3),
-                    Throws.Exception.TypeOf<ArgumentOutOfRangeException>()); // Array is full
+                Assert.That(() => array.AddValue(3, 3), Throws.InvalidOperationException); // Array is full
                 Assert.That(array.Length, Is.EqualTo(2));
                 Assert.That(array.IsFull, Is.True);
 #endif

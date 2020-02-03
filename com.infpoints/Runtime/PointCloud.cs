@@ -1,4 +1,5 @@
 ﻿using InfPoints.Jobs;
+using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -8,9 +9,6 @@ namespace InfPoints
     public class PointCloud
     {
         SparseOctree<Node> m_Octree;
-        
-        // A way to get from a node to its points
-        NativeHashMap<Node, PointsStorage> m_PointStorage;
 
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
@@ -18,7 +16,6 @@ namespace InfPoints
         public PointCloud(AABB aabb)
         {
             m_Octree = new SparseOctree<Node>(aabb, MaximumPointsPerNode, Allocator.Persistent);
-            m_PointStorage = new NativeHashMap<Node, PointsStorage>(1024, Allocator.Persistent);
         }
 
         public void AddPoints(XYZSoA<float> points)
@@ -57,15 +54,12 @@ namespace InfPoints
                 Codes = mortonCodes
             }.Schedule(uniqueCoordinates.Length, InnerLoopBatchCount);
 
-            // Filter full nodes
-            /*
-            var uniqueFilteredCodeHandle = new FilterFullNodesJob()
+            var uniqueFilteredCodeHandle = new FilterFullNodesJob<Node>()
             {
-                NodePointsMap = m_PointStorage,
                 MortonCodes = mortonCodes,
-                LevelIndex = levelIndex
+                NodeStorage = m_Octree.GetNodeStorage(levelIndex).Storage
             }.ScheduleAppend(uniqueNodesIndices, mortonCodes.Length, InnerLoopBatchCount);
-*/
+            
             uniqueCoordinates.Dispose();
             uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();

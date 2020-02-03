@@ -13,10 +13,11 @@ namespace InfPoints.NativeCollections
         public int Length;
 
         public bool IsFull => Length == Capacity;
+        public int FreeLength => Capacity - Length - StartIndex;
 
         public override string ToString()
         {
-            return $"Page Index: {PageIndex} Start Index: {StartIndex} Length: {Capacity}";
+            return $"Page Index: {PageIndex} Start Index: {StartIndex} Length: {Length} Capacity: {Capacity}";
         }
     }
 
@@ -93,6 +94,15 @@ namespace InfPoints.NativeCollections
             m_LastPageAllocation = default;
         }
 
+        public bool IsFull(ulong sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+            CheckContainsIndexAndThrow(sparseIndex);
+#endif
+            return m_PageAllocations[sparseIndex].IsFull;
+        }
+
         public bool ContainsIndex(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -140,6 +150,22 @@ namespace InfPoints.NativeCollections
             m_PageAllocations.AddValue(allocation, sparseIndex);
         }
 
+        public void Add(ulong sparseIndex, T data)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+            CheckContainsIndexAndThrow(sparseIndex);
+            CheckHasCapacityAndThrow(sparseIndex, 1);
+#endif
+            var pageAllocation = m_PageAllocations[sparseIndex];
+            void* destination = m_Pages[pageAllocation.PageIndex] +
+                                UnsafeUtility.SizeOf<T>() * pageAllocation.StartIndex;
+            UnsafeUtility.WriteArrayElement(destination, pageAllocation.Length * UnsafeUtility.SizeOf<T>(), data);
+            pageAllocation.Length++;
+            m_PageAllocations[sparseIndex] = pageAllocation;
+            m_LastPageAllocation = pageAllocation;
+        }
+        
         /// <summary>
         /// A data to the <see cref="PageAllocation"/> the belongs to the sparseIndex. If this is a new sparseIndex, then a
         /// new <see cref="PageAllocation"/> will be created and data added to it. Otherwise the data will be added to the
@@ -151,13 +177,9 @@ namespace InfPoints.NativeCollections
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            if (data == default) throw new ArgumentNullException(nameof(data));
-            if (!m_PageAllocations.ContainsIndex(sparseIndex))
-                throw new InvalidOperationException("Adding data to non-existent index");
-            if (m_PageAllocations[sparseIndex].StartIndex + m_PageAllocations[sparseIndex].Length + data.Length >
-                m_PageAllocations[sparseIndex].Capacity)
-                throw new ArgumentOutOfRangeException(
-                    $"Data of length {data.Length} will not fit in allocation {m_PageAllocations[sparseIndex]}");
+            Checks.CheckNullAndThrow(data);
+            CheckContainsIndexAndThrow(sparseIndex);
+            CheckHasCapacityAndThrow(sparseIndex, data.Length);
 #endif
             var pageAllocation = m_PageAllocations[sparseIndex];
 
@@ -169,6 +191,7 @@ namespace InfPoints.NativeCollections
             m_PageAllocations[sparseIndex] = pageAllocation;
             m_LastPageAllocation = pageAllocation;
         }
+
 
         /// <summary>
         /// Return the <see cref="PageAllocation"/> at sparseIndex as a <see cref="NativeArray{T}"/>.
@@ -220,6 +243,19 @@ namespace InfPoints.NativeCollections
                 m_Allocator);
             m_PageCount++;
             return index;
+        }
+        
+        void CheckHasCapacityAndThrow(ulong sparseIndex, int length)
+        {
+            if (m_PageAllocations[sparseIndex].FreeLength < Length)
+                throw new ArgumentOutOfRangeException(
+                    $"Data of length {Length} will not fit in allocation {m_PageAllocations[sparseIndex]}");
+        }
+
+        void CheckContainsIndexAndThrow(ulong sparseIndex)
+        {
+            if (!m_PageAllocations.ContainsIndex(sparseIndex))
+                throw new ArgumentOutOfRangeException(nameof(sparseIndex));
         }
     }
 }

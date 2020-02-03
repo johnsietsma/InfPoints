@@ -1,4 +1,5 @@
-﻿using InfPoints.NativeCollections;
+﻿using System;
+using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -19,8 +20,8 @@ namespace InfPoints.Tests.Editor.NativeCollections
             
             var allocationNotFull = new PageAllocation()
             {
-                Capacity = 2,
-                Length = 1,
+                Capacity = 1,
+                Length = 0,
                 PageIndex = 0,
                 StartIndex = 0
             };
@@ -29,6 +30,19 @@ namespace InfPoints.Tests.Editor.NativeCollections
             Assert.That(allocationNotFull.IsFull, Is.False);
         }
         
+        [Test]
+        public void AllocationGivesCorrectFreeLength()
+        {
+            var allocation = new PageAllocation()
+            {
+                Capacity = 10,
+                Length = 5,
+                PageIndex = 0,
+                StartIndex = 5
+            };
+            
+            Assert.That(allocation.FreeLength, Is.EqualTo(0));
+        }
         
         [Test]
         public void CreationGivesCorrectValues()
@@ -62,6 +76,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 array.AddIndex(sparseIndex);
                 Assert.That(array.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(array.Length, Is.EqualTo(1));
+                Assert.That(array.IsFull(sparseIndex), Is.False);
             }
         }
 
@@ -169,7 +184,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
             using (var array = new NativeSparsePagedArray<int>(1, 1, 1, Allocator.Persistent))
             using (var data = new NativeArray<int>(1, Allocator.Persistent))
             {
-                Assert.That(() => array.AddRange(1, data), Throws.InvalidOperationException);
+                Assert.That(() => array.AddRange(1, data), Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
             }
 #endif
         }
@@ -181,7 +196,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
             using (var array = new NativeSparsePagedArray<int>(1, 1, 1, Allocator.Persistent))
             using (var data = new NativeArray<int>(2, Allocator.Persistent))
             {
-                Assert.That(() => array.AddRange(1, data), Throws.InvalidOperationException);
+                Assert.That(() => array.AddRange(1, data), Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
             }
 #endif
         }

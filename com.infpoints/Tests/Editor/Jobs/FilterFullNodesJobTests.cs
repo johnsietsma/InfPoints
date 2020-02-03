@@ -11,35 +11,28 @@ namespace InfPoints.Tests.Editor.Jobs
         [Test]
         public void DoesFilterFullNodes()
         {
-            const int length = 2;
+            const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pageAllocations = new NativeSparseArray<PageAllocation>(length, Allocator.TempJob))
+            using (var pagedArray = new NativeSparsePagedArray<int>(length,1,2, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
             using( var indices = new NativeList<int>(length, Allocator.TempJob))
             {
                 const int pageIndex = 0;
                 const int startIndex = 0;
 
-                pageAllocations.AddValue( new PageAllocation()
-                {
-                    PageIndex = pageIndex,
-                    Capacity = 1,
-                    Length = 1,
-                    StartIndex = startIndex
-                } , codesArray[0] );
+                // Fill the fist page
+                var index1 = codesArray[0];
+                pagedArray.AddIndex(index1);
+                pagedArray.Add(index1, 1);
                 
-                pageAllocations.AddValue( new PageAllocation()
-                {
-                    PageIndex = pageIndex,
-                    Capacity = 2,
-                    Length = 1,
-                    StartIndex = startIndex
-                } , codesArray[1] );
+                // Don't fill the second page
+                var index2 = codesArray[1];
+                pagedArray.AddIndex(index2);
                 
-                var isFullJob = new FilterFullNodesJob()
+                var isFullJob = new FilterFullNodesJob<int>()
                 {
                     MortonCodes = codes,
-                    PageAllocations = pageAllocations
+                    NodeStorage = pagedArray
                 }.ScheduleAppend(indices, length, 4);
                 
                 isFullJob.Complete();

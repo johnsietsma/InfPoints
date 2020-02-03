@@ -4,15 +4,15 @@ using Unity.Jobs;
 
 namespace InfPoints.Jobs
 {
-    public struct FilterFullNodesJob : IJobParallelForFilter
+    public struct FilterFullNodesJob<T> : IJobParallelForFilter where T :unmanaged
     {
-        [ReadOnly] public NativeSparseArray<PageAllocation> PageAllocations;
+        [ReadOnly] public NativeSparsePagedArray<T> NodeStorage;
         [ReadOnly] public NativeArray<ulong> MortonCodes;
         
         public bool Execute(int index)
         {
             ulong code = MortonCodes[index];
-            return PageAllocations[code].IsFull;
+            return NodeStorage.IsFull(code);
         }
     }
 }

@@ -19,29 +19,21 @@ namespace InfPoints
     {
         public const int MaxLevelCount = 7;
 
-        public bool IsCreated => m_NodesPerLevel != null;
+        public bool IsCreated => m_NodesStorage!=null;
 
-        public int LevelCount { get; private set; }
+        public int LevelCount => m_NodesStorage.Count;
 
         // ReSharper disable once InconsistentNaming
         public AABB AABB { get; private set; }
-
-        const int NodesPerPage = 4;
-        readonly int m_MaximumPointsPerNode;
-        readonly int m_StoragePageSize;
+        
         readonly Allocator m_Allocator;
-        List<NativeSparseArray<T>> m_NodesPerLevel;
-        List<NativeSparsePagedArray<T>> m_LevelStorage;
+        List<NativeNodeStorage<T>> m_NodesStorage;
 
         public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {
             AABB = aabb;
-            m_MaximumPointsPerNode = maximumPointsPerNode;
-            m_StoragePageSize = maximumPointsPerNode * NodesPerPage;
             m_Allocator = allocator;
-            m_NodesPerLevel = new List<NativeSparseArray<T>>(MaxLevelCount);
-            LevelCount = 0;
-            m_LevelStorage = new List<NativeSparsePagedArray<T>>(MaxLevelCount);
+            m_NodesStorage = new List<NativeNodeStorage<T>>(MaxLevelCount);
         }
 
         public static int GetNodeCount(int levelIndex)
@@ -49,28 +41,28 @@ namespace InfPoints
             return (int) math.pow(2, levelIndex);
         }
 
+        public NativeNodeStorage<T> GetNodeStorage(int levelIndex)
+        {
+            return m_NodesStorage[levelIndex];
+        }
+
         public void AddLevel(int maximumPointsPerNode)
         {
             var nodeCount = GetNodeCount(LevelCount);
-            m_NodesPerLevel.Add(new NativeSparseArray<T>(nodeCount, m_Allocator));
-            int maximumPageCount = nodeCount / NodesPerPage;
-            m_LevelStorage.Add(new NativeSparsePagedArray<T>(m_MaximumPointsPerNode, m_StoragePageSize,
-                maximumPageCount, m_Allocator));
-            LevelCount++;
+            var nodeStorage = new NativeNodeStorage<T>(nodeCount, maximumPointsPerNode, m_Allocator);
+            m_NodesStorage.Add(nodeStorage);
         }
 
         public void Dispose()
         {
-            if (m_NodesPerLevel == null) throw new InvalidOperationException();
-
+            if( !IsCreated) throw new InvalidOperationException();
+            
             for (int i = 0; i < LevelCount; i++)
             {
-                m_NodesPerLevel[i].Dispose();
-                m_LevelStorage[i].Dispose();
+                m_NodesStorage[i].Dispose();
             }
 
-            LevelCount = 0;
-            m_NodesPerLevel = null;
+            m_NodesStorage = null;
         }
     }
 }
