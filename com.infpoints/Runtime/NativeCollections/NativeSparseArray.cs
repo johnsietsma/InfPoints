@@ -92,32 +92,38 @@ namespace InfPoints.NativeCollections
         {
             get
             {
-                var dataIndex = FindDataIndex((ulong)sparseIndex);
+                var dataIndex = FindDataIndex((ulong) sparseIndex);
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                if(dataIndex==-1) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
+                if (dataIndex == -1) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
 #endif
                 return Data[dataIndex];
             }
             set
             {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
                 if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
                 else SetValue(value, sparseIndex);
             }
         }
-        
+
         public T this[ulong sparseIndex]
         {
             get
             {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
                 var dataIndex = FindDataIndex(sparseIndex);
                 return Data[dataIndex];
             }
             set
             {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
                 if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
                 else SetValue(value, sparseIndex);
             }
@@ -127,10 +133,12 @@ namespace InfPoints.NativeCollections
         {
             return ContainsIndex((ulong) sparseIndex);
         }
-        
+
         public bool ContainsIndex(ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
             return FindDataIndex(sparseIndex) >= 0;
         }
 
@@ -152,15 +160,16 @@ namespace InfPoints.NativeCollections
         /// <param name="sparseIndex">The sparse index of the data</param>
         public void AddValue(T value, int sparseIndex)
         {
-            AddValue(value, (ulong)sparseIndex);
+            AddValue(value, (ulong) sparseIndex);
         }
-        
+
         public void AddValue(T value, ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             CheckFullAndThrow();
             CheckIndexDoesntExistOrThrow(sparseIndex);
-
+#endif
             int dataIndex = FindDataIndex(sparseIndex);
             dataIndex = ~dataIndex; // Two's complement is the insertion point
             Indices.Insert(dataIndex, sparseIndex);
@@ -177,12 +186,14 @@ namespace InfPoints.NativeCollections
         /// <param name="sparseIndex">The sparse array index</param>
         public void SetValue(T value, int sparseIndex)
         {
-            SetValue(value, (ulong)sparseIndex);   
+            SetValue(value, (ulong) sparseIndex);
         }
-        
+
         public void SetValue(T value, ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
             int dataIndex = FindDataIndex(sparseIndex);
             // Update the data
             Data[dataIndex] = value;
@@ -197,12 +208,14 @@ namespace InfPoints.NativeCollections
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
-            RemoveAt((ulong)sparseIndex);
+            RemoveAt((ulong) sparseIndex);
         }
-        
+
         public void RemoveAt(ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
@@ -230,9 +243,8 @@ namespace InfPoints.NativeCollections
 
         public void Dispose()
         {
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif
 
