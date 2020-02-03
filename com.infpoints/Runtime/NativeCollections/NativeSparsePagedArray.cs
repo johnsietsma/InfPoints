@@ -12,6 +12,8 @@ namespace InfPoints.NativeCollections
         public int Capacity;
         public int Length;
 
+        public bool IsFull => Length == Capacity;
+
         public override string ToString()
         {
             return $"Page Index: {PageIndex} Start Index: {StartIndex} Length: {Capacity}";
@@ -93,15 +95,19 @@ namespace InfPoints.NativeCollections
 
         public bool ContainsIndex(ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
             return m_PageAllocations.ContainsIndex(sparseIndex);
         }
 
         public void AddIndex(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentException($"Sparse index {sparseIndex} already exists.", nameof(sparseIndex));
-            if (m_PageAllocations.Length == m_PageAllocations.Capacity)
+            if (m_PageAllocations.IsFull)
                 throw new InvalidOperationException("Page allocations at capacity. Increase maximum page count.");
 #endif
 
@@ -144,6 +150,7 @@ namespace InfPoints.NativeCollections
         public void AddRange(ulong sparseIndex, NativeArray<T> data)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             if (data == default) throw new ArgumentNullException(nameof(data));
             if (!m_PageAllocations.ContainsIndex(sparseIndex))
                 throw new InvalidOperationException("Adding data to non-existent index");
@@ -169,8 +176,11 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="sparseIndex">The sparse index to retrieve</param>
         /// <returns>A <see cref="NativeArray{T}"/>containing the data</returns>
-        public NativeArray<T> AsArray(ulong sparseIndex)
+        public NativeArray<T> ToArray(ulong sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
             var allocation = m_PageAllocations[sparseIndex];
             void* dataPointer = m_Pages[allocation.PageIndex] + allocation.StartIndex;
             var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(dataPointer, allocation.Length,
@@ -183,6 +193,10 @@ namespace InfPoints.NativeCollections
 
         public void Dispose()
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
+#endif
+
             m_PageAllocations.Dispose();
             for (int index = 0; index < m_PageCount; index++)
             {

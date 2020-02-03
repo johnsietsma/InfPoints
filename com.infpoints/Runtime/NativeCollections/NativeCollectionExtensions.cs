@@ -111,7 +111,7 @@ namespace InfPoints.NativeCollections
             , IComparable<T>
         {
             CheckInRangeOrThrow(startIndex, count, data.Length);
-            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafePtr(), key, startIndex, count);
+            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafeReadOnlyPtr(), key, startIndex, count);
         }
 
         public static int BinarySearch<T>(this NativeSlice<T> data, T key)
@@ -126,7 +126,7 @@ namespace InfPoints.NativeCollections
             , IComparable<T>
         {
             CheckInRangeOrThrow(startIndex, count, data.Length);
-            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafePtr(), key, startIndex, count);
+            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafeReadOnlyPtr(), key, startIndex, count);
         }
 
         public static int BinarySearch<T>(this NativeList<T> data, T key)
@@ -141,7 +141,7 @@ namespace InfPoints.NativeCollections
             , IComparable<T>
         {
             CheckInRangeOrThrow(startIndex, count, data.Length);
-            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafePtr(), key, startIndex, count);
+            return NativeCollectionUnsafe.BinarySearch(data.GetUnsafeReadOnlyPtr(), key, startIndex, count);
         }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]

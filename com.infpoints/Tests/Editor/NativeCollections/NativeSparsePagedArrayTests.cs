@@ -1,5 +1,4 @@
-﻿using System;
-using InfPoints.NativeCollections;
+﻿using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -7,6 +6,30 @@ namespace InfPoints.Tests.Editor.NativeCollections
 {
     public class NativeSparsePagedArrayTests
     {
+        [Test]
+        public void AllocationAtCapacityIsFull()
+        {
+            var allocationFull = new PageAllocation()
+            {
+                Capacity = 1,
+                Length = 1,
+                PageIndex = 0,
+                StartIndex = 0
+            };
+            
+            var allocationNotFull = new PageAllocation()
+            {
+                Capacity = 2,
+                Length = 1,
+                PageIndex = 0,
+                StartIndex = 0
+            };
+            
+            Assert.That(allocationFull.IsFull, Is.True);
+            Assert.That(allocationNotFull.IsFull, Is.False);
+        }
+        
+        
         [Test]
         public void CreationGivesCorrectValues()
         {
@@ -59,7 +82,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 array.AddIndex(sparseIndex);
                 array.AddRange(sparseIndex, data);
                 Assert.That(array.Length, Is.EqualTo(1));
-                var returnedData = array.AsArray(sparseIndex);
+                var returnedData = array.ToArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length));
                 Assert.That(returnedData.ToArray(), Is.EqualTo(dataArray));
             }
@@ -90,7 +113,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 array.AddRange(sparseIndex, data);
                 Assert.That(array.Length, Is.EqualTo(1));
                 Assert.That(array.PageCount, Is.EqualTo(1));
-                var returnedData = array.AsArray(sparseIndex);
+                var returnedData = array.ToArray(sparseIndex);
                 Assert.That(returnedData.Length, Is.EqualTo(data.Length * 2));
 
                 for (int index = 0; index < dataArray.Length * 2; index++)
@@ -120,8 +143,8 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 array.AddIndex(sparseIndex2);
                 array.AddRange(sparseIndex2, data);
                 Assert.That(array.PageCount, Is.EqualTo(2));
-                var returnedData1 = array.AsArray(sparseIndex1);
-                var returnedData2 = array.AsArray(sparseIndex2);
+                var returnedData1 = array.ToArray(sparseIndex1);
+                var returnedData2 = array.ToArray(sparseIndex2);
                 Assert.That(returnedData1.ToArray(), Is.EqualTo(returnedData2.ToArray()));
             }
         }
