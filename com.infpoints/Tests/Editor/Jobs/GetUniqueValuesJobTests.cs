@@ -5,7 +5,7 @@ using Unity.Jobs;
 
 namespace InfPoints.Tests.Editor.Jobs
 {
-    public class FilterUniqueValuesJobTests
+    public class GetUniqueValuesJobTests
     {
         [Test]
         public void DoesFilterUniqueValues()
@@ -15,14 +15,14 @@ namespace InfPoints.Tests.Editor.Jobs
             using (var uniqueMap = new NativeHashMap<int,uint>(valuesArray.Length, Allocator.TempJob))
             using(var indices = new NativeList<int>(valuesArray.Length, Allocator.TempJob) )
             {
-                var uniqueJob = new FilterUniqueValuesJob<int>()
+                var uniqueJob = new GetUniqueValuesJob<int>()
                 {
                     Values = valuesArray,
                     UniqueValues = uniqueMap
                 };
 
 
-                var collectUniqueJobHandle = uniqueJob.ScheduleAppend(indices, valuesArray.Length, 128);
+                var collectUniqueJobHandle = uniqueJob.Schedule(valuesArray.Length, 128);
                 collectUniqueJobHandle.Complete();
 
                 Assert.That(uniqueMap.Length, Is.EqualTo(5));

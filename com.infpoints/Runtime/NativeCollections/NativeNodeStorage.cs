@@ -12,7 +12,6 @@ namespace InfPoints.NativeCollections
         public NativeSparseArray<T> Nodes => m_Nodes;
         public NativeSparsePagedArray<T> Storage => m_Storage;
 
-
         NativeSparseArray<T> m_Nodes;
         NativeSparsePagedArray<T> m_Storage;
 
