@@ -2,7 +2,6 @@
 using InfPoints.Jobs;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 
 namespace InfPoints
 {
@@ -28,6 +27,22 @@ namespace InfPoints
             int MaximumPointsPerLevel = MaximumPointsPerNode * cellCount;
             
             m_Octree.AddLevel(MaximumPointsPerLevel);
+            
+            var outsideCount = new NativeInterlockedInt(0, Allocator.TempJob);
+            // Check points are inside AABB
+            var arePointsInsideJob = new ArePointsInsideAABBJob()
+            {
+                aabb = m_Octree.AABB,
+                Points = points,
+                OutsideCount = outsideCount
+            }.Schedule(points.Length, InnerLoopBatchCount);
+            arePointsInsideJob.Complete();
+            if (outsideCount.Value > 0)
+            {
+                UnityEngine.Debug.Log("Adding points outside the AABB, aborting");
+            }
+            
+            outsideCount.Dispose();
 
             // Transform each point to a coordinate within the AABB
             var coordinates = PointCloudUtils.PointsToCoordinates(points, -m_Octree.AABB.Minimum, cellWidth);
