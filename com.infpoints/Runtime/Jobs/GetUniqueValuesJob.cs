@@ -15,7 +15,7 @@ namespace InfPoints.Jobs
     public struct GetUniqueValuesJob<T> : IJobParallelFor where T : unmanaged, IEquatable<T>
     {
         [ReadOnly] public NativeArray<T> Values;
-        public NativeHashMap<T, uint> UniqueValues;
+        public NativeHashMap<T, uint>.ParallelWriter UniqueValues;
 
         public void Execute(int index)
         {
@@ -26,17 +26,9 @@ namespace InfPoints.Jobs
         /// <summary>
         /// Either adds a new unique value, or increments the count of the value. 
         /// </summary>
-        public static void AddUniqueWithCount(NativeHashMap<T, uint> uniqueValues, T key)
+        public static void AddUniqueWithCount(NativeHashMap<T, uint>.ParallelWriter uniqueValues, T key)
         {
-            if (uniqueValues.TryGetValue(key, out var count))
-            {
-                uniqueValues[key] = count + 1;
-            }
-            else
-            {
-                // First time we've encountered this, it is unique
-                uniqueValues.TryAdd(key, 1);
-            }
+            uniqueValues.TryAdd(key, 1);
         }
     }
 
@@ -46,7 +38,7 @@ namespace InfPoints.Jobs
         [ReadOnly] public NativeArray<uint> X;
         [ReadOnly] public NativeArray<uint> Y;
         [ReadOnly] public NativeArray<uint> Z;
-        public NativeHashMap<uint3, uint> UniqueValues;
+        public NativeHashMap<uint3, uint>.ParallelWriter UniqueValues;
 
         public void Execute(int index)
         {

@@ -39,7 +39,7 @@ namespace InfPoints.Jobs
 
         public void Execute(int index)
         {
-            Codes[index] = Morton.EncodeMorton64( new uint3(CoordinatesX[0], CoordinatesY[0], CoordinatesZ[0]));
+            Codes[index] = Morton.EncodeMorton64( new uint3(CoordinatesX[index], CoordinatesY[index], CoordinatesZ[index]));
         }
     }
 

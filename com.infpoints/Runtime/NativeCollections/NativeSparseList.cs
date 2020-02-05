@@ -85,13 +85,17 @@ namespace InfPoints
         {
             get
             {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
                 var dataIndex = FindDataIndex(sparseIndex);
                 return Data[dataIndex];
             }
             set
             {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
                 if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
                 else SetValue(value, sparseIndex);
             }
@@ -99,7 +103,9 @@ namespace InfPoints
 
         public bool ContainsIndex(int sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
             return FindDataIndex(sparseIndex) >= 0;
         }
 
@@ -111,15 +117,17 @@ namespace InfPoints
         /// <param name="sparseIndex">The sparse index of the data</param>
         public void AddValue(T value, int sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             CheckIndexDoesntExistOrThrow(sparseIndex);
-            
+#endif
+
             int dataIndex = FindDataIndex(sparseIndex);
             dataIndex = ~dataIndex; // Two's complement is the insertion point
-            
+
             // Make room in the list to insert
-            Indices.Add(default); 
-            Data.Add(default); 
+            Indices.Add(default);
+            Data.Add(default);
 
             Indices.Insert(dataIndex, sparseIndex);
             Data.Insert(dataIndex, value);
@@ -134,7 +142,9 @@ namespace InfPoints
         /// <param name="sparseIndex">The sparse List index</param>
         public void SetValue(T value, int sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
             int dataIndex = FindDataIndex(sparseIndex);
             // Update the data
             Data[dataIndex] = value;
@@ -149,7 +159,9 @@ namespace InfPoints
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void RemoveAt(int sparseIndex)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
@@ -170,9 +182,8 @@ namespace InfPoints
 
         public void Dispose()
         {
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif
 

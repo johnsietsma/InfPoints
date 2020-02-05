@@ -1,28 +1,33 @@
-﻿using InfPoints.Jobs;
-using InfPoints.NativeCollections;
+﻿using System;
+using InfPoints.Jobs;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace InfPoints
 {
-    public class PointCloud
+    public class PointCloud : IDisposable
     {
-        SparseOctree<ulong> m_Octree;
+        SparseOctree<float> m_Octree;
 
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
 
         public PointCloud(AABB aabb)
         {
-            m_Octree = new SparseOctree<ulong>(aabb, MaximumPointsPerNode, Allocator.Persistent);
+            m_Octree = new SparseOctree<float>(aabb, MaximumPointsPerNode, Allocator.Persistent);
         }
 
         public void AddPoints(XYZSoA<float> points)
         {
             int levelIndex = 0;
-            int cellCount = SparseOctree<int>.GetNodeCount(levelIndex);
+            int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
+
+            const int MaximumPointsPerNode = 1024;
+            int MaximumPointsPerLevel = MaximumPointsPerNode * cellCount;
+            
+            m_Octree.AddLevel(MaximumPointsPerLevel);
 
             // Transform each point to a coordinate within the AABB
             var coordinates = PointCloudUtils.PointsToCoordinates(points, -m_Octree.AABB.Minimum, cellWidth);
@@ -43,16 +48,17 @@ namespace InfPoints
 
             // Filter out full nodes
             NativeList<int> filteredMortonCodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
-            var filterFullNodesHandle = new FilterFullNodesJob<ulong>()
+            var filterFullNodesHandle = new FilterFullNodesJob<float>()
             {
                 MortonCodes = uniqueCodes,
-                NodeStorage = m_Octree.GetNodeStorage(levelIndex).Storage
+                NodeStorage = m_Octree.GetNodeStorage(levelIndex)
             }.ScheduleAppend(filteredMortonCodeIndices, mortonCodes.Length, InnerLoopBatchCount);
             filterFullNodesHandle.Complete();
 
-            var collectedPoints = new NativeArray<float3>(mortonCodes.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var collectedPointsCount = new NativeArray<int>(1, Allocator.TempJob);
-            // Filter points
+            
+            // For each node
             for (int index = 0; index < filteredMortonCodeIndices.Length; index++)
             {
                 int mortonCodeIndex = filteredMortonCodeIndices[index];
@@ -66,11 +72,21 @@ namespace InfPoints
                     PointsX = points.X,
                     PointsY = points.Y,
                     PointsZ = points.Z,
-                    CollectedPoints = collectedPoints,
+                    CollectedPointsX = collectedPoints.X,
+                    CollectedPointsY = collectedPoints.Y,
+                    CollectedPointsZ = collectedPoints.Z,
                     CollectedPointsCount = collectedPointsCount
                 }.ScheduleFilter(filteredMortonCodeIndices, InnerLoopBatchCount);
-                
                 collectJob.Complete();
+
+                // Add them to the octree
+                var storage = m_Octree.GetNodeStorage(0);
+                if (!storage.ContainsNode(mortonCode))
+                {
+                    storage.AddNode(mortonCode);
+                }
+                
+                storage.AddData(mortonCode, collectedPoints);
             }
 
             collectedPointsCount.Dispose();
@@ -79,6 +95,11 @@ namespace InfPoints
             uniqueCodes.Dispose();
             coordinates.Dispose();
             mortonCodes.Dispose();
+        }
+
+        public void Dispose()
+        {
+            m_Octree?.Dispose();
         }
     }
 }

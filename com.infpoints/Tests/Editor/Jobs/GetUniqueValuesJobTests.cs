@@ -18,7 +18,7 @@ namespace InfPoints.Tests.Editor.Jobs
                 var uniqueJob = new GetUniqueValuesJob<int>()
                 {
                     Values = valuesArray,
-                    UniqueValues = uniqueMap
+                    UniqueValues = uniqueMap.AsParallelWriter()
                 };
 
 

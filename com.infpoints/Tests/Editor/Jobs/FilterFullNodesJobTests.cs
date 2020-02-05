@@ -13,7 +13,7 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pagedArray = new NativeSparsePagedArray<int>(length,1,2, Allocator.TempJob))
+            using (var pagedArray = new NativeNodeStorage(1,2, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
             using( var indices = new NativeList<int>(length, Allocator.TempJob))
             {
@@ -22,12 +22,12 @@ namespace InfPoints.Tests.Editor.Jobs
 
                 // Fill the fist page
                 var index1 = codesArray[0];
-                pagedArray.AddIndex(index1);
+                pagedArray.AddNode(index1);
                 pagedArray.Add(index1, 1);
                 
                 // Don't fill the second page
                 var index2 = codesArray[1];
-                pagedArray.AddIndex(index2);
+                pagedArray.AddNode(index2);
                 
                 var isFullJob = new FilterFullNodesJob<int>()
                 {

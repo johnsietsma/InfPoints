@@ -14,6 +14,7 @@ namespace InfPoints
             // Transform points from world to Octree AABB space
             var pointsWide = points.Reinterpret<float4>();
             var transformHandle = PointCloudUtils.ScheduleTransformPoints(pointsWide, offset);
+            transformHandle.Complete();
 
             // Convert all points to node coordinates
             var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob);
@@ -30,7 +31,7 @@ namespace InfPoints
                 var uniqueCoordinatesHandle = new GetUniqueValuesJob<ulong>()
                 {
                     Values = codes,
-                    UniqueValues = uniqueCoordinatesMap
+                    UniqueValues = uniqueCoordinatesMap.AsParallelWriter()
                 }.Schedule(codes.Length, InnerLoopBatchCount);
                 uniqueCoordinatesHandle.Complete();
                 return uniqueCoordinatesMap.GetKeyArray(Allocator.TempJob);
