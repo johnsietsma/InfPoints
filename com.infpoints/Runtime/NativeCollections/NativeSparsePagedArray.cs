@@ -144,6 +144,7 @@ namespace InfPoints.NativeCollections
             {
                 PageIndex = pageIndex,
                 StartIndex = startIndex,
+                Length = 0,
                 Capacity = m_AllocationSize
             };
 
@@ -247,9 +248,9 @@ namespace InfPoints.NativeCollections
         
         void CheckHasCapacityAndThrow(ulong sparseIndex, int length)
         {
-            if (m_PageAllocations[sparseIndex].FreeLength < Length)
+            if (m_PageAllocations[sparseIndex].FreeLength < length)
                 throw new ArgumentOutOfRangeException(
-                    $"Data of length {Length} will not fit in allocation {m_PageAllocations[sparseIndex]}");
+                    $"Data of length {length} will not fit in allocation {m_PageAllocations[sparseIndex]}");
         }
 
         void CheckContainsIndexAndThrow(ulong sparseIndex)

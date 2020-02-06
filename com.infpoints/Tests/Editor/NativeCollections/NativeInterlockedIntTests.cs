@@ -52,18 +52,18 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void IncrementGivesCorrectResultInJob()
         {
-            const int IncrementCount = 1024 * 1024;
-            const int BatchCount = 2;
+            const int incrementCount = 1024 * 1024;
+            const int batchCount = 2;
             
             using (NativeInterlockedInt interlockedInt = new NativeInterlockedInt(0, Allocator.TempJob))
             {
                 var incrementJob = new IncrementInterlockedIntJob()
                 {
                     Count = interlockedInt
-                }.Schedule(IncrementCount, BatchCount);
+                }.Schedule(incrementCount, batchCount);
                 incrementJob.Complete();
                 
-                Assert.That(IncrementCount, Is.EqualTo(interlockedInt.Value));
+                Assert.That(incrementCount, Is.EqualTo(interlockedInt.Value));
             }
         }
     }

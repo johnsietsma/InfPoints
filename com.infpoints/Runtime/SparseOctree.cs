@@ -29,10 +29,12 @@ namespace InfPoints
 
         readonly Allocator m_Allocator;
         List<NativeNodeStorage> m_NodeStoragePerLevel;
+        int m_MaximumPointsPerNode;
 
         public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {
             AABB = aabb;
+            m_MaximumPointsPerNode = maximumPointsPerNode;
             m_Allocator = allocator;
             m_NodeStoragePerLevel = new List<NativeNodeStorage>(MaxLevelCount);
         }
@@ -42,10 +44,10 @@ namespace InfPoints
             return m_NodeStoragePerLevel[levelIndex];
         }
 
-        public void AddLevel(int maximumPointsPerNode)
+        public void AddLevel()
         {
             var nodeCount = SparseOctreeUtils.GetNodeCount(LevelCount);
-            var nodeStorage = new NativeNodeStorage(nodeCount, maximumPointsPerNode, m_Allocator);
+            var nodeStorage = new NativeNodeStorage(nodeCount, m_MaximumPointsPerNode, m_MaximumPointsPerNode*4, m_Allocator);
             m_NodeStoragePerLevel.Add(nodeStorage);
         }
 

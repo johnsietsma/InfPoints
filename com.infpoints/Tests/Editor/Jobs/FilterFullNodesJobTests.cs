@@ -13,13 +13,10 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pagedArray = new NativeNodeStorage(1,2, Allocator.TempJob))
+            using (var pagedArray = new NativeNodeStorage(2,1, 1, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
             using( var indices = new NativeList<int>(length, Allocator.TempJob))
             {
-                const int pageIndex = 0;
-                const int startIndex = 0;
-
                 // Fill the fist page
                 var index1 = codesArray[0];
                 pagedArray.AddNode(index1);

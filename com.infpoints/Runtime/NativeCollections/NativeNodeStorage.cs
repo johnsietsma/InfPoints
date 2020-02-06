@@ -21,17 +21,15 @@ namespace InfPoints.NativeCollections
         NativeSparsePagedArray<float> m_DataY;
         NativeSparsePagedArray<float> m_DataZ;
 
-        const int NodesPerPage = 4;
-
-        public NativeNodeStorage(int maximumNodeCount, int maximumPointsPerNode, Allocator allocator)
+        public NativeNodeStorage(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
-            var storagePageSize = maximumPointsPerNode * NodesPerPage;
-            int maximumPageCount = maximumNodeCount / NodesPerPage;
+            var storagePageSize = maximumPointsPerNode * nodesPerPage;
+            int maximumPageCount = maximumNodeCount / nodesPerPage;
 
             m_DataX = new NativeSparsePagedArray<float>(maximumPointsPerNode, storagePageSize, maximumPageCount,
                 allocator);
@@ -61,8 +59,8 @@ namespace InfPoints.NativeCollections
         public void Add(ulong sparseIndex, float3 point)
         {
             m_DataX.Add(sparseIndex, point.x);
-            m_DataX.Add(sparseIndex, point.y);
-            m_DataX.Add(sparseIndex, point.z);
+            m_DataY.Add(sparseIndex, point.y);
+            m_DataZ.Add(sparseIndex, point.z);
         }
 
         public void AddData(ulong sparseIndex, XYZSoA<float> data)

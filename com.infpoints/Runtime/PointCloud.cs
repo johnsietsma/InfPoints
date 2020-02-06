@@ -23,10 +23,7 @@ namespace InfPoints
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
 
-            const int MaximumPointsPerNode = 1024;
-            int MaximumPointsPerLevel = MaximumPointsPerNode * cellCount;
-            
-            m_Octree.AddLevel(MaximumPointsPerLevel);
+            m_Octree.AddLevel();
             
             var outsideCount = new NativeInterlockedInt(0, Allocator.TempJob);
             // Check points are inside AABB

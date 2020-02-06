@@ -24,7 +24,7 @@ namespace InfPoints.Tests.Editor
             using (var octree = new SparseOctree<int>(AABB.zero, 1, Allocator.Persistent))
             {
                 Assert.That(octree.LevelCount, Is.EqualTo(0));
-                octree.AddLevel(1);
+                octree.AddLevel();
                 Assert.That(octree.LevelCount, Is.EqualTo(1));
             }
         }
