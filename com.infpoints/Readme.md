@@ -44,3 +44,7 @@ Putting it all together, given a node's index, the start of the child index rang
 ### Sparse Array
 
 A double-indirection. Due to the large number of nodes in a level, which mostly wont be filled, the nodes are stored in a compact array and another array stores sorted indices into the node array. To access a node a binary search is performed on the index array.
+
+## License
+
+MIT License

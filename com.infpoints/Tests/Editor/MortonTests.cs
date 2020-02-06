@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using InfPoints.Jobs;
 using NUnit.Framework;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -13,10 +15,78 @@ using Random = Unity.Mathematics.Random;
 
 namespace InfPoints.Tests.Editor
 {
+    // ----
+    // Code for packing and unpacking points into 4x3 arrays
+
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct TransposePackedJob : IJob
+    {
+        [ReadOnly] public NativeArray<uint3x4> SourceArray;
+        public NativeArray<uint4x3> TransposedArray;
+
+        public void Execute()
+        {
+            for (int i = 0; i < SourceArray.Length; i++)
+            {
+                TransposedArray[i] = math.transpose(SourceArray[i]);
+            }
+        }
+    }
+
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct TransposeUnpackedJob : IJob
+    {
+        [ReadOnly] public NativeArray<uint4x3> SourceArray;
+        public NativeArray<uint3x4> TransposedArray;
+
+        public void Execute()
+        {
+            for (int i = 0; i < SourceArray.Length; i++)
+            {
+                TransposedArray[i] = math.transpose(SourceArray[i]);
+            }
+        }
+    }
+
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct Morton32EncodeJob_Packed : IJob
+    {
+        [ReadOnly] public NativeArray<uint4x3> Coordinates;
+        public NativeArray<uint4> Codes;
+
+        public void Execute()
+        {
+            for (int index = 0; index < Coordinates.Length; index++)
+            {
+                var coordinate = Coordinates[index];
+                Codes[index] = Morton.EncodeMorton32(coordinate[0], coordinate[1], coordinate[2]);
+            }
+        }
+    }
+
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct Morton32DecodeJob_Packed : IJob
+    {
+        [ReadOnly] public NativeArray<uint4> Codes;
+        public NativeArray<uint4x3> Coordinates;
+
+        public void Execute()
+        {
+            for (int index = 0; index < Codes.Length; index++)
+            {
+                Coordinates[index] = Morton.DecodeMorton32(Codes[index]);
+            }
+        }
+    }
+
+    // ----
+
+
     [SuppressMessage("ReSharper", "HeapView.BoxingAllocation")]
     public class MortonTests
     {
         static readonly int NUM_COORDS = 1000000;
+        const int InnerLoopBatchCont = 64;
 
         private static uint3[] WellKnownCoordinates32 { get; } =
         {
@@ -200,10 +270,11 @@ namespace InfPoints.Tests.Editor
         public void Morton64_EncodeDecode()
         {
             DoEncodeDecode64();
-            for( int i=0; i<m_Coordinates64.Length; i++)
+            for (int i = 0; i < m_Coordinates64.Length; i++)
             {
                 Assert.AreEqual(m_Coordinates64Decoded[i], m_Coordinates64[i], $"i={i}");
             }
+
             Assert.IsTrue(m_Coordinates64.ArraysEqual(m_Coordinates64Decoded));
         }
 
@@ -219,17 +290,6 @@ namespace InfPoints.Tests.Editor
         {
             DoTransposePacked32();
             DoEncodeDecodeJobPacked32();
-            DoTransposeUnpacked32();
-
-            Assert.IsTrue(m_Coordinates32.ArraysEqual(m_Coordinates32Decoded));
-            Assert.IsTrue(m_Coordinates32Packed.ArraysEqual(m_Coordinates32DecodedPacked));
-        }
-
-        [Test]
-        public void Morton32Job_EncodeDecodePackedFor()
-        {
-            DoTransposePacked32();
-            DoEncodeDecodeJobPackedFor32();
             DoTransposeUnpacked32();
 
             Assert.IsTrue(m_Coordinates32.ArraysEqual(m_Coordinates32Decoded));
@@ -264,33 +324,13 @@ namespace InfPoints.Tests.Editor
             Measure.Method(DoEncodeDecodeJob64).WarmupCount(2).Run();
         }
 
-        
+
         [Test, Performance]
         [Version("1")]
         public void Performance_EncodeDecodeJobPacked32()
         {
             DoTransposePacked32();
             Measure.Method(DoEncodeDecodeJobPacked32).WarmupCount(2).Run();
-        }
-
-        [Test, Performance]
-        [Version("1")]
-        public void Performance_EncodeDecodeJobPackedWithTranspose32()
-        {
-            Measure.Method(() =>
-            {
-                DoTransposePacked32();
-                DoEncodeDecodeJobPacked32();
-                DoTransposeUnpacked32();
-            }).WarmupCount(2).Run();
-        }
-
-        [Test, Performance]
-        [Version("1")]
-        public void Performance_EncodeDecodeJobPackedFor32()
-        {
-            DoTransposePacked32();
-            Measure.Method(DoEncodeDecodeJobPackedFor32).WarmupCount(2).Run();
         }
 
         void DoEncodeDecode32()
@@ -333,8 +373,8 @@ namespace InfPoints.Tests.Editor
                 Coordinates = m_Coordinates32Decoded
             };
 
-            var encodeJobHandle = encodeJob.Schedule();
-            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+            var encodeJobHandle = encodeJob.Schedule(m_Coordinates32.Length, InnerLoopBatchCont);
+            var decodeJobHandle = decodeJob.Schedule(m_Codes32.Length, InnerLoopBatchCont, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }
@@ -353,8 +393,8 @@ namespace InfPoints.Tests.Editor
                 Coordinates = m_Coordinates64Decoded
             };
 
-            var encodeJobHandle = encodeJob.Schedule();
-            var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
+            var encodeJobHandle = encodeJob.Schedule(m_Coordinates64.Length, InnerLoopBatchCont);
+            var decodeJobHandle = decodeJob.Schedule(m_Codes64.Length, InnerLoopBatchCont, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }
@@ -398,27 +438,6 @@ namespace InfPoints.Tests.Editor
 
             var encodeJobHandle = encodeJob.Schedule();
             var decodeJobHandle = decodeJob.Schedule(encodeJobHandle);
-
-            decodeJobHandle.Complete();
-        }
-
-        void DoEncodeDecodeJobPackedFor32()
-        {
-            var encodeJob = new Morton32EncodeJob_PackedFor()
-            {
-                Coordinates = m_Coordinates32Packed,
-                Codes = m_Codes32.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>())
-            };
-
-            var decodeJob = new Morton32DecodeJob_PackedFor()
-            {
-                Codes = m_Codes32.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>()),
-                Coordinates = m_Coordinates32DecodedPacked,
-            };
-
-            var coordinatesLength = encodeJob.Coordinates.Length;
-            var encodeJobHandle = encodeJob.Schedule(coordinatesLength, 32);
-            var decodeJobHandle = decodeJob.Schedule(coordinatesLength, 32, encodeJobHandle);
 
             decodeJobHandle.Complete();
         }

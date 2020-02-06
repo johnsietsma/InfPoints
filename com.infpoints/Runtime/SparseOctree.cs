@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using InfPoints.NativeCollections;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace InfPoints
 {
-
     /// <summary>
     /// The first level of the Octree is the root node, which has an AABB which encapsulates the entire tree.
     /// Each level down has 8 nodes, each with its own AABB.
@@ -14,46 +15,52 @@ namespace InfPoints
     ///   belong to a node.
     /// This is not a Native Collection because Native Collections cannot contain other collections.
     /// </summary>
-    public class SparseOctree<T> : IDisposable where T : unmanaged
+    public class SparseOctree<T> : IDisposable
+        where T : unmanaged
     {
-        public bool IsCreated => m_Levels != null;
+        public const int MaxLevelCount = 7;
 
-        public int LevelCount { get; private set; }
-        
+        public bool IsCreated => m_NodeStoragePerLevel != null;
+
+        public int LevelCount => m_NodeStoragePerLevel.Count;
+
         // ReSharper disable once InconsistentNaming
         public AABB AABB { get; private set; }
 
         readonly Allocator m_Allocator;
-        List<NativeSparseArray<T>> m_Levels;
+        List<NativeNodeStorage> m_NodeStoragePerLevel;
+        int m_MaximumPointsPerNode;
 
-        public SparseOctree(AABB aabb, int initialLevelCount, Allocator allocator)
+        public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {
             AABB = aabb;
+            m_MaximumPointsPerNode = maximumPointsPerNode;
             m_Allocator = allocator;
-            m_Levels = new List<NativeSparseArray<T>>(initialLevelCount);
-            LevelCount = 0;
+            m_NodeStoragePerLevel = new List<NativeNodeStorage>(MaxLevelCount);
+        }
+        
+        public NativeNodeStorage GetNodeStorage(int levelIndex)
+        {
+            return m_NodeStoragePerLevel[levelIndex];
         }
 
-        public void AddLevel(int maxNodeCountForLevel)
+        public void AddLevel()
         {
-            m_Levels.Add(new NativeSparseArray<T>(maxNodeCountForLevel, m_Allocator));
-            LevelCount++;
+            var nodeCount = SparseOctreeUtils.GetNodeCount(LevelCount);
+            var nodeStorage = new NativeNodeStorage(nodeCount, m_MaximumPointsPerNode, m_MaximumPointsPerNode*4, m_Allocator);
+            m_NodeStoragePerLevel.Add(nodeStorage);
         }
 
         public void Dispose()
         {
-            if (m_Levels == null) throw new InvalidOperationException();
-            
+            if (!IsCreated) throw new InvalidOperationException();
+
             for (int i = 0; i < LevelCount; i++)
             {
-                m_Levels[i].Dispose();
+                m_NodeStoragePerLevel[i].Dispose();
             }
 
-            LevelCount = 0;
-            m_Levels = null;
+            m_NodeStoragePerLevel = null;
         }
-
-
     }
-
 }

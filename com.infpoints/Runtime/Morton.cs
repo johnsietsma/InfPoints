@@ -13,6 +13,8 @@ namespace InfPoints
     /// Morton order.
     /// See http://asgerhoedt.dk/?p=276 for an overview.
     /// Encoding and decoding functions adapted from https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/.
+    /// Original code in the public domain (https://fgiesen.wordpress.com/2011/01/17/texture-tiling-and-swizzling/#comment-858)
+    /// Added 64 bit versions.
     /// </summary>
     public static class Morton
     {
