@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Unity.Collections;
 using Unity.Mathematics;
 
 namespace InfPoints.Tests.Editor
@@ -9,12 +10,11 @@ namespace InfPoints.Tests.Editor
         public void CanAddPointsToPointCloud()
         {
             var aabb = new AABB(float3.zero,10);
-            var pointCloud = new PointCloud(aabb);
-            var points = PointCloudGenerator.Sphere(1024, 5);
-            pointCloud.AddPoints( points );
-
-            points.Dispose();
-            pointCloud.Dispose();
+            using(var pointCloud = new PointCloud(aabb))
+            using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
+            {
+                pointCloud.AddPoints(points);
+            }
         }
     }
 }

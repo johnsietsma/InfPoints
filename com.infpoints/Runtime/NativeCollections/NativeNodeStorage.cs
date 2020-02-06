@@ -26,6 +26,9 @@ namespace InfPoints.NativeCollections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
+            if(maximumNodeCount<=0) throw new ArgumentException(nameof(maximumNodeCount), "Must be greater then 0");
+            if(maximumPointsPerNode<=0) throw new ArgumentException(nameof(maximumPointsPerNode), "Must be greater then 0");
+            if(nodesPerPage<=0) throw new ArgumentException(nameof(nodesPerPage), "Must be greater then 0");
 #endif
 
             var storagePageSize = maximumPointsPerNode * nodesPerPage;

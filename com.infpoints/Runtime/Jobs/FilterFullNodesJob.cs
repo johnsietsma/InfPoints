@@ -12,7 +12,7 @@ namespace InfPoints.Jobs
         public bool Execute(int index)
         {
             ulong code = MortonCodes[index];
-            return NodeStorage.IsFull(code);
+            return NodeStorage.ContainsNode(code) && NodeStorage.IsFull(code);
         }
     }
 }

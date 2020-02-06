@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using InfPoints.Jobs;
+using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 
@@ -19,63 +21,56 @@ namespace InfPoints
 
         public void AddPoints(XYZSoA<float> points)
         {
+            UnityEngine.Debug.Log($"Adding {points.Length} points to the octree with AABB {m_Octree.AABB}.");
+
             int levelIndex = 0;
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = m_Octree.AABB.Size / cellCount;
 
+            UnityEngine.Debug.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
+
             m_Octree.AddLevel();
-            
-            var outsideCount = new NativeInterlockedInt(0, Allocator.TempJob);
-            // Check points are inside AABB
-            var arePointsInsideJob = new ArePointsInsideAABBJob()
+
+            using (var outsideCount = new NativeInterlockedInt(0, Allocator.TempJob))
             {
-                aabb = m_Octree.AABB,
-                Points = points,
-                OutsideCount = outsideCount
-            }.Schedule(points.Length, InnerLoopBatchCount);
-            arePointsInsideJob.Complete();
-            if (outsideCount.Value > 0)
-            {
-                UnityEngine.Debug.Log("Adding points outside the AABB, aborting");
+                // Check points are inside AABB
+                var arePointsInsideJob = new ArePointsInsideAABBJob()
+                {
+                    aabb = m_Octree.AABB,
+                    Points = points,
+                    OutsideCount = outsideCount
+                }.Schedule(points.Length, InnerLoopBatchCount);
+                arePointsInsideJob.Complete();
+                if (outsideCount.Value > 0)
+                {
+                    UnityEngine.Debug.Log("Adding points outside the AABB, aborting");
+                    return;
+                }
             }
-            
-            outsideCount.Dispose();
 
             // Transform each point to a coordinate within the AABB
-            var coordinates = PointCloudUtils.PointsToCoordinates(points, -m_Octree.AABB.Minimum, cellWidth);
-            
-            // Convert unique coordinates to morton codes
-            var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var mortonCodeHandle = new Morton64SoAEncodeJob()
-            {
-                CoordinatesX = coordinates.X,
-                CoordinatesY = coordinates.Y,
-                CoordinatesZ = coordinates.Z,
-                Codes = mortonCodes
-            }.Schedule(coordinates.Length, InnerLoopBatchCount);
-            mortonCodeHandle.Complete();
+            var coordinates = PointCloudUtils.PointsToCoordinates(points, m_Octree.AABB.Minimum, cellWidth);
+
+            // Convert coordinates to morton codes
+            var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
 
             // Get all unique codes
             var uniqueCodes = PointCloudUtils.GetUniqueCodes(mortonCodes);
 
             // Filter out full nodes
-            NativeList<int> filteredMortonCodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
-            var filterFullNodesHandle = new FilterFullNodesJob<float>()
-            {
-                MortonCodes = uniqueCodes,
-                NodeStorage = m_Octree.GetNodeStorage(levelIndex)
-            }.ScheduleAppend(filteredMortonCodeIndices, mortonCodes.Length, InnerLoopBatchCount);
-            filterFullNodesHandle.Complete();
+            var nodeStorage = m_Octree.GetNodeStorage(levelIndex);
+            var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage);
 
-            var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory);
             var collectedPointsCount = new NativeArray<int>(1, Allocator.TempJob);
-            
+
             // For each node
             for (int index = 0; index < filteredMortonCodeIndices.Length; index++)
             {
                 int mortonCodeIndex = filteredMortonCodeIndices[index];
                 ulong mortonCode = mortonCodes[mortonCodeIndex];
-                
+
                 // Collect points
                 var collectJob = new CollectPointsJob()
                 {
@@ -97,7 +92,7 @@ namespace InfPoints
                 {
                     storage.AddNode(mortonCode);
                 }
-                
+
                 storage.AddData(mortonCode, collectedPoints);
             }
 
