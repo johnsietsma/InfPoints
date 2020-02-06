@@ -15,6 +15,7 @@ namespace InfPoints
     /// <typeparam name="T">An unmanaged type</typeparam>
     [NativeContainer]
     [NativeContainerIsAtomicWriteOnly]
+    [NativeContainerSupportsDeallocateOnJobCompletion]
     public unsafe struct NativeInterlockedInt : IDisposable
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS

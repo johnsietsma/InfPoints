@@ -4,16 +4,26 @@ using Unity.Jobs;
 
 namespace InfPoints.Tests.Editor.NativeCollections
 {
-    internal struct IncrementInterlockedIntJob : IJobParallelFor
+    internal struct IncrementIntJob : IJobParallelFor
     {
         public NativeInterlockedInt Count;
-        
+
         public void Execute(int index)
         {
             Count.Increment();
         }
     }
     
+    internal struct DeallocIntJob : IJobParallelFor
+    {
+        [DeallocateOnJobCompletion] public NativeInterlockedInt Count;
+
+        public void Execute(int index)
+        {
+            Count.Increment();
+        }
+    }
+
     public class NativeInterlockedIntTests
     {
         [Test]
@@ -26,7 +36,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(interlockedInt.Value, Is.EqualTo(5));
             }
         }
-        
+
         [Test]
         public void IncrementingGivesTheCorrectResult()
         {
@@ -37,7 +47,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(interlockedInt.Value, Is.EqualTo(11));
             }
         }
-        
+
         [Test]
         public void DecrementingGivesTheCorrectResult()
         {
@@ -54,17 +64,38 @@ namespace InfPoints.Tests.Editor.NativeCollections
         {
             const int incrementCount = 1024 * 1024;
             const int batchCount = 2;
-            
-            using (NativeInterlockedInt interlockedInt = new NativeInterlockedInt(0, Allocator.TempJob))
+
+            using (var interlockedInt = new NativeInterlockedInt(0, Allocator.TempJob))
             {
-                var incrementJob = new IncrementInterlockedIntJob()
+                var incrementJob = new IncrementIntJob()
                 {
                     Count = interlockedInt
                 }.Schedule(incrementCount, batchCount);
+
+                Assert.That(interlockedInt.IsCreated, Is.True);
                 incrementJob.Complete();
-                
+
                 Assert.That(incrementCount, Is.EqualTo(interlockedInt.Value));
             }
+        }
+        
+        [Test]
+        public void DeallocsOnJobCompletion()
+        {
+            const int incrementCount = 1;
+            const int batchCount = 1;
+
+            var interlockedInt = new NativeInterlockedInt(0, Allocator.TempJob);
+            interlockedInt.Value = 5; // Legal before the job is scheduled
+            
+            var deallocJob = new DeallocIntJob()
+            {
+                Count = interlockedInt
+            }.Schedule(incrementCount, batchCount);
+            
+            deallocJob.Complete();
+            
+            Assert.That(()=>interlockedInt.Value, Throws.InvalidOperationException); // Deallocated
         }
     }
 }
