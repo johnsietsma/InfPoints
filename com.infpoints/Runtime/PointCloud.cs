@@ -31,7 +31,7 @@ namespace InfPoints
 
             m_Octree.AddLevel();
 
-            using (var outsideCount = new NativeInterlockedInt(0, Allocator.TempJob))
+            using (var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 // Check points are inside AABB
                 var arePointsInsideJob = new ArePointsInsideAABBJob()

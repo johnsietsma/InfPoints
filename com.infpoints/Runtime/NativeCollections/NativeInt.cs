@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using Unity.Burst;
 using Unity.Collections;
@@ -9,14 +10,16 @@ namespace InfPoints
 {
 
     /// <summary>
-    /// Use a simple Int as a NativeContainer. This allows data to be passed out of a Job without having to create
+    /// Use a simple int as a NativeContainer. This allows data to be passed out of a Job without having to create
     /// a new NativeArray to hold a single value.
+    /// Can be used in IJobParallelFor and supports [DeallocateOnJobCompletion]
     /// </summary>
-    /// <typeparam name="T">An unmanaged type</typeparam>
     [NativeContainer]
+    [DebuggerTypeProxy(typeof(NativeIntDebugView))]
+    [DebuggerDisplay("Value = {Value}")]
     [NativeContainerIsAtomicWriteOnly]
     [NativeContainerSupportsDeallocateOnJobCompletion]
-    public unsafe struct NativeInterlockedInt : IDisposable
+    public unsafe struct NativeInt : IDisposable
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -82,7 +85,7 @@ namespace InfPoints
         /// <summary>
         /// Create a new NativeValue with an initial value.
         /// </summary>
-        public NativeInterlockedInt(int initialValue, Allocator allocatorLabel)
+        public NativeInt(int initialValue, Allocator allocatorLabel)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocatorLabel);
@@ -111,7 +114,7 @@ namespace InfPoints
         [BurstCompile]
         struct DisposeJob : IJob
         {
-            public NativeInterlockedInt Value;
+            public NativeInt Value;
 
             public void Execute()
             {
@@ -144,5 +147,17 @@ namespace InfPoints
 
             return jobHandle;
         }
+    }
+    
+    internal sealed class NativeIntDebugView
+    {
+        private NativeInt m_NativeInt;
+
+        public NativeIntDebugView(NativeInt nativeInt)
+        {
+            m_NativeInt = nativeInt;
+        }
+
+        public int Value => m_NativeInt.Value;
     }
 }

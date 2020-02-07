@@ -7,7 +7,7 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public AABB aabb;
         [ReadOnly] public XYZSoA<float> Points;
-        public NativeInterlockedInt OutsideCount;
+        public NativeInt OutsideCount;
 
         public void Execute(int index)
         {
