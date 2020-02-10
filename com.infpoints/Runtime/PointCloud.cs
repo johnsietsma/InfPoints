@@ -9,34 +9,42 @@ namespace InfPoints
 {
     public class PointCloud : IDisposable
     {
-        SparseOctree<float> m_Octree;
-
+        public SparseOctree<float> Octree => m_Octree;
+        
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
+
+        SparseOctree<float> m_Octree;
 
         public PointCloud(AABB aabb)
         {
             m_Octree = new SparseOctree<float>(aabb, MaximumPointsPerNode, Allocator.Persistent);
         }
 
+
         public void AddPoints(XYZSoA<float> points)
         {
-            UnityEngine.Debug.Log($"Adding {points.Length} points to the octree with AABB {m_Octree.AABB}.");
+            #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            // Because of reinterpret to SIMD friendly types 
+            if( points.Length%4!=0) throw new ArgumentException("Points must be added in multiples of 4");
+            #endif
+            
+            UnityEngine.Debug.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
 
             int levelIndex = 0;
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
-            float cellWidth = m_Octree.AABB.Size / cellCount;
+            float cellWidth = Octree.AABB.Size / cellCount;
 
             UnityEngine.Debug.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
 
-            m_Octree.AddLevel();
+            Octree.AddLevel();
 
             using (var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 // Check points are inside AABB
                 var arePointsInsideJob = new ArePointsInsideAABBJob()
                 {
-                    aabb = m_Octree.AABB,
+                    aabb = Octree.AABB,
                     Points = points,
                     OutsideCount = outsideCount
                 }.Schedule(points.Length, InnerLoopBatchCount);
@@ -49,7 +57,7 @@ namespace InfPoints
             }
 
             // Transform each point to a coordinate within the AABB
-            var coordinates = PointCloudUtils.PointsToCoordinates(points, m_Octree.AABB.Minimum, cellWidth);
+            var coordinates = PointCloudUtils.PointsToCoordinates(points, Octree.AABB.Minimum, cellWidth);
 
             // Convert coordinates to morton codes
             var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
@@ -58,7 +66,7 @@ namespace InfPoints
             var uniqueCodes = PointCloudUtils.GetUniqueCodes(mortonCodes);
 
             // Filter out full nodes
-            var nodeStorage = m_Octree.GetNodeStorage(levelIndex);
+            var nodeStorage = Octree.GetNodeStorage(levelIndex);
             var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage);
 
             var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
@@ -87,7 +95,7 @@ namespace InfPoints
                 collectJob.Complete();
 
                 // Add them to the octree
-                var storage = m_Octree.GetNodeStorage(0);
+                var storage = Octree.GetNodeStorage(0);
                 if (!storage.ContainsNode(mortonCode))
                 {
                     storage.AddNode(mortonCode);
@@ -106,7 +114,7 @@ namespace InfPoints
 
         public void Dispose()
         {
-            m_Octree?.Dispose();
+            Octree?.Dispose();
         }
     }
 }

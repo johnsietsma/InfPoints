@@ -17,6 +17,8 @@ namespace InfPoints.NativeCollections
 
         public bool IsCreated => m_DataX.IsCreated;
         public int Length => m_DataX.Length;
+        public NativeArray<ulong> Indices => m_DataX.Indices;
+        
         NativeSparsePagedArray<float> m_DataX;
         NativeSparsePagedArray<float> m_DataY;
         NativeSparsePagedArray<float> m_DataZ;
@@ -50,6 +52,11 @@ namespace InfPoints.NativeCollections
         public bool IsFull(ulong sparseIndex)
         {
             return m_DataX.IsFull(sparseIndex);
+        }
+
+        public int GetLength(ulong sparseIndex)
+        {
+            return m_DataX.Length;
         }
 
         public void AddNode(ulong sparseIndex)

@@ -13,6 +13,7 @@ namespace InfPoints.NativeCollections
         public int Length;
 
         public bool IsFull => Length == Capacity;
+        
         public int FreeLength => Capacity - Length - StartIndex;
 
         public override string ToString()
@@ -56,6 +57,8 @@ namespace InfPoints.NativeCollections
         /// </summary>
         public int PageSize => m_PageSize;
 
+        public NativeArray<ulong> Indices => m_PageAllocations.Indices;
+        
         readonly int m_AllocationSize;
         readonly int m_PageSize;
         readonly int m_MaximumPageCount;
@@ -102,6 +105,15 @@ namespace InfPoints.NativeCollections
 #endif
             return m_PageAllocations[sparseIndex].IsFull;
         }
+        
+        public bool Ismpty(ulong sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+            CheckContainsIndexAndThrow(sparseIndex);
+#endif
+            return m_PageAllocations[sparseIndex].IsFull;
+        }
 
         public bool ContainsIndex(ulong sparseIndex)
         {
@@ -109,6 +121,27 @@ namespace InfPoints.NativeCollections
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
             return m_PageAllocations.ContainsIndex(sparseIndex);
+        }
+
+        /// <summary>
+        /// Return the <see cref="PageAllocation"/> at sparseIndex as a <see cref="NativeArray{T}"/>.
+        /// No memory is allocated.
+        /// </summary>
+        /// <param name="sparseIndex">The sparse index to retrieve</param>
+        /// <returns>A <see cref="NativeArray{T}"/>containing the data</returns>
+        public NativeArray<T> ToArray(ulong sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+            var allocation = m_PageAllocations[sparseIndex];
+            void* dataPointer = m_Pages[allocation.PageIndex] + allocation.StartIndex;
+            var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(dataPointer, allocation.Length,
+                Allocator.Invalid);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, m_Safety);
+#endif
+            return array;
         }
 
         public void AddIndex(ulong sparseIndex)
@@ -166,7 +199,7 @@ namespace InfPoints.NativeCollections
             m_PageAllocations[sparseIndex] = pageAllocation;
             m_LastPageAllocation = pageAllocation;
         }
-        
+
         /// <summary>
         /// A data to the <see cref="PageAllocation"/> the belongs to the sparseIndex. If this is a new sparseIndex, then a
         /// new <see cref="PageAllocation"/> will be created and data added to it. Otherwise the data will be added to the
@@ -193,27 +226,6 @@ namespace InfPoints.NativeCollections
             m_LastPageAllocation = pageAllocation;
         }
 
-
-        /// <summary>
-        /// Return the <see cref="PageAllocation"/> at sparseIndex as a <see cref="NativeArray{T}"/>.
-        /// No memory is allocated.
-        /// </summary>
-        /// <param name="sparseIndex">The sparse index to retrieve</param>
-        /// <returns>A <see cref="NativeArray{T}"/>containing the data</returns>
-        public NativeArray<T> ToArray(ulong sparseIndex)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-#endif
-            var allocation = m_PageAllocations[sparseIndex];
-            void* dataPointer = m_Pages[allocation.PageIndex] + allocation.StartIndex;
-            var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(dataPointer, allocation.Length,
-                Allocator.Invalid);
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, m_Safety);
-#endif
-            return array;
-        }
 
         public void Dispose()
         {
