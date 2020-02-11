@@ -10,20 +10,17 @@ namespace InfPoints
     {
         const int InnerLoopBatchCount = 128;
 
-        public static XYZSoA<uint> PointsToCoordinates(XYZSoA<float> points, float3 offset, float cellWidth)
+        public static JobHandle SchedulePointsToCoordinates(XYZSoA<float> points, XYZSoA<uint> coordinates, float3 offset, float cellWidth)
         {
             // Transform points from world to Octree AABB space
             var pointsWide = points.Reinterpret<float4>();
             var transformHandle = ScheduleTransformPoints(pointsWide, offset);
 
             // Convert all points to node coordinates
-            var coordinates =
-                new XYZSoA<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var coordinatesWide = coordinates.Reinterpret<uint4>();
             var pointsToCoordinatesHandle =
                 SchedulePointsToCoordinates(pointsWide, coordinatesWide, cellWidth, transformHandle);
-            pointsToCoordinatesHandle.Complete();
-            return coordinates;
+            return pointsToCoordinatesHandle;
         }
 
         public static NativeArray<ulong> EncodeMortonCodes(XYZSoA<float> points, XYZSoA<uint> coordinates)
