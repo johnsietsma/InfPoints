@@ -46,6 +46,20 @@ namespace InfPoints.Tests.Editor
         }
 
         [Test]
+        public void GetUniqueCodesGivesTheCorrectResult()
+        {
+            ulong[] codesData = new ulong[] {1, 2, 2, 3, 4, 5, 5, 5};
+            using (var codes = new NativeArray<ulong>(codesData, Allocator.TempJob))
+            using (var codesUniqueMap = new NativeHashMap<ulong,uint>(codes.Length, Allocator.TempJob))
+            using (var uniqueCodes = new NativeList<ulong>(Allocator.TempJob))
+            {
+                PointCloudUtils.ScheduleGetUniqueCodes(codes, codesUniqueMap, uniqueCodes).Complete();
+                Assert.That(uniqueCodes.Length, Is.EqualTo(5));
+            }
+        }
+        
+
+        [Test]
         public void CanFilterWithEmptyNodeStorage()
         {
             const int cellSize = 10;
@@ -58,6 +72,7 @@ namespace InfPoints.Tests.Editor
                 var pointsToCoordinatesJobHandle = PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
                 PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle).Complete();
                 var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage);
+                filteredMortonCodeIndices.Dispose();
             }
         }
     }

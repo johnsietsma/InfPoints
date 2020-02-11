@@ -24,6 +24,7 @@ namespace InfPoints
 
         public void AddPoints(XYZSoA<float> points)
         {
+            // TODO: https://www.nuget.org/packages/System.Buffers
             #if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Because of reinterpret to SIMD friendly types 
             if( points.Length%4!=0) throw new ArgumentException("Points must be added in multiples of 4");
@@ -66,11 +67,13 @@ namespace InfPoints
             var mortonCodes =
                 new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var mortonCodesJobHandle = PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
-            mortonCodesJobHandle.Complete();
 
             // Get all unique codes
-            var uniqueCodes = PointCloudUtils.GetUniqueCodes(mortonCodes);
-
+            var uniqueCoordinatesMap = new NativeHashMap<ulong, uint>(mortonCodes.Length, Allocator.TempJob);
+            NativeList<ulong> uniqueCodes = new NativeList<ulong>(Allocator.TempJob);
+            var uniqueCodesHandle = PointCloudUtils.ScheduleGetUniqueCodes(mortonCodes, uniqueCoordinatesMap, uniqueCodes, mortonCodesJobHandle);
+            uniqueCodesHandle.Complete();
+            
             // Filter out full nodes
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
             var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage);
@@ -114,6 +117,7 @@ namespace InfPoints
             collectedPoints.Dispose();
             filteredMortonCodeIndices.Dispose();
             uniqueCodes.Dispose();
+            uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();
             mortonCodes.Dispose();
         }

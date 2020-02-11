@@ -8,7 +8,7 @@ namespace InfPoints.Jobs
     public struct CollectPointsJob : IJobParallelForFilter
     {
         [ReadOnly] public ulong CodeKey;
-        [ReadOnly] public NativeArray<ulong> Codes;
+        [ReadOnly] public NativeList<ulong> Codes;
         [ReadOnly] public NativeArray<float> PointsX;
         [ReadOnly] public NativeArray<float> PointsY;
         [ReadOnly] public NativeArray<float> PointsZ;
