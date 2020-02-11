@@ -76,16 +76,18 @@ namespace InfPoints
             
             // Filter out full nodes
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
-            var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage);
+            NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
+            var notFullNodesHandle = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage, notFullNodeIndices);
+            notFullNodesHandle.Complete();
 
             var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory);
             var collectedPointsCount = new NativeArray<int>(1, Allocator.TempJob);
 
             // For each node
-            for (int index = 0; index < filteredMortonCodeIndices.Length; index++)
+            for (int index = 0; index < notFullNodeIndices.Length; index++)
             {
-                int mortonCodeIndex = filteredMortonCodeIndices[index];
+                int mortonCodeIndex = notFullNodeIndices[index];
                 ulong mortonCode = mortonCodes[mortonCodeIndex];
 
                 // Collect points
@@ -100,7 +102,7 @@ namespace InfPoints
                     CollectedPointsY = collectedPoints.Y,
                     CollectedPointsZ = collectedPoints.Z,
                     CollectedPointsCount = collectedPointsCount
-                }.ScheduleFilter(filteredMortonCodeIndices, InnerLoopBatchCount);
+                }.ScheduleFilter(notFullNodeIndices, InnerLoopBatchCount);
                 collectJob.Complete();
 
                 // Add them to the octree
@@ -115,7 +117,7 @@ namespace InfPoints
 
             collectedPointsCount.Dispose();
             collectedPoints.Dispose();
-            filteredMortonCodeIndices.Dispose();
+            notFullNodeIndices.Dispose();
             uniqueCodes.Dispose();
             uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();

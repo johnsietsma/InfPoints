@@ -70,9 +70,10 @@ namespace InfPoints.Tests.Editor
             using (var nodeStorage = new NativeNodeStorage(1, 1, 1, Allocator.TempJob))
             {
                 var pointsToCoordinatesJobHandle = PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
+                NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
                 PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle).Complete();
-                var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage);
-                filteredMortonCodeIndices.Dispose();
+                PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage,notFullNodeIndices).Complete();
+                notFullNodeIndices.Dispose();
             }
         }
     }
