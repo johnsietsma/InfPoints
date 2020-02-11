@@ -57,10 +57,16 @@ namespace InfPoints
             }
 
             // Transform each point to a coordinate within the AABB
-            var coordinates = PointCloudUtils.PointsToCoordinates(points, Octree.AABB.Minimum, cellWidth);
+            var coordinates =
+                new XYZSoA<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var coordinatesJobHandle =
+                PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, m_Octree.AABB.Minimum, cellWidth);
 
             // Convert coordinates to morton codes
-            var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
+            var mortonCodes =
+                new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var mortonCodesJobHandle = PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
+            mortonCodesJobHandle.Complete();
 
             // Get all unique codes
             var uniqueCodes = PointCloudUtils.GetUniqueCodes(mortonCodes);
