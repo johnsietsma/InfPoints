@@ -53,10 +53,12 @@ namespace InfPoints
                 new XYZSoA<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var coordinatesJobHandle =
                 PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, m_Octree.AABB.Minimum, cellWidth);
-            coordinatesJobHandle.Complete();
 
             // Convert coordinates to morton codes
-            var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
+            var mortonCodes =
+                new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var mortonCodesJobHandle = PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
+            mortonCodesJobHandle.Complete();
 
             // Get all unique codes
             var uniqueCodes = PointCloudUtils.GetUniqueCodes(mortonCodes);

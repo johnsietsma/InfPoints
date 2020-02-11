@@ -31,15 +31,17 @@ namespace InfPoints.Tests.Editor
             var aabb = new AABB(float3.zero, cellSize);
             using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
             using (var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob))
+            using (var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob))
             {
-                PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize).Complete();
-                var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
+                var pointsToCoordinatesJobHandle =
+                    PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
+                PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle)
+                    .Complete();
                 for (int index = 0; index < mortonCodes.Length; index++)
                 {
                     var code = mortonCodes[index];
                     Assert.That(code, Is.EqualTo(0));
                 }
-                mortonCodes.Dispose();
             }
         }
 
@@ -50,10 +52,11 @@ namespace InfPoints.Tests.Editor
             var aabb = new AABB(float3.zero, cellSize);
             using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
             using (var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob))
+            using (var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob))
             using (var nodeStorage = new NativeNodeStorage(1, 1, 1, Allocator.TempJob))
             {
-                PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize).Complete();
-                var mortonCodes = PointCloudUtils.EncodeMortonCodes(points, coordinates);
+                var pointsToCoordinatesJobHandle = PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
+                PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle).Complete();
                 var filteredMortonCodeIndices = PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage);
             }
         }

@@ -23,19 +23,15 @@ namespace InfPoints
             return pointsToCoordinatesHandle;
         }
 
-        public static NativeArray<ulong> EncodeMortonCodes(XYZSoA<float> points, XYZSoA<uint> coordinates)
+        public static JobHandle ScheduleEncodeMortonCodes(XYZSoA<uint> coordinates, NativeArray<ulong> mortonCodes, JobHandle deps=default(JobHandle))
         {
-            var mortonCodes =
-                new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var mortonCodeHandle = new Morton64SoAEncodeJob()
+            return new Morton64SoAEncodeJob()
             {
                 CoordinatesX = coordinates.X,
                 CoordinatesY = coordinates.Y,
                 CoordinatesZ = coordinates.Z,
                 Codes = mortonCodes
-            }.Schedule(coordinates.Length, InnerLoopBatchCount);
-            mortonCodeHandle.Complete();
-            return mortonCodes;
+            }.Schedule(coordinates.Length, InnerLoopBatchCount, deps);
         }
 
         public static NativeArray<ulong> GetUniqueCodes(NativeArray<ulong> codes)
