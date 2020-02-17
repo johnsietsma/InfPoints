@@ -4,23 +4,23 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace InfPoints
 {
-    public struct XYZNativeArray<T> : IDisposable where T : unmanaged
+    public struct NativeArrayXYZ<T> : IDisposable where T : unmanaged
     {
         public int Length => X.Length;
         public NativeArray<T> X;
         public NativeArray<T> Y;
         public NativeArray<T> Z;
 
-        public XYZNativeArray(int length, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
+        public NativeArrayXYZ(int length, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
         {
             X = new NativeArray<T>(length, allocator, options);
             Y = new NativeArray<T>(length, allocator, options);
             Z = new NativeArray<T>(length, allocator, options);
         }
 
-        public XYZNativeArray<U> Reinterpret<U>() where U : unmanaged
+        public NativeArrayXYZ<U> Reinterpret<U>() where U : unmanaged
         {
-            return new XYZNativeArray<U>()
+            return new NativeArrayXYZ<U>()
             {
                 X = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
                 Y = Y.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
@@ -39,16 +39,16 @@ namespace InfPoints
             }
         }
         
-        public void CopyFrom(XYZNativeArray<T> nativeArray)
+        public void CopyFrom(NativeArrayXYZ<T> nativeArray)
         {
             X.CopyFrom(nativeArray.X);
             Y.CopyFrom(nativeArray.Y);
             Z.CopyFrom(nativeArray.Z);
         }
 
-        public static void Copy(XYZNativeArray<T> src,
+        public static void Copy(NativeArrayXYZ<T> src,
             int srcIndex,
-            XYZNativeArray<T> dst,
+            NativeArrayXYZ<T> dst,
             int dstIndex,
             int length)
         {

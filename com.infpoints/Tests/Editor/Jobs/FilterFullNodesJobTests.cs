@@ -13,7 +13,7 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pagedArray = new XYZNativeSparsePagedArray(2,1, 1, Allocator.TempJob))
+            using (var pagedArray = new NativeSparsePagedArrayXYZ(2,1, 1, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
             using( var indices = new NativeList<int>(length, Allocator.TempJob))
             {

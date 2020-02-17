@@ -6,7 +6,7 @@ namespace InfPoints.Jobs
 {
     public struct FilterFullNodesJob<T> : IJobParallelForFilter where T :unmanaged
     {
-        [ReadOnly] public XYZNativeSparsePagedArray SparsePagedArray;
+        [ReadOnly] public NativeSparsePagedArrayXYZ SparsePagedArray;
         [ReadOnly] public NativeArray<ulong> MortonCodes;
         
         public bool Execute(int index)

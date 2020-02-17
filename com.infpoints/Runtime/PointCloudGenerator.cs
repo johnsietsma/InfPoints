@@ -7,11 +7,11 @@ namespace InfPoints
 {
     public static class PointCloudGenerator
     {
-        public static XYZNativeArray<float> RandomPointsOnSphere(int pointCount, float radius, Allocator allocator)
+        public static NativeArrayXYZ<float> RandomPointsOnSphere(int pointCount, float radius, Allocator allocator)
         {
             Random rand = new Random();
             rand.InitState();
-            var points = new XYZNativeArray<float>(pointCount, allocator);
+            var points = new NativeArrayXYZ<float>(pointCount, allocator);
             for (int index = 0; index < pointCount; index++)
             {
                 var p = rand.NextFloat3Direction() * radius;
@@ -23,11 +23,11 @@ namespace InfPoints
             return points;
         }
 
-        public static XYZNativeArray<float> RandomPointsInAABB(int pointCount, AABB aabb, Allocator allocator)
+        public static NativeArrayXYZ<float> RandomPointsInAABB(int pointCount, AABB aabb, Allocator allocator)
         {
             Random rand = new Random();
             rand.InitState();
-            var points = new XYZNativeArray<float>(pointCount, allocator);
+            var points = new NativeArrayXYZ<float>(pointCount, allocator);
             for (int index = 0; index < pointCount; index++)
             {
                 var p = rand.NextFloat3(aabb.Minimum, aabb.Maximum);
@@ -39,10 +39,10 @@ namespace InfPoints
             return points;
         }
 
-        public static XYZNativeArray<float> PointsInGrid(int pointCount, float3 cellSize, Allocator allocator)
+        public static NativeArrayXYZ<float> PointsInGrid(int pointCount, float3 cellSize, Allocator allocator)
         {
             float3 offset = cellSize / 2;
-            var points = new XYZNativeArray<float>(pointCount, allocator);
+            var points = new NativeArrayXYZ<float>(pointCount, allocator);
             for (int index = 0; index < pointCount; index++)
             {
                 uint3 xyzIndex = Morton.DecodeMorton32((uint)index);

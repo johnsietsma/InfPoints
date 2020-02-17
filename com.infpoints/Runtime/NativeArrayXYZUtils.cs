@@ -7,9 +7,16 @@ namespace InfPoints
 {
     public static class XYZSoAUtils
     {
-        public static XYZNativeArray<float> MakeXYZSoA(NativeArray<float3> points, Allocator allocator)
+        /// <summary>
+        /// Convert a <seealso cref="NativeArray{T}"/> of points to a <seealso cref="NativeArrayXYZ{T}"/>.
+        /// This allocates memory for the new array.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="allocator"></param>
+        /// <returns></returns>
+        public static NativeArrayXYZ<float> MakeNativeArrayXYZ(NativeArray<float3> points, Allocator allocator)
         {
-            var xyzPoints = new XYZNativeArray<float>(points.Length, allocator);
+            var xyzPoints = new NativeArrayXYZ<float>(points.Length, allocator);
             for (int index = 0; index < points.Length; index++)
             {
                 var p = points[index];
@@ -22,7 +29,7 @@ namespace InfPoints
         }
         
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-        public struct AdditionJob_XYZSoA_float4 : IJobParallelFor
+        public struct AdditionJob_NativeArrayXYZ_float4 : IJobParallelFor
         {
             [ReadOnly] public float4 NumberToAdd;
             public NativeArray<float4> ValuesX;
@@ -38,7 +45,7 @@ namespace InfPoints
         }
         
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-        public struct IntegerDivisionJob_XYZSoA_float4_uint4 : IJobParallelFor
+        public struct IntegerDivisionJob_NativeArrayXYZ_float4_uint4 : IJobParallelFor
         {
             [ReadOnly] public float4 Divisor;
             [ReadOnly] public NativeArray<float4> ValuesX;

@@ -5,8 +5,12 @@ using Unity.Mathematics;
 
 namespace InfPoints.NativeCollections
 {
+    /// <summary>
+    /// A SoA wrapper around <see cref="NativeSparseArray{T}"/>.
+    /// Contains X,Y,Z arrays to hold points.
+    /// </summary>
     [NativeContainer]
-    public struct XYZNativeSparsePagedArray : IDisposable 
+    public struct NativeSparsePagedArrayXYZ : IDisposable 
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -23,7 +27,7 @@ namespace InfPoints.NativeCollections
         NativeSparsePagedArray<float> m_DataY;
         NativeSparsePagedArray<float> m_DataZ;
 
-        public XYZNativeSparsePagedArray(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
+        public NativeSparsePagedArrayXYZ(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
@@ -74,7 +78,7 @@ namespace InfPoints.NativeCollections
             m_DataZ.Add(sparseIndex, point.z);
         }
 
-        public void AddData(ulong sparseIndex, XYZNativeArray<float> data)
+        public void AddData(ulong sparseIndex, NativeArrayXYZ<float> data)
         {
             m_DataX.AddRange(sparseIndex, data.X);
             m_DataY.AddRange(sparseIndex, data.Y);
