@@ -15,17 +15,17 @@ namespace InfPoints.Jobs
         public NativeArray<float> CollectedPointsX;
         public NativeArray<float> CollectedPointsY;
         public NativeArray<float> CollectedPointsZ;
-        public NativeArray<int> CollectedPointsCount; // TODO Make NativeValue
+        public NativeInt CollectedPointsCount;
         
         public bool Execute(int index)
         {
             if (Codes[index].Equals(CodeKey))
             {
-                int collectedPointIndex = CollectedPointsCount[0];
+                int collectedPointIndex = CollectedPointsCount.Value;
                 CollectedPointsX[collectedPointIndex] = PointsX[index];
                 CollectedPointsY[collectedPointIndex] = PointsY[index];
                 CollectedPointsZ[collectedPointIndex] = PointsZ[index];
-                CollectedPointsCount[0]++;
+                CollectedPointsCount.Increment();
             }
 
             return true;

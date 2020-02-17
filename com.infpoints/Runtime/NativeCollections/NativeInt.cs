@@ -81,6 +81,13 @@ namespace InfPoints
             Interlocked.Decrement(ref *m_Buffer);
         }
 
+        /// <summary>
+        /// Create a new NativeInt with an initial value of 0.
+        /// </summary>
+        /// <param name="allocatorLabel"></param>
+        public NativeInt(Allocator allocatorLabel) : this(0, allocatorLabel)
+        {
+        }
         
         /// <summary>
         /// Create a new NativeValue with an initial value.

@@ -97,6 +97,15 @@ namespace InfPoints.NativeCollections
             m_LastPageAllocation = default;
         }
 
+        public int GetLength(ulong sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+            CheckContainsIndexAndThrow(sparseIndex);
+#endif
+            return m_PageAllocations[sparseIndex].Length;
+        }
+        
         public bool IsFull(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -106,7 +115,7 @@ namespace InfPoints.NativeCollections
             return m_PageAllocations[sparseIndex].IsFull;
         }
         
-        public bool Ismpty(ulong sparseIndex)
+        public bool IsEmpty(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
@@ -207,21 +216,40 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="sparseIndex">The sparse index at add the data to</param>
         /// <param name="data">The data to add</param>
+        public void AddRange(ulong sparseIndex, NativeSlice<T> data)
+        {
+            AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), data.Length);
+        }
+
         public void AddRange(ulong sparseIndex, NativeArray<T> data)
+        {
+            AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), data.Length);
+        }
+        
+        public void AddRange(ulong sparseIndex, NativeSlice<T> data, int count)
+        {
+            AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), count);
+        }
+
+        public void AddRange(ulong sparseIndex, NativeArray<T> data, int count)
+        {
+            AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), count);
+        }
+
+        void AddRange(ulong sparseIndex, void* data, int count)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            Checks.CheckNullAndThrow(data);
+            Checks.CheckNullAndThrow(data, nameof(data));
             CheckContainsIndexAndThrow(sparseIndex);
-            CheckHasCapacityAndThrow(sparseIndex, data.Length);
+            CheckHasCapacityAndThrow(sparseIndex, count);
 #endif
             var pageAllocation = m_PageAllocations[sparseIndex];
 
             void* destination = m_Pages[pageAllocation.PageIndex] +
                                 UnsafeUtility.SizeOf<T>() * pageAllocation.StartIndex;
-            void* source = data.GetUnsafeReadOnlyPtr();
-            UnsafeUtility.MemCpy(destination, source, UnsafeUtility.SizeOf<T>() * data.Length);
-            pageAllocation.Length += data.Length;
+            UnsafeUtility.MemCpy(destination, data, UnsafeUtility.SizeOf<T>() * count);
+            pageAllocation.Length += count;
             m_PageAllocations[sparseIndex] = pageAllocation;
             m_LastPageAllocation = pageAllocation;
         }

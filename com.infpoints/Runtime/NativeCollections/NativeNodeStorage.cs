@@ -56,7 +56,7 @@ namespace InfPoints.NativeCollections
 
         public int GetLength(ulong sparseIndex)
         {
-            return m_DataX.Length;
+            return m_DataX.GetLength(sparseIndex);
         }
 
         public void AddNode(ulong sparseIndex)
@@ -75,9 +75,14 @@ namespace InfPoints.NativeCollections
 
         public void AddData(ulong sparseIndex, XYZSoA<float> data)
         {
-            m_DataX.AddRange(sparseIndex, data.X);
-            m_DataY.AddRange(sparseIndex, data.Y);
-            m_DataZ.AddRange(sparseIndex, data.Z);
+            AddData(sparseIndex, data, data.Length);
+        }
+        
+        public void AddData(ulong sparseIndex, XYZSoA<float> data, int count)
+        {
+            m_DataX.AddRange(sparseIndex, data.X, count);
+            m_DataY.AddRange(sparseIndex, data.Y, count);
+            m_DataZ.AddRange(sparseIndex, data.Z, count);
         }
 
         public void Dispose()

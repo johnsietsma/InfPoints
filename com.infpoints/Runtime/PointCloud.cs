@@ -10,7 +10,7 @@ namespace InfPoints
     public class PointCloud : IDisposable
     {
         public SparseOctree<float> Octree => m_Octree;
-        
+
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
 
@@ -25,21 +25,23 @@ namespace InfPoints
         public void AddPoints(XYZSoA<float> points)
         {
             // TODO: https://www.nuget.org/packages/System.Buffers
-            #if ENABLE_UNITY_COLLECTIONS_CHECKS
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Because of reinterpret to SIMD friendly types 
-            if( points.Length%4!=0) throw new ArgumentException("Points must be added in multiples of 4");
-            #endif
-            
+            if (points.Length % 4 != 0) throw new ArgumentException("Points must be added in multiples of 4");
+#endif
+
             UnityEngine.Debug.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
 
             int levelIndex = 0;
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = Octree.AABB.Size / cellCount;
 
-            UnityEngine.Debug.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
+            Logger.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
 
             Octree.AddLevel();
 
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             using (var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 // Check points are inside AABB
@@ -52,10 +54,11 @@ namespace InfPoints
                 arePointsInsideJob.Complete();
                 if (outsideCount.Value > 0)
                 {
-                    UnityEngine.Debug.Log("Adding points outside the AABB, aborting");
+                    Logger.Log("Adding points outside the AABB, aborting");
                     return;
                 }
             }
+#endif
 
             // Transform each point to a coordinate within the AABB
             var coordinates =
@@ -66,32 +69,44 @@ namespace InfPoints
             // Convert coordinates to morton codes
             var mortonCodes =
                 new NativeArray<ulong>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var mortonCodesJobHandle = PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
+            var mortonCodesJobHandle =
+                PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
 
             // Get all unique codes
             var uniqueCoordinatesMap = new NativeHashMap<ulong, uint>(mortonCodes.Length, Allocator.TempJob);
             NativeList<ulong> uniqueCodes = new NativeList<ulong>(Allocator.TempJob);
-            var uniqueCodesHandle = PointCloudUtils.ScheduleGetUniqueCodes(mortonCodes, uniqueCoordinatesMap, uniqueCodes, mortonCodesJobHandle);
+            var uniqueCodesHandle = PointCloudUtils.ScheduleGetUniqueCodes(mortonCodes, uniqueCoordinatesMap,
+                uniqueCodes, mortonCodesJobHandle);
             uniqueCodesHandle.Complete();
-            
+
             // Filter out full nodes
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
-            NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
-            var notFullNodesHandle = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage, notFullNodeIndices);
-            notFullNodesHandle.Complete();
+            NativeList<int> validNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
+            var validNodesHandle = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage, validNodeIndices);
+            validNodesHandle.Complete();
 
-            var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
-                NativeArrayOptions.UninitializedMemory);
-            var collectedPointsCount = new NativeArray<int>(1, Allocator.TempJob);
 
             // For each node
-            for (int index = 0; index < notFullNodeIndices.Length; index++)
+            var collectJobHandles = new JobHandle[validNodeIndices.Length];
+            for (int index = 0; index < validNodeIndices.Length; index++)
             {
-                int mortonCodeIndex = notFullNodeIndices[index];
+                int mortonCodeIndex = validNodeIndices[index];
                 ulong mortonCode = mortonCodes[mortonCodeIndex];
+                
+                // Add node to the Octree if it doesn't exist
+                var storage = Octree.GetNodeStorage(levelIndex);
+                var addNodeJobHandle = new AddNodeToStorageJob()
+                {
+                    SparseIndex = mortonCode,
+                    Storage = Octree.GetNodeStorage(levelIndex)
+                }.Schedule(validNodesHandle);
+                
+                var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
+                    NativeArrayOptions.UninitializedMemory);
+                var collectedPointsCount = new NativeInt(Allocator.TempJob);
 
                 // Collect points
-                var collectJob = new CollectPointsJob()
+                var collectJobHandle = new CollectPointsJob()
                 {
                     CodeKey = mortonCode,
                     Codes = uniqueCodes,
@@ -102,22 +117,22 @@ namespace InfPoints
                     CollectedPointsY = collectedPoints.Y,
                     CollectedPointsZ = collectedPoints.Z,
                     CollectedPointsCount = collectedPointsCount
-                }.ScheduleFilter(notFullNodeIndices, InnerLoopBatchCount);
-                collectJob.Complete();
+                }.ScheduleFilter(validNodeIndices, InnerLoopBatchCount, addNodeJobHandle);
 
-                // Add them to the octree
-                var storage = Octree.GetNodeStorage(0);
-                if (!storage.ContainsNode(mortonCode))
+                var addDataToStorageHandle = new AddDataToStorageJob()
                 {
-                    storage.AddNode(mortonCode);
-                }
+                    SparseIndex = mortonCode,
+                    Data = collectedPoints, // Deallocate on job completion
+                    Count = collectedPointsCount, // Deallocate on job completion
+                    Storage = storage
+                }.Schedule(collectJobHandle);
 
-                storage.AddData(mortonCode, collectedPoints);
+                collectJobHandles[index] = addDataToStorageHandle;
             }
 
-            collectedPointsCount.Dispose();
-            collectedPoints.Dispose();
-            notFullNodeIndices.Dispose();
+            JobUtils.CombineHandles(collectJobHandles).Complete();
+
+            validNodeIndices.Dispose();
             uniqueCodes.Dispose();
             uniqueCoordinatesMap.Dispose();
             coordinates.Dispose();
