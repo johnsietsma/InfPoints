@@ -9,20 +9,20 @@ namespace InfPoints
 {
     public class PointCloud : IDisposable
     {
-        public SparseOctree<float> Octree => m_Octree;
-
+        public SparseOctree Octree => m_Octree;
+        
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
 
-        SparseOctree<float> m_Octree;
+        SparseOctree m_Octree;
 
         public PointCloud(AABB aabb)
         {
-            m_Octree = new SparseOctree<float>(aabb, MaximumPointsPerNode, Allocator.Persistent);
+            m_Octree = new SparseOctree(aabb, MaximumPointsPerNode, Allocator.Persistent);
         }
 
 
-        public void AddPoints(XYZSoA<float> points)
+        public void AddPoints(NativeArrayXYZ<float> points)
         {
             // TODO: https://www.nuget.org/packages/System.Buffers
 
@@ -62,7 +62,7 @@ namespace InfPoints
 
             // Transform each point to a coordinate within the AABB
             var coordinates =
-                new XYZSoA<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                new NativeArrayXYZ<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var coordinatesJobHandle =
                 PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, m_Octree.AABB.Minimum, cellWidth);
 

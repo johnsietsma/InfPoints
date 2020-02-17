@@ -13,7 +13,7 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pagedArray = new NativeNodeStorage(2,1, 1, Allocator.TempJob))
+            using (var pagedArray = new NativeSparsePagedArrayXYZ(2,1, 1, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
             using( var indices = new NativeList<int>(length, Allocator.TempJob))
             {
@@ -29,7 +29,7 @@ namespace InfPoints.Tests.Editor.Jobs
                 var isFullJob = new FilterFullNodesJob<int>()
                 {
                     MortonCodes = codes,
-                    NodeStorage = pagedArray
+                    SparsePagedArray = pagedArray
                 }.ScheduleAppend(indices, length, 4);
                 
                 isFullJob.Complete();

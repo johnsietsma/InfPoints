@@ -11,7 +11,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void CreateAndDispose()
         {
-            var octree = new SparseOctree<int>(AABB.zero, 1, Allocator.Persistent);
+            var octree = new SparseOctree(AABB.zero, 1, Allocator.Persistent);
             Assert.That(octree.IsCreated, Is.True);
             octree.Dispose();
             Assert.That(octree.IsCreated, Is.False);
@@ -21,7 +21,7 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void AddValueGivesCorrectValue()
         {
-            using (var octree = new SparseOctree<int>(AABB.zero, 1, Allocator.Persistent))
+            using (var octree = new SparseOctree(AABB.zero, 1, Allocator.Persistent))
             {
                 Assert.That(octree.LevelCount, Is.EqualTo(0));
                 octree.AddLevel();

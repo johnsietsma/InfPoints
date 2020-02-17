@@ -5,8 +5,12 @@ using Unity.Mathematics;
 
 namespace InfPoints.NativeCollections
 {
+    /// <summary>
+    /// A SoA wrapper around <see cref="NativeSparseArray{T}"/>.
+    /// Contains X,Y,Z arrays to hold points.
+    /// </summary>
     [NativeContainer]
-    public struct NativeNodeStorage : IDisposable 
+    public struct NativeSparsePagedArrayXYZ : IDisposable 
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -23,16 +27,12 @@ namespace InfPoints.NativeCollections
         NativeSparsePagedArray<float> m_DataY;
         NativeSparsePagedArray<float> m_DataZ;
 
-        public NativeNodeStorage(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
+        public NativeSparsePagedArrayXYZ(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
-            if(maximumNodeCount<=0) throw new ArgumentException(nameof(maximumNodeCount), "Must be greater then 0");
-            if(maximumPointsPerNode<=0) throw new ArgumentException(nameof(maximumPointsPerNode), "Must be greater then 0");
-            if(nodesPerPage<=0) throw new ArgumentException(nameof(nodesPerPage), "Must be greater then 0");
 #endif
-
             var storagePageSize = maximumPointsPerNode * nodesPerPage;
             int maximumPageCount = maximumNodeCount / nodesPerPage;
 
@@ -46,17 +46,22 @@ namespace InfPoints.NativeCollections
 
         public bool ContainsNode(ulong sparseIndex)
         {
-            return m_DataX.ContainsIndex(sparseIndex);
+            return m_DataX.ContainsAllocation(sparseIndex);
         }
 
         public bool IsFull(ulong sparseIndex)
         {
-            return m_DataX.IsFull(sparseIndex);
+            return m_DataX.GetAllocation(sparseIndex).IsFull;
+        }
+        
+        public bool IsEmpty(ulong sparseIndex)
+        {
+            return m_DataX.GetAllocation(sparseIndex).Length==0;
         }
 
         public int GetLength(ulong sparseIndex)
         {
-            return m_DataX.GetLength(sparseIndex);
+            return m_DataX.GetAllocation(sparseIndex).Length;
         }
 
         public void AddNode(ulong sparseIndex)
@@ -73,7 +78,7 @@ namespace InfPoints.NativeCollections
             m_DataZ.Add(sparseIndex, point.z);
         }
 
-        public void AddData(ulong sparseIndex, XYZSoA<float> data)
+        public void AddData(ulong sparseIndex, NativeArrayXYZ<float> data)
         {
             AddData(sparseIndex, data, data.Length);
         }

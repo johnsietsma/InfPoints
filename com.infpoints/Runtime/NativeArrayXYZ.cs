@@ -1,31 +1,26 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Mathematics;
-using UnityEditorInternal.Profiling.Memory.Experimental;
-using UnityEngine;
 
 namespace InfPoints
 {
-    public struct XYZSoA<T> : IDisposable where T : unmanaged
+    public struct NativeArrayXYZ<T> : IDisposable where T : unmanaged
     {
         public int Length => X.Length;
         public NativeArray<T> X;
         public NativeArray<T> Y;
         public NativeArray<T> Z;
 
-        public XYZSoA(int length, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
+        public NativeArrayXYZ(int length, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
         {
             X = new NativeArray<T>(length, allocator, options);
             Y = new NativeArray<T>(length, allocator, options);
             Z = new NativeArray<T>(length, allocator, options);
         }
 
-        public XYZSoA<U> Reinterpret<U>() where U : unmanaged
+        public NativeArrayXYZ<U> Reinterpret<U>() where U : unmanaged
         {
-            return new XYZSoA<U>()
+            return new NativeArrayXYZ<U>()
             {
                 X = X.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
                 Y = Y.Reinterpret<U>(UnsafeUtility.SizeOf<T>()),
@@ -44,16 +39,16 @@ namespace InfPoints
             }
         }
         
-        public void CopyFrom(XYZSoA<T> array)
+        public void CopyFrom(NativeArrayXYZ<T> nativeArray)
         {
-            X.CopyFrom(array.X);
-            Y.CopyFrom(array.Y);
-            Z.CopyFrom(array.Z);
+            X.CopyFrom(nativeArray.X);
+            Y.CopyFrom(nativeArray.Y);
+            Z.CopyFrom(nativeArray.Z);
         }
 
-        public static void Copy(XYZSoA<T> src,
+        public static void Copy(NativeArrayXYZ<T> src,
             int srcIndex,
-            XYZSoA<T> dst,
+            NativeArrayXYZ<T> dst,
             int dstIndex,
             int length)
         {
