@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using InfPoints.NativeCollections;
 using Unity.Collections;
-using Unity.Mathematics;
 
 namespace InfPoints
 {
@@ -15,21 +14,20 @@ namespace InfPoints
     ///   belong to a node.
     /// This is not a Native Collection because Native Collections cannot contain other collections.
     /// </summary>
-    public class SparseOctree<T> : IDisposable
-        where T : unmanaged
+    public class SparseOctree : IDisposable
     {
-        public const int MaxLevelCount = 7;
+        const int MaxLevelCount = 7;
 
         public bool IsCreated => m_NodeStoragePerLevel != null;
 
         public int LevelCount => m_NodeStoragePerLevel.Count;
 
         // ReSharper disable once InconsistentNaming
-        public AABB AABB { get; private set; }
+        public AABB AABB { get; }
 
         readonly Allocator m_Allocator;
+        readonly int m_MaximumPointsPerNode;
         List<NativeSparsePagedArrayXYZ> m_NodeStoragePerLevel;
-        int m_MaximumPointsPerNode;
 
         public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {

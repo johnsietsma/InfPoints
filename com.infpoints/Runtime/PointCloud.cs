@@ -9,16 +9,16 @@ namespace InfPoints
 {
     public class PointCloud : IDisposable
     {
-        public SparseOctree<float> Octree => m_Octree;
+        public SparseOctree Octree => m_Octree;
         
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
 
-        SparseOctree<float> m_Octree;
+        SparseOctree m_Octree;
 
         public PointCloud(AABB aabb)
         {
-            m_Octree = new SparseOctree<float>(aabb, MaximumPointsPerNode, Allocator.Persistent);
+            m_Octree = new SparseOctree(aabb, MaximumPointsPerNode, Allocator.Persistent);
         }
 
 
