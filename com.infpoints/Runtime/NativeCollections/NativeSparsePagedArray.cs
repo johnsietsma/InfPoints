@@ -106,13 +106,13 @@ namespace InfPoints.NativeCollections
             return m_PageAllocations[sparseIndex].IsFull;
         }
         
-        public bool Ismpty(ulong sparseIndex)
+        public bool IsEmpty(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
             CheckContainsIndexAndThrow(sparseIndex);
 #endif
-            return m_PageAllocations[sparseIndex].IsFull;
+            return m_PageAllocations[sparseIndex].Length==0;
         }
 
         public bool ContainsIndex(ulong sparseIndex)

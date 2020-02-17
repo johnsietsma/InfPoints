@@ -54,6 +54,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Allocator.Persistent);
             Assert.That(array.IsCreated, Is.True);
             Assert.That(array.Length, Is.EqualTo(0));
+            Assert.That(array.PageCount, Is.EqualTo(0));
             Assert.That(array.MaximumPageCount, Is.EqualTo(maximumPageCount));
             Assert.That(array.PageSize, Is.EqualTo(pageSize));
             array.Dispose();
@@ -70,18 +71,16 @@ namespace InfPoints.Tests.Editor.NativeCollections
             using (var array =
                 new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
             {
-                Assert.That(array.Length, Is.EqualTo(0));
-                Assert.That(array.MaximumPageCount, Is.EqualTo(1));
                 Assert.That(array.ContainsIndex(sparseIndex), Is.False);
                 array.AddIndex(sparseIndex);
                 Assert.That(array.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(array.Length, Is.EqualTo(1));
-                Assert.That(array.IsFull(sparseIndex), Is.False);
+                Assert.That(array.IsEmpty(sparseIndex), Is.True);
             }
         }
 
         [Test]
-        public void AddingDataGivesCorrectResult()
+        public void AddingDataRangeGivesCorrectResult()
         {
             int allocationSize = 10;
             int pageSize = 10;
@@ -92,8 +91,6 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
             using (var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
-                Assert.That(array.Length, Is.EqualTo(0));
-                Assert.That(array.MaximumPageCount, Is.EqualTo(1));
                 array.AddIndex(sparseIndex);
                 array.AddRange(sparseIndex, data);
                 Assert.That(array.Length, Is.EqualTo(1));
