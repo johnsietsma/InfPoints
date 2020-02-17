@@ -13,7 +13,7 @@ namespace InfPoints.NativeCollections
         public int Length;
 
         public bool IsFull => Length == Capacity;
-        
+
         public int FreeLength => Capacity - Length - StartIndex;
 
         public override string ToString()
@@ -58,7 +58,7 @@ namespace InfPoints.NativeCollections
         public int PageSize => m_PageSize;
 
         public NativeArray<ulong> Indices => m_PageAllocations.Indices;
-        
+
         readonly int m_AllocationSize;
         readonly int m_PageSize;
         readonly int m_MaximumPageCount;
@@ -79,17 +79,17 @@ namespace InfPoints.NativeCollections
         /// <param name="maximumPageCount">The maximum number of pages that can be allocated</param>
         /// <param name="allocator">The <see cref="Unity.Collections.Allocator"/> to use to allocate each <see cref="PageAllocation"/></param>
         /// <exception cref="Exception"></exception>
-        public NativeSparsePagedArray(int allocationSize, int pageSize, int maximumPageCount, Allocator allocator)
+        public NativeSparsePagedArray(int allocationSize, int allocationsPerPage, int maximumPageCount, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
-            if(pageSize<=0) throw new ArgumentException("Must be greater then 0", nameof(pageSize));
-            if(allocationSize<=0) throw new ArgumentException("Must be greater then 0", nameof(allocationSize));
-            if(maximumPageCount<=0) throw new ArgumentException("Must be greater then 0", nameof(maximumPageCount));
+            if (allocationsPerPage <= 0) throw new ArgumentException("Must be greater then 0", nameof(allocationsPerPage));
+            if (allocationSize <= 0) throw new ArgumentException("Must be greater then 0", nameof(allocationSize));
+            if (maximumPageCount <= 0) throw new ArgumentException("Must be greater then 0", nameof(maximumPageCount));
 #endif
             m_AllocationSize = allocationSize;
-            m_PageSize = pageSize;
+            m_PageSize = allocationsPerPage * allocationSize;
             m_MaximumPageCount = maximumPageCount;
             m_PageAllocations = new NativeSparseArray<PageAllocation>(maximumPageCount, allocator);
             m_Pages = (T**) UnsafeUtility.Malloc(IntPtr.Size * maximumPageCount, UnsafeUtility.AlignOf<T>(), allocator);
@@ -98,37 +98,20 @@ namespace InfPoints.NativeCollections
             m_LastPageAllocation = default;
         }
 
-        public int GetLength(ulong sparseIndex)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            CheckContainsIndexAndThrow(sparseIndex);
-#endif
-            return m_PageAllocations[sparseIndex].Length;
-        }
-        
-        public bool IsFull(ulong sparseIndex)
+        public bool ContainsAllocation(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
-            return m_PageAllocations[sparseIndex].IsFull;
+            return m_PageAllocations.ContainsIndex(sparseIndex);
         }
-        
-        public bool IsEmpty(ulong sparseIndex)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            CheckContainsIndexAndThrow(sparseIndex);
-#endif
-            return m_PageAllocations[sparseIndex].IsFull;
-        }
+
 
         public PageAllocation GetAllocation(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            if(!ContainsAllocation(sparseIndex)) throw new ArgumentException(nameof(sparseIndex));
+            if (!ContainsAllocation(sparseIndex)) throw new ArgumentException(nameof(sparseIndex));
 #endif
             return m_PageAllocations[sparseIndex];
         }
@@ -219,21 +202,37 @@ namespace InfPoints.NativeCollections
         /// <param name="data">The data to add</param>
         public void AddRange(ulong sparseIndex, NativeSlice<T> data)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            Checks.CheckNullAndThrow(data, nameof(data));
+#endif
+
             AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), data.Length);
         }
 
         public void AddRange(ulong sparseIndex, NativeArray<T> data)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            Checks.CheckNullAndThrow(data, nameof(data));
+#endif
+
             AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), data.Length);
         }
-        
+
         public void AddRange(ulong sparseIndex, NativeSlice<T> data, int count)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            Checks.CheckNullAndThrow(data, nameof(data));
+#endif
+
             AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), count);
         }
 
         public void AddRange(ulong sparseIndex, NativeArray<T> data, int count)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            Checks.CheckNullAndThrow(data, nameof(data));
+#endif
+
             AddRange(sparseIndex, data.GetUnsafeReadOnlyPtr(), count);
         }
 
@@ -286,7 +285,7 @@ namespace InfPoints.NativeCollections
             m_PageCount++;
             return index;
         }
-        
+
         void CheckHasCapacityAndThrow(ulong sparseIndex, int length)
         {
             if (m_PageAllocations[sparseIndex].FreeLength < length)

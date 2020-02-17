@@ -101,7 +101,7 @@ namespace InfPoints
                     Storage = Octree.GetNodeStorage(levelIndex)
                 }.Schedule(validNodesHandle);
                 
-                var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
+                var collectedPoints = new NativeArrayXYZ<float>(mortonCodes.Length, Allocator.TempJob,
                     NativeArrayOptions.UninitializedMemory);
                 var collectedPointsCount = new NativeInt(Allocator.TempJob);
 

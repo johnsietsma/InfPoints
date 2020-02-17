@@ -7,9 +7,9 @@ namespace InfPoints.Jobs
     public struct AddDataToStorageJob : IJob
     {
         [ReadOnly] public ulong SparseIndex;
-        [ReadOnly][DeallocateOnJobCompletion] public XYZSoA<float> Data;
+        [ReadOnly][DeallocateOnJobCompletion] public NativeArrayXYZ<float> Data;
         [ReadOnly] [DeallocateOnJobCompletion] public NativeInt Count;
-        public NativeNodeStorage Storage;
+        public NativeSparsePagedArrayXYZ Storage;
 
         public void Execute()
         {

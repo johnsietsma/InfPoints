@@ -16,7 +16,7 @@ namespace InfPoints.Tests.Editor
             {
                 pointCloud.AddPoints(points);
                 var storage = pointCloud.Octree.GetNodeStorage(0);
-                Assert.That(storage.Indices, Is.EqualTo(PointCount));
+                Assert.That(storage.Length, Is.EqualTo(PointCount));
 
                 foreach (var index in storage.Indices)
                 {

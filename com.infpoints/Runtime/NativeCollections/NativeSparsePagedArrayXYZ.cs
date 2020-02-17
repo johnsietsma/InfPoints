@@ -27,21 +27,15 @@ namespace InfPoints.NativeCollections
         NativeSparsePagedArray<float> m_DataY;
         NativeSparsePagedArray<float> m_DataZ;
 
-        public NativeSparsePagedArrayXYZ(int maximumNodeCount, int maximumPointsPerNode, int nodesPerPage, Allocator allocator)
+        public NativeSparsePagedArrayXYZ(int allocationSize, int pageSize, int maximumPageCount, Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
-            var storagePageSize = maximumPointsPerNode * nodesPerPage;
-            int maximumPageCount = maximumNodeCount / nodesPerPage;
-
-            m_DataX = new NativeSparsePagedArray<float>(maximumPointsPerNode, storagePageSize, maximumPageCount,
-                allocator);
-            m_DataY = new NativeSparsePagedArray<float>(maximumPointsPerNode, storagePageSize, maximumPageCount,
-                allocator);
-            m_DataZ = new NativeSparsePagedArray<float>(maximumPointsPerNode, storagePageSize, maximumPageCount,
-                allocator);
+            m_DataX = new NativeSparsePagedArray<float>(allocationSize, pageSize, maximumPageCount, allocator);
+            m_DataY = new NativeSparsePagedArray<float>(allocationSize, pageSize, maximumPageCount, allocator);
+            m_DataZ = new NativeSparsePagedArray<float>(allocationSize, pageSize, maximumPageCount, allocator);
         }
 
         public bool ContainsNode(ulong sparseIndex)
@@ -83,7 +77,7 @@ namespace InfPoints.NativeCollections
             AddData(sparseIndex, data, data.Length);
         }
         
-        public void AddData(ulong sparseIndex, XYZSoA<float> data, int count)
+        public void AddData(ulong sparseIndex, NativeArrayXYZ<float> data, int count)
         {
             m_DataX.AddRange(sparseIndex, data.X, count);
             m_DataY.AddRange(sparseIndex, data.Y, count);

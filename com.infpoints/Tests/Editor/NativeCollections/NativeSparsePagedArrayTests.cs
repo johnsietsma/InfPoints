@@ -48,15 +48,14 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void CreationGivesCorrectValues()
         {
             int allocationSize = 10;
-            int pageSize = 10;
             int maximumPageCount = 1;
-            var array = new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount,
+            var array = new NativeSparsePagedArray<int>(allocationSize, 1, maximumPageCount,
                 Allocator.Persistent);
             Assert.That(array.IsCreated, Is.True);
             Assert.That(array.Length, Is.EqualTo(0));
             Assert.That(array.PageCount, Is.EqualTo(0));
             Assert.That(array.MaximumPageCount, Is.EqualTo(maximumPageCount));
-            Assert.That(array.PageSize, Is.EqualTo(pageSize));
+            Assert.That(array.PageSize, Is.EqualTo(allocationSize));
             array.Dispose();
             Assert.That(array.IsCreated, Is.False);
         }
@@ -65,11 +64,10 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddingIndexGivesCorrectResult()
         {
             int allocationSize = 10;
-            int pageSize = 10;
             int maximumPageCount = 1;
             ulong sparseIndex = 12345;
             using (var array =
-                new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
+                new NativeSparsePagedArray<int>(allocationSize, 1, maximumPageCount, Allocator.Persistent))
             {
                 Assert.That(array.ContainsAllocation(sparseIndex), Is.False);
                 array.AddIndex(sparseIndex);
@@ -83,12 +81,11 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddingDataRangeGivesCorrectResult()
         {
             int allocationSize = 10;
-            int pageSize = 10;
             int maximumPageCount = 1;
             ulong sparseIndex = 12345;
             int[] dataArray = {1, 2, 3, 4, 5};
             using (var array =
-                new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
+                new NativeSparsePagedArray<int>(allocationSize, 1, maximumPageCount, Allocator.Persistent))
             using (var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
                 array.AddIndex(sparseIndex);
@@ -112,12 +109,11 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddingDataTwiceToTheSamePageGivesCorrectResult()
         {
             int allocationSize = 10;
-            int pageSize = 10;
             int maximumPageCount = 1;
             ulong sparseIndex = 12345;
             int[] dataArray = {1, 2, 3, 4, 5};
             using (var array =
-                new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
+                new NativeSparsePagedArray<int>(allocationSize, 1, maximumPageCount, Allocator.Persistent))
             using (var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
                 array.AddIndex(sparseIndex);
@@ -140,13 +136,12 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddingDataTwiceToTheDifferentPagesGivesCorrectResult()
         {
             int allocationSize = 5;
-            int pageSize = 5;
             int maximumPageCount = 2;
             ulong sparseIndex1 = 12345;
             ulong sparseIndex2 = 54321;
             int[] dataArray = {1, 2, 3, 4, 5};
             using (var array =
-                new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
+                new NativeSparsePagedArray<int>(allocationSize, 1, maximumPageCount, Allocator.Persistent))
             using (var data = new NativeArray<int>(dataArray, Allocator.Persistent))
             {
                 array.AddIndex(sparseIndex1);

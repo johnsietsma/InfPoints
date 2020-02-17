@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using Unity.Collections;
+using Unity.Mathematics;
 
 // ReSharper disable HeapView.BoxingAllocation
 
@@ -21,7 +22,8 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void AddValueGivesCorrectValue()
         {
-            using (var octree = new SparseOctree(AABB.zero, 1, Allocator.Persistent))
+            var aabb = new AABB(float3.zero, 1);
+            using (var octree = new SparseOctree(aabb, 1, Allocator.Persistent))
             {
                 Assert.That(octree.LevelCount, Is.EqualTo(0));
                 octree.AddLevel();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using InfPoints.NativeCollections;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace InfPoints
 {
@@ -17,6 +18,7 @@ namespace InfPoints
     public class SparseOctree : IDisposable
     {
         const int MaxLevelCount = 7;
+        const int AllocationsPerPage =4;
 
         public bool IsCreated => m_NodeStoragePerLevel != null;
 
@@ -31,12 +33,20 @@ namespace InfPoints
 
         public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (aabb.Extents <= 0) throw new ArgumentException("AABB must be bigger then 0", nameof(aabb));
+            if (maximumPointsPerNode <= 0)
+                throw new ArgumentException("Must be greater then 0", nameof(maximumPointsPerNode));
+            if ((long)maximumPointsPerNode * AllocationsPerPage > int.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(maximumPointsPerNode), $"maximumPointsPerNode * AllocationsPerPage cannot exceed {int.MaxValue} bytes");
+
+#endif
             AABB = aabb;
             m_MaximumPointsPerNode = maximumPointsPerNode;
             m_Allocator = allocator;
             m_NodeStoragePerLevel = new List<NativeSparsePagedArrayXYZ>(MaxLevelCount);
         }
-        
+
         public NativeSparsePagedArrayXYZ GetNodeStorage(int levelIndex)
         {
             return m_NodeStoragePerLevel[levelIndex];
@@ -45,7 +55,11 @@ namespace InfPoints
         public void AddLevel()
         {
             var nodeCount = SparseOctreeUtils.GetNodeCount(LevelCount);
-            var nodeStorage = new NativeSparsePagedArrayXYZ(nodeCount, m_MaximumPointsPerNode, m_MaximumPointsPerNode*4, m_Allocator);
+            int maximumPageCount = ((nodeCount * m_MaximumPointsPerNode) / AllocationsPerPage)+1;
+            int allocationSize = m_MaximumPointsPerNode * UnsafeUtility.SizeOf<float>();
+
+            var nodeStorage =
+                new NativeSparsePagedArrayXYZ(allocationSize, AllocationsPerPage, maximumPageCount, m_Allocator);
             m_NodeStoragePerLevel.Add(nodeStorage);
         }
 
