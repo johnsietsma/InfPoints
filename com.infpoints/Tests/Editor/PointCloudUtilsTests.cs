@@ -13,7 +13,7 @@ namespace InfPoints.Tests.Editor
             const int cellSize = 10;
             var aabb = new AABB(float3.zero, cellSize);
             using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
-            using (var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob))
+            using (var coordinates = new XYZNativeArray<uint>(points.Length, Allocator.TempJob))
             {
                 PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize).Complete();
                 for (int index = 0; index < coordinates.Length; index++)
@@ -30,7 +30,7 @@ namespace InfPoints.Tests.Editor
             const int cellSize = 10;
             var aabb = new AABB(float3.zero, cellSize);
             using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
-            using (var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob))
+            using (var coordinates = new XYZNativeArray<uint>(points.Length, Allocator.TempJob))
             using (var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob))
             {
                 var pointsToCoordinatesJobHandle =
@@ -65,9 +65,9 @@ namespace InfPoints.Tests.Editor
             const int cellSize = 10;
             var aabb = new AABB(float3.zero, cellSize);
             using (var points = PointCloudGenerator.RandomPointsOnSphere(1024, 5, Allocator.TempJob))
-            using (var coordinates = new XYZSoA<uint>(points.Length, Allocator.TempJob))
+            using (var coordinates = new XYZNativeArray<uint>(points.Length, Allocator.TempJob))
             using (var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob))
-            using (var nodeStorage = new NativeNodeStorage(1, 1, 1, Allocator.TempJob))
+            using (var nodeStorage = new XYZNativeSparsePagedArray(1, 1, 1, Allocator.TempJob))
             {
                 var pointsToCoordinatesJobHandle = PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
                 NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);

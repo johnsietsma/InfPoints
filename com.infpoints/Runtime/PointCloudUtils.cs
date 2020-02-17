@@ -10,7 +10,7 @@ namespace InfPoints
     {
         const int InnerLoopBatchCount = 128;
 
-        public static JobHandle SchedulePointsToCoordinates(XYZSoA<float> points, XYZSoA<uint> coordinates,
+        public static JobHandle SchedulePointsToCoordinates(XYZNativeArray<float> points, XYZNativeArray<uint> coordinates,
             float3 offset, float cellWidth, JobHandle deps = default)
         {
             // Transform points from world to Octree AABB space
@@ -24,7 +24,7 @@ namespace InfPoints
             return pointsToCoordinatesHandle;
         }
 
-        public static JobHandle ScheduleEncodeMortonCodes(XYZSoA<uint> coordinates, NativeArray<ulong> mortonCodes,
+        public static JobHandle ScheduleEncodeMortonCodes(XYZNativeArray<uint> coordinates, NativeArray<ulong> mortonCodes,
             JobHandle deps = default)
         {
             return new Morton64SoAEncodeJob()
@@ -52,42 +52,42 @@ namespace InfPoints
             }.Schedule(uniqueCodesMapHandle);
         }
 
-        public static JobHandle FilterFullNodes(NativeArray<ulong> mortonCodes, NativeNodeStorage nodeStorage,
+        public static JobHandle FilterFullNodes(NativeArray<ulong> mortonCodes, XYZNativeSparsePagedArray sparsePagedArray,
             NativeList<int> notFullNodeIndices, JobHandle deps = default)
         {
             return new FilterFullNodesJob<float>()
             {
                 MortonCodes = mortonCodes,
-                NodeStorage = nodeStorage
+                SparsePagedArray = sparsePagedArray
             }.ScheduleAppend(notFullNodeIndices, mortonCodes.Length, InnerLoopBatchCount, deps);
         }
 
-        static JobHandle ScheduleTransformPoints(XYZSoA<float4> xyz, float3 numberToAdd, JobHandle deps = default)
+        static JobHandle ScheduleTransformPoints(XYZNativeArray<float4> xyzNative, float3 numberToAdd, JobHandle deps = default)
         {
             // Convert points to Octree AABB space
             return new XYZSoAUtils.AdditionJob_XYZSoA_float4()
             {
-                ValuesX = xyz.X,
-                ValuesY = xyz.Y,
-                ValuesZ = xyz.Z,
+                ValuesX = xyzNative.X,
+                ValuesY = xyzNative.Y,
+                ValuesZ = xyzNative.Z,
                 NumberToAdd = -numberToAdd[0]
-            }.Schedule(xyz.Length, InnerLoopBatchCount, deps);
+            }.Schedule(xyzNative.Length, InnerLoopBatchCount, deps);
         }
 
-        static JobHandle SchedulePointsToCoordinates(XYZSoA<float4> xyz, XYZSoA<uint4> coordinates,
+        static JobHandle SchedulePointsToCoordinates(XYZNativeArray<float4> xyzNative, XYZNativeArray<uint4> coordinates,
             float divisionAmount, JobHandle deps)
         {
             // Convert points to Octree AABB space
             return new XYZSoAUtils.IntegerDivisionJob_XYZSoA_float4_uint4()
             {
-                ValuesX = xyz.X,
-                ValuesY = xyz.Y,
-                ValuesZ = xyz.Z,
+                ValuesX = xyzNative.X,
+                ValuesY = xyzNative.Y,
+                ValuesZ = xyzNative.Z,
                 Divisor = divisionAmount,
                 QuotientsX = coordinates.X,
                 QuotientsY = coordinates.Y,
                 QuotientsZ = coordinates.Z
-            }.Schedule(xyz.Length, InnerLoopBatchCount, deps);
+            }.Schedule(xyzNative.Length, InnerLoopBatchCount, deps);
         }
     }
 }

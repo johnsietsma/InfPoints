@@ -28,7 +28,7 @@ namespace InfPoints
         public AABB AABB { get; private set; }
 
         readonly Allocator m_Allocator;
-        List<NativeNodeStorage> m_NodeStoragePerLevel;
+        List<XYZNativeSparsePagedArray> m_NodeStoragePerLevel;
         int m_MaximumPointsPerNode;
 
         public SparseOctree(AABB aabb, int maximumPointsPerNode, Allocator allocator)
@@ -36,10 +36,10 @@ namespace InfPoints
             AABB = aabb;
             m_MaximumPointsPerNode = maximumPointsPerNode;
             m_Allocator = allocator;
-            m_NodeStoragePerLevel = new List<NativeNodeStorage>(MaxLevelCount);
+            m_NodeStoragePerLevel = new List<XYZNativeSparsePagedArray>(MaxLevelCount);
         }
         
-        public NativeNodeStorage GetNodeStorage(int levelIndex)
+        public XYZNativeSparsePagedArray GetNodeStorage(int levelIndex)
         {
             return m_NodeStoragePerLevel[levelIndex];
         }
@@ -47,7 +47,7 @@ namespace InfPoints
         public void AddLevel()
         {
             var nodeCount = SparseOctreeUtils.GetNodeCount(LevelCount);
-            var nodeStorage = new NativeNodeStorage(nodeCount, m_MaximumPointsPerNode, m_MaximumPointsPerNode*4, m_Allocator);
+            var nodeStorage = new XYZNativeSparsePagedArray(nodeCount, m_MaximumPointsPerNode, m_MaximumPointsPerNode*4, m_Allocator);
             m_NodeStoragePerLevel.Add(nodeStorage);
         }
 

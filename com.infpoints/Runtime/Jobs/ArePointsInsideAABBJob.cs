@@ -6,7 +6,7 @@ namespace InfPoints.Jobs
     public struct ArePointsInsideAABBJob : IJobParallelFor
     {
         [ReadOnly] public AABB aabb;
-        [ReadOnly] public XYZSoA<float> Points;
+        [ReadOnly] public XYZNativeArray<float> Points;
         public NativeInt OutsideCount;
 
         public void Execute(int index)

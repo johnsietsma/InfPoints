@@ -24,7 +24,7 @@ namespace InfPoints.NativeCollections
 
     /// <summary>
     /// Used to store very large amount of data split over separate arrays.
-    /// It allows for consolidation of stored data, while keeping a consistent handle to ranges of that data.
+    /// It allows for consolidation of stored data, while keeping a consistent index to ranges of that data.
     /// </summary>
     [NativeContainer]
     [DebuggerDisplay("Length = {Length}, IsCreated = {IsCreated}")]
@@ -84,8 +84,9 @@ namespace InfPoints.NativeCollections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
-
-            // Checks happen in NativeSparseArray constructor. I wont repeat them here.
+            if(pageSize<=0) throw new ArgumentException("Must be greater then 0", nameof(pageSize));
+            if(allocationSize<=0) throw new ArgumentException("Must be greater then 0", nameof(allocationSize));
+            if(maximumPageCount<=0) throw new ArgumentException("Must be greater then 0", nameof(maximumPageCount));
 #endif
             m_AllocationSize = allocationSize;
             m_PageSize = pageSize;
@@ -97,30 +98,21 @@ namespace InfPoints.NativeCollections
             m_LastPageAllocation = default;
         }
 
-        public bool IsFull(ulong sparseIndex)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            CheckContainsIndexAndThrow(sparseIndex);
-#endif
-            return m_PageAllocations[sparseIndex].IsFull;
-        }
-        
-        public bool IsEmpty(ulong sparseIndex)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-            CheckContainsIndexAndThrow(sparseIndex);
-#endif
-            return m_PageAllocations[sparseIndex].Length==0;
-        }
-
-        public bool ContainsIndex(ulong sparseIndex)
+        public bool ContainsAllocation(ulong sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
             return m_PageAllocations.ContainsIndex(sparseIndex);
+        }
+
+        public PageAllocation GetAllocation(ulong sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+            if(!ContainsAllocation(sparseIndex)) throw new ArgumentException(nameof(sparseIndex));
+#endif
+            return m_PageAllocations[sparseIndex];
         }
 
         /// <summary>
@@ -148,7 +140,7 @@ namespace InfPoints.NativeCollections
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            if (ContainsIndex(sparseIndex))
+            if (ContainsAllocation(sparseIndex))
                 throw new ArgumentException($"Sparse index {sparseIndex} already exists.", nameof(sparseIndex));
             if (m_PageAllocations.IsFull)
                 throw new InvalidOperationException("Page allocations at capacity. Increase maximum page count.");

@@ -71,11 +71,11 @@ namespace InfPoints.Tests.Editor.NativeCollections
             using (var array =
                 new NativeSparsePagedArray<int>(allocationSize, pageSize, maximumPageCount, Allocator.Persistent))
             {
-                Assert.That(array.ContainsIndex(sparseIndex), Is.False);
+                Assert.That(array.ContainsAllocation(sparseIndex), Is.False);
                 array.AddIndex(sparseIndex);
-                Assert.That(array.ContainsIndex(sparseIndex), Is.True);
+                Assert.That(array.ContainsAllocation(sparseIndex), Is.True);
                 Assert.That(array.Length, Is.EqualTo(1));
-                Assert.That(array.IsEmpty(sparseIndex), Is.True);
+                Assert.That(array.GetAllocation(sparseIndex).Length, Is.EqualTo(0));
             }
         }
 

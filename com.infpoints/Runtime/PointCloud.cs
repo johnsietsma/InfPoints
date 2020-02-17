@@ -22,7 +22,7 @@ namespace InfPoints
         }
 
 
-        public void AddPoints(XYZSoA<float> points)
+        public void AddPoints(XYZNativeArray<float> points)
         {
             // TODO: https://www.nuget.org/packages/System.Buffers
             #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -59,7 +59,7 @@ namespace InfPoints
 
             // Transform each point to a coordinate within the AABB
             var coordinates =
-                new XYZSoA<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                new XYZNativeArray<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             var coordinatesJobHandle =
                 PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, m_Octree.AABB.Minimum, cellWidth);
 
@@ -80,7 +80,7 @@ namespace InfPoints
             var notFullNodesHandle = PointCloudUtils.FilterFullNodes(uniqueCodes, nodeStorage, notFullNodeIndices);
             notFullNodesHandle.Complete();
 
-            var collectedPoints = new XYZSoA<float>(mortonCodes.Length, Allocator.TempJob,
+            var collectedPoints = new XYZNativeArray<float>(mortonCodes.Length, Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory);
             var collectedPointsCount = new NativeArray<int>(1, Allocator.TempJob);
 

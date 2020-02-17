@@ -7,9 +7,9 @@ namespace InfPoints
 {
     public static class XYZSoAUtils
     {
-        public static XYZSoA<float> MakeXYZSoA(NativeArray<float3> points, Allocator allocator)
+        public static XYZNativeArray<float> MakeXYZSoA(NativeArray<float3> points, Allocator allocator)
         {
-            var xyzPoints = new XYZSoA<float>(points.Length, allocator);
+            var xyzPoints = new XYZNativeArray<float>(points.Length, allocator);
             for (int index = 0; index < points.Length; index++)
             {
                 var p = points[index];
