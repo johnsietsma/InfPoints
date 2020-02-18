@@ -37,15 +37,15 @@ namespace InfPoints
         }
 
         public static JobHandle ScheduleGetUniqueCodes(NativeArray<ulong> codes,
-            NativeHashMap<ulong, uint> uniqueCodesMap, NativeList<ulong> uniqueCodes, JobHandle deps = default)
+            NativeHashMap<ulong, int> uniqueCodesMap, NativeList<ulong> uniqueCodes, JobHandle deps = default)
         {
             var uniqueCodesMapHandle = new GetUniqueValuesJob<ulong>()
             {
                 Values = codes,
-                UniqueValues = uniqueCodesMap.AsParallelWriter()
-            }.Schedule(codes.Length, InnerLoopBatchCount, deps);
+                UniqueValues = uniqueCodesMap
+            }.Schedule(deps);
 
-            return new NativeHashMapGetKeysJob<ulong, uint>()
+            return new NativeHashMapGetKeysJob<ulong, int>()
             {
                 NativeHashMap = uniqueCodesMap,
                 Keys = uniqueCodes

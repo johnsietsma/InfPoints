@@ -8,7 +8,7 @@ namespace InfPoints
     public class PointCloud : IDisposable
     {
         public SparseOctree Octree => m_Octree;
-        
+
         const int InnerLoopBatchCount = 128;
         const int MaximumPointsPerNode = 1024 * 1024;
 
@@ -71,7 +71,7 @@ namespace InfPoints
                 PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, coordinatesJobHandle);
 
             // Get all unique codes
-            var uniqueCoordinatesMap = new NativeHashMap<ulong, uint>(mortonCodes.Length, Allocator.TempJob);
+            var uniqueCoordinatesMap = new NativeHashMap<ulong, int>(mortonCodes.Length, Allocator.TempJob);
             NativeList<ulong> uniqueCodes = new NativeList<ulong>(Allocator.TempJob);
             var uniqueCodesHandle = PointCloudUtils.ScheduleGetUniqueCodes(mortonCodes, uniqueCoordinatesMap,
                 uniqueCodes, mortonCodesJobHandle);
@@ -90,6 +90,12 @@ namespace InfPoints
             {
                 int mortonCodeIndex = validNodeIndices[index];
                 ulong mortonCode = mortonCodes[mortonCodeIndex];
+                int pointsCount = uniqueCoordinatesMap[mortonCode];
+                var collectedPoints = new NativeArrayXYZ<float>(pointsCount, Allocator.TempJob,
+                    NativeArrayOptions.UninitializedMemory);
+                var collectedPointsCount = new NativeInt(Allocator.TempJob);
+
+                Logger.Log($"Adding {pointsCount} points to node {mortonCode}");
                 
                 // Add node to the Octree if it doesn't exist
                 var storage = Octree.GetNodeStorage(levelIndex);
@@ -98,14 +104,11 @@ namespace InfPoints
                     SparseIndex = mortonCode,
                     Storage = Octree.GetNodeStorage(levelIndex)
                 }.Schedule(validNodesHandle);
-                
-                var collectedPoints = new NativeArrayXYZ<float>(mortonCodes.Length, Allocator.TempJob,
-                    NativeArrayOptions.UninitializedMemory);
-                var collectedPointsCount = new NativeInt(Allocator.TempJob);
 
                 // Collect points
                 var collectJobHandle = new CollectPointsJob()
                 {
+                    ValidIndices = validNodeIndices,
                     CodeKey = mortonCode,
                     Codes = uniqueCodes,
                     PointsX = points.X,
@@ -115,7 +118,7 @@ namespace InfPoints
                     CollectedPointsY = collectedPoints.Y,
                     CollectedPointsZ = collectedPoints.Z,
                     CollectedPointsCount = collectedPointsCount
-                }.ScheduleFilter(validNodeIndices, InnerLoopBatchCount, addNodeJobHandle);
+                }.Schedule(addNodeJobHandle);
 
                 var addDataToStorageHandle = new AddDataToStorageJob()
                 {
@@ -126,9 +129,11 @@ namespace InfPoints
                 }.Schedule(collectJobHandle);
 
                 collectJobHandles[index] = addDataToStorageHandle;
+
+                addDataToStorageHandle.Complete();
             }
 
-            JobUtils.CombineHandles(collectJobHandles).Complete();
+            //JobUtils.CombineHandles(collectJobHandles).Complete();
 
             validNodeIndices.Dispose();
             uniqueCodes.Dispose();

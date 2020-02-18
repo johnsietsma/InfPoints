@@ -13,6 +13,8 @@ namespace InfPoints.Jobs
 
         public void Execute()
         {
+            Logger.Log($"Adding {Count.Value} points.");
+            if(!Storage.ContainsNode(SparseIndex)) Storage.AddNode(SparseIndex);
             Storage.AddData(SparseIndex, Data, Count.Value);
         }
     }

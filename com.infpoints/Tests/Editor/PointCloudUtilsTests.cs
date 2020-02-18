@@ -50,7 +50,7 @@ namespace InfPoints.Tests.Editor
         {
             ulong[] codesData = {1, 2, 2, 3, 4, 5, 5, 5};
             using (var codes = new NativeArray<ulong>(codesData, Allocator.TempJob))
-            using (var codesUniqueMap = new NativeHashMap<ulong, uint>(codes.Length, Allocator.TempJob))
+            using (var codesUniqueMap = new NativeHashMap<ulong, int>(codes.Length, Allocator.TempJob))
             using (var uniqueCodes = new NativeList<ulong>(Allocator.TempJob))
             {
                 PointCloudUtils.ScheduleGetUniqueCodes(codes, codesUniqueMap, uniqueCodes).Complete();

@@ -12,16 +12,16 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             int[] values = {1, 1, 2, 3, 5, 5, 6, 6};
             using (var valuesArray = new NativeArray<int>(values, Allocator.TempJob))
-            using (var uniqueMap = new NativeHashMap<int,uint>(valuesArray.Length, Allocator.TempJob))
+            using (var uniqueMap = new NativeHashMap<int,int>(valuesArray.Length, Allocator.TempJob))
             {
                 var uniqueJob = new GetUniqueValuesJob<int>()
                 {
                     Values = valuesArray,
-                    UniqueValues = uniqueMap.AsParallelWriter()
+                    UniqueValues = uniqueMap
                 };
 
 
-                var collectUniqueJobHandle = uniqueJob.Schedule(valuesArray.Length, 128);
+                var collectUniqueJobHandle = uniqueJob.Schedule();
                 collectUniqueJobHandle.Complete();
 
                 Assert.That(uniqueMap.Length, Is.EqualTo(5));

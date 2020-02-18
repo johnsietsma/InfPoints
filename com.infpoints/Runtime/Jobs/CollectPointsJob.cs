@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace InfPoints.Jobs
 {
-    public struct CollectPointsJob : IJobParallelForFilter
+    public struct CollectPointsJob : IJob
     {
+        [ReadOnly] public NativeList<int> ValidIndices;
         [ReadOnly] public ulong CodeKey;
         [ReadOnly] public NativeList<ulong> Codes;
         [ReadOnly] public NativeArray<float> PointsX;
@@ -17,18 +19,22 @@ namespace InfPoints.Jobs
         public NativeArray<float> CollectedPointsZ;
         public NativeInt CollectedPointsCount;
         
-        public bool Execute(int index)
+        public void Execute()
         {
-            if (Codes[index].Equals(CodeKey))
+            int count = 0;
+            for (int index = 0; index < ValidIndices.Length; index++)
             {
-                int collectedPointIndex = CollectedPointsCount.Value;
-                CollectedPointsX[collectedPointIndex] = PointsX[index];
-                CollectedPointsY[collectedPointIndex] = PointsY[index];
-                CollectedPointsZ[collectedPointIndex] = PointsZ[index];
-                CollectedPointsCount.Increment();
+                if (Codes[index].Equals(CodeKey))
+                {
+                    CollectedPointsX[count] = PointsX[index];
+                    CollectedPointsY[count] = PointsY[index];
+                    CollectedPointsZ[count] = PointsZ[index];
+                    count++;
+                }
             }
 
-            return true;
+            Logger.Log($"Collected {count} points");
+            CollectedPointsCount.Value = count;
         }
     }
 }
