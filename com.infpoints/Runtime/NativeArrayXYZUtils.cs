@@ -5,7 +5,7 @@ using Unity.Mathematics;
 
 namespace InfPoints
 {
-    public static class XYZSoAUtils
+    public static class NativeArrayXYZUtils
     {
         /// <summary>
         /// Convert a <seealso cref="NativeArray{T}"/> of points to a <seealso cref="NativeArrayXYZ{T}"/>.

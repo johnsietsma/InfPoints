@@ -48,16 +48,16 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void GetUniqueCodesGivesTheCorrectResult()
         {
-            ulong[] codesData = new ulong[] {1, 2, 2, 3, 4, 5, 5, 5};
+            ulong[] codesData = {1, 2, 2, 3, 4, 5, 5, 5};
             using (var codes = new NativeArray<ulong>(codesData, Allocator.TempJob))
-            using (var codesUniqueMap = new NativeHashMap<ulong,uint>(codes.Length, Allocator.TempJob))
+            using (var codesUniqueMap = new NativeHashMap<ulong, uint>(codes.Length, Allocator.TempJob))
             using (var uniqueCodes = new NativeList<ulong>(Allocator.TempJob))
             {
                 PointCloudUtils.ScheduleGetUniqueCodes(codes, codesUniqueMap, uniqueCodes).Complete();
                 Assert.That(uniqueCodes.Length, Is.EqualTo(5));
             }
         }
-        
+
 
         [Test]
         public void CanFilterWithEmptyNodeStorage()
@@ -69,11 +69,29 @@ namespace InfPoints.Tests.Editor
             using (var mortonCodes = new NativeArray<ulong>(points.Length, Allocator.TempJob))
             using (var nodeStorage = new NativeSparsePagedArrayXYZ(1, 1, 1, Allocator.TempJob))
             {
-                var pointsToCoordinatesJobHandle = PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
+                var pointsToCoordinatesJobHandle =
+                    PointCloudUtils.SchedulePointsToCoordinates(points, coordinates, aabb.Minimum, cellSize);
                 NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob);
-                PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle).Complete();
-                PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage,notFullNodeIndices).Complete();
+                PointCloudUtils.ScheduleEncodeMortonCodes(coordinates, mortonCodes, pointsToCoordinatesJobHandle)
+                    .Complete();
+                PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage, notFullNodeIndices).Complete();
                 notFullNodeIndices.Dispose();
+            }
+        }
+
+        [Test]
+        public void CanFilterNonexistentNode()
+        {
+            ulong[] codesData = {1,2,3};
+            using (var mortonCodes = new NativeArray<ulong>(codesData, Allocator.TempJob))
+            using (var nodeStorage = new NativeSparsePagedArrayXYZ(1, 2, 1, Allocator.TempJob)) 
+            using(NativeList<int> notFullNodeIndices = new NativeList<int>(mortonCodes.Length, Allocator.TempJob))
+            {
+                nodeStorage.AddNode(2);
+                nodeStorage.AddNode(3);
+                nodeStorage.Add(3, float3.zero); // Is now full
+                PointCloudUtils.FilterFullNodes(mortonCodes, nodeStorage, notFullNodeIndices).Complete();
+                Assert.That(notFullNodeIndices.Length, Is.EqualTo(2));
             }
         }
     }

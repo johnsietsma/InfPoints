@@ -19,7 +19,7 @@ namespace InfPoints.Tests.Editor.Jobs
             };
             AABB aabb = new AABB(20, 5);
             using(var points = new NativeArray<float3>(pointsArray, Allocator.TempJob))
-            using (var xyzPoints = XYZSoAUtils.MakeNativeArrayXYZ(points, Allocator.TempJob))
+            using (var xyzPoints = NativeArrayXYZUtils.MakeNativeArrayXYZ(points, Allocator.TempJob))
             using(var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 var pointsOutsideJob = new ArePointsInsideAABBJob()

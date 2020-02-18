@@ -65,7 +65,7 @@ namespace InfPoints
         static JobHandle ScheduleTransformPoints(NativeArrayXYZ<float4> nativeArrayXyzNative, float3 numberToAdd, JobHandle deps = default)
         {
             // Convert points to Octree AABB space
-            return new XYZSoAUtils.AdditionJob_NativeArrayXYZ_float4()
+            return new NativeArrayXYZUtils.AdditionJob_NativeArrayXYZ_float4()
             {
                 ValuesX = nativeArrayXyzNative.X,
                 ValuesY = nativeArrayXyzNative.Y,
@@ -78,7 +78,7 @@ namespace InfPoints
             float divisionAmount, JobHandle deps)
         {
             // Convert points to Octree AABB space
-            return new XYZSoAUtils.IntegerDivisionJob_NativeArrayXYZ_float4_uint4()
+            return new NativeArrayXYZUtils.IntegerDivisionJob_NativeArrayXYZ_float4_uint4()
             {
                 ValuesX = nativeArrayXyzNative.X,
                 ValuesY = nativeArrayXyzNative.Y,

@@ -79,19 +79,21 @@ namespace InfPoints.NativeCollections
         /// <param name="maximumPageCount">The maximum number of pages that can be allocated</param>
         /// <param name="allocator">The <see cref="Unity.Collections.Allocator"/> to use to allocate each <see cref="PageAllocation"/></param>
         /// <exception cref="Exception"></exception>
-        public NativeSparsePagedArray(int allocationSize, int allocationsPerPage, int maximumPageCount, Allocator allocator)
+        public NativeSparsePagedArray(int allocationSize, int allocationsPerPage, int maximumPageCount,
+            Allocator allocator)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
-            if (allocationsPerPage <= 0) throw new ArgumentException("Must be greater then 0", nameof(allocationsPerPage));
+            if (allocationsPerPage <= 0)
+                throw new ArgumentException("Must be greater then 0", nameof(allocationsPerPage));
             if (allocationSize <= 0) throw new ArgumentException("Must be greater then 0", nameof(allocationSize));
             if (maximumPageCount <= 0) throw new ArgumentException("Must be greater then 0", nameof(maximumPageCount));
 #endif
             m_AllocationSize = allocationSize;
             m_PageSize = allocationsPerPage * allocationSize;
             m_MaximumPageCount = maximumPageCount;
-            m_PageAllocations = new NativeSparseArray<PageAllocation>(maximumPageCount, allocator);
+            m_PageAllocations = new NativeSparseArray<PageAllocation>(maximumPageCount * allocationsPerPage, allocator);
             m_Pages = (T**) UnsafeUtility.Malloc(IntPtr.Size * maximumPageCount, UnsafeUtility.AlignOf<T>(), allocator);
             m_Allocator = allocator;
             m_PageCount = 0;

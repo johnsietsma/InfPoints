@@ -14,6 +14,7 @@ namespace InfPoints.Jobs
         public void Execute()
         {
             var keyArray = NativeHashMap.GetKeyArray(Allocator.Temp);
+            Logger.Log($"Getting {keyArray.Length} keys");
             Keys.AddRange(keyArray);
         }
     }

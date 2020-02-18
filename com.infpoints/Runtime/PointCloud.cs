@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using InfPoints.Jobs;
-using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 
@@ -31,7 +29,7 @@ namespace InfPoints
             if (points.Length % 4 != 0) throw new ArgumentException("Points must be added in multiples of 4");
 #endif
 
-            UnityEngine.Debug.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
+            Logger.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
 
             int levelIndex = 0;
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
