@@ -1,5 +1,4 @@
-﻿using JacksonDunstan.NativeCollections;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 

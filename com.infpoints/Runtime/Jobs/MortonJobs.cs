@@ -37,6 +37,14 @@ namespace InfPoints.Jobs
         [ReadOnly] public NativeArray<uint> CoordinatesZ;
         public NativeArray<ulong> Codes;
 
+        public Morton64SoAEncodeJob(NativeArrayXYZ<uint> coordinates, NativeArray<ulong> codes)
+        {
+            CoordinatesX = coordinates.X;
+            CoordinatesY = coordinates.Y;
+            CoordinatesZ = coordinates.Z;
+            Codes = codes;
+        }
+
         public void Execute(int index)
         {
             Codes[index] = Morton.EncodeMorton64( new uint3(CoordinatesX[index], CoordinatesY[index], CoordinatesZ[index]));

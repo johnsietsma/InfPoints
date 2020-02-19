@@ -11,6 +11,12 @@ namespace InfPoints.Jobs
         [ReadOnly] public NativeHashMap<TKey, TValue> NativeHashMap;
         public NativeList<TKey> Keys;
 
+        public NativeHashMapGetKeysJob(NativeHashMap<TKey, TValue> nativeHashMap, NativeList<TKey> keys)
+        {
+            NativeHashMap = nativeHashMap;
+            Keys = keys;
+        }
+
         public void Execute()
         {
             var keyArray = NativeHashMap.GetKeyArray(Allocator.Temp);

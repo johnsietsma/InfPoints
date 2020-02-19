@@ -8,6 +8,13 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public NativeSparsePagedArrayXYZ SparsePagedArray;
         [ReadOnly] public NativeArray<ulong> MortonCodes;
+
+        public FilterFullNodesJob(NativeSparsePagedArrayXYZ sparsePagedArray, NativeArray<ulong> mortonCodes)
+        {
+            SparsePagedArray = sparsePagedArray;
+            MortonCodes = mortonCodes;
+        }
+        
         
         public bool Execute(int index)
         {

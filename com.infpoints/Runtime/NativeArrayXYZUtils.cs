@@ -36,6 +36,14 @@ namespace InfPoints
             public NativeArray<float4> ValuesY;
             public NativeArray<float4> ValuesZ;
 
+            public AdditionJob_NativeArrayXYZ_float4(NativeArrayXYZ<float4> values, float4 numberToAdd)
+            {
+                NumberToAdd = numberToAdd;
+                ValuesX = values.X;
+                ValuesY = values.Y;
+                ValuesZ = values.Z;
+            }
+
             public void Execute(int index)
             {
                 ValuesX[index] += NumberToAdd;
@@ -54,6 +62,18 @@ namespace InfPoints
             public NativeArray<uint4> QuotientsX;
             public NativeArray<uint4> QuotientsY;
             public NativeArray<uint4> QuotientsZ;
+
+            public IntegerDivisionJob_NativeArrayXYZ_float4_uint4(NativeArrayXYZ<float4> values,
+                NativeArrayXYZ<uint4> quotients, float4 divisor)
+            {
+                Divisor = divisor;
+                ValuesX = values.X;
+                ValuesY = values.Y;
+                ValuesZ = values.Z;
+                QuotientsX = quotients.X;
+                QuotientsY = quotients.Y;
+                QuotientsZ = quotients.Z;
+            }
 
             public void Execute(int index)
             {

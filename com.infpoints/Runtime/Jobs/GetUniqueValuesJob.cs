@@ -17,6 +17,12 @@ namespace InfPoints.Jobs
         [ReadOnly] public NativeArray<T> Values;
         public NativeHashMap<T, int> UniqueValues;
 
+        public GetUniqueValuesJob(NativeArray<T> values, NativeHashMap<T, int> uniqueValues)
+        {
+            Values = values;
+            UniqueValues = uniqueValues;
+        }
+        
         public void Execute()
         {
             for (int index = 0; index < Values.Length; index++)
