@@ -21,7 +21,23 @@ namespace InfPoints.NativeCollections
 
         public bool IsCreated => m_DataX.IsCreated;
         public int Length => m_DataX.Length;
-        public NativeArray<ulong> Indices => m_DataX.Indices;
+
+        public int DataLength
+        {
+            get
+            {
+                int length = 0;
+                for (int index = 0; index < m_DataX.Length; index++)
+                {
+                    ulong sparseIndex = m_DataX.Indices[index];
+                    length += m_DataX.GetAllocation(sparseIndex).Length;
+                }
+
+                return length;
+            }
+        }
+
+        public NativeSlice<ulong> Indices => m_DataX.Indices.Slice(0,Length);
         
         NativeSparsePagedArray<float> m_DataX;
         NativeSparsePagedArray<float> m_DataY;

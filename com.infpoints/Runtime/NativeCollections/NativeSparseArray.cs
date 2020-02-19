@@ -46,7 +46,7 @@ namespace InfPoints.NativeCollections
         /// Every time a unique index is used, this count goes up.
         /// When the `SparseArray` is full no more items can be added.
         /// </summary>
-        public int Length { get; set; }
+        public int Length => m_Length.Value;
 
         /// <summary>
         /// The sorted indices of data in the `SparseArray`.
@@ -59,6 +59,8 @@ namespace InfPoints.NativeCollections
         /// This data is store contiguously, even though the indices are far apart. 
         /// </summary>
         public NativeArray<T> Data;
+
+        NativeInt m_Length;
 
         /// <summary>
         /// Create a new empty `SparseArray`.
@@ -76,7 +78,7 @@ namespace InfPoints.NativeCollections
 
             Indices = new NativeArray<ulong>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             Data = new NativeArray<T>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
-            Length = 0;
+            m_Length = new NativeInt(0, allocator);
         }
 
         /// <summary>
@@ -142,18 +144,6 @@ namespace InfPoints.NativeCollections
             return FindDataIndex(sparseIndex) >= 0;
         }
 
-        /// <summary>
-        /// If a copy of this struct has elements added to it, then the `UsedElementCount` becomes out of date.
-        /// Use this to update the count if you are required to use a copy, in a job for example.
-        /// </summary>
-        /// <param name="count"></param>
-        public void IncrementUsedElementCount(int count)
-        {
-            Length += count;
-        }
-
-
-        /// <summary>
         /// Explicitly add a new index and value to the `SparseArray`.
         /// </summary>
         /// <param name="value">The value to add</param>
@@ -174,7 +164,7 @@ namespace InfPoints.NativeCollections
             dataIndex = ~dataIndex; // Two's complement is the insertion point
             Indices.Insert(dataIndex, sparseIndex);
             Data.Insert(dataIndex, value);
-            Length++;
+            m_Length.Increment();
         }
 
         /// <summary>
@@ -219,7 +209,7 @@ namespace InfPoints.NativeCollections
             int dataIndex = FindDataIndex(sparseIndex);
             Indices.RemoveAt(dataIndex);
             Data.RemoveAt(dataIndex);
-            Length--;
+            m_Length.Decrement();
         }
 
         int FindDataIndex(ulong sparseIndex)
@@ -248,6 +238,7 @@ namespace InfPoints.NativeCollections
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif
 
+            m_Length.Dispose();
             Indices.Dispose();
             Data.Dispose();
         }

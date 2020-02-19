@@ -17,15 +17,14 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public struct AddJob : IJob
         {
             public NativeSparseArray<int> array;
-
-            public NativeArray<int> addedCount;
+            public NativeInt addedCount;
 
             public void Execute()
             {
                 for (int i = 0; i < AddCount; i++)
                 {
                     array.AddValue(i, i);
-                    addedCount[0]++;
+                    addedCount.Increment();
                 }
             }
         }
@@ -34,7 +33,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddJobAddsCorrectAmount()
         {
             using (var array = new NativeSparseArray<int>(AddCount, Allocator.TempJob))
-            using (var count = new NativeArray<int>(1, Allocator.TempJob))
+            using (var count = new NativeInt(0, Allocator.TempJob))
             {
                 var addJob = new AddJob()
                 {
@@ -45,8 +44,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 var jobData = addJob.Schedule();
                 jobData.Complete();
 
-                Assert.That(addJob.addedCount[0], Is.EqualTo(AddCount));
-                array.IncrementUsedElementCount(addJob.addedCount[0]);
+                Assert.That(addJob.addedCount.Value, Is.EqualTo(AddCount));
                 Assert.That(array.Length, Is.EqualTo(AddCount));
             }
         }

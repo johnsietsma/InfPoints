@@ -108,9 +108,8 @@ namespace InfPoints
                 // Collect points
                 var collectJobHandle = new CollectPointsJob()
                 {
-                    ValidIndices = validNodeIndices,
                     CodeKey = mortonCode,
-                    Codes = uniqueCodes,
+                    Codes = mortonCodes,
                     PointsX = points.X,
                     PointsY = points.Y,
                     PointsZ = points.Z,

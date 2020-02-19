@@ -183,7 +183,7 @@ namespace InfPoints.NativeCollections
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-            CheckContainsIndexAndThrow(sparseIndex);
+            CheckContainsPageAllocationAndThrow(sparseIndex);
             CheckHasCapacityAndThrow(sparseIndex, 1);
 #endif
             var pageAllocation = m_PageAllocations[sparseIndex];
@@ -243,7 +243,7 @@ namespace InfPoints.NativeCollections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             Checks.CheckNullAndThrow(data, nameof(data));
-            CheckContainsIndexAndThrow(sparseIndex);
+            CheckContainsPageAllocationAndThrow(sparseIndex);
             CheckHasCapacityAndThrow(sparseIndex, count);
 #endif
             var pageAllocation = m_PageAllocations[sparseIndex];
@@ -295,7 +295,7 @@ namespace InfPoints.NativeCollections
                     $"Data of length {length} will not fit in allocation {m_PageAllocations[sparseIndex]}");
         }
 
-        void CheckContainsIndexAndThrow(ulong sparseIndex)
+        void CheckContainsPageAllocationAndThrow(ulong sparseIndex)
         {
             if (!m_PageAllocations.ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException(nameof(sparseIndex));

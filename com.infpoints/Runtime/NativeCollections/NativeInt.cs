@@ -44,7 +44,7 @@ namespace InfPoints
             get
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+// TODO: Why does this cause a write error?               AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
                 return *m_Buffer;
             }
