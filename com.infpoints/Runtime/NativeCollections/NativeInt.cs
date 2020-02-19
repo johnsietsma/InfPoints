@@ -8,22 +8,20 @@ using Unity.Jobs;
 
 namespace InfPoints
 {
-
     /// <summary>
     /// Use a simple int as a NativeContainer. This allows data to be passed out of a Job without having to create
     /// a new NativeArray to hold a single value.
     /// Can be used in IJobParallelFor and supports [DeallocateOnJobCompletion]
     /// </summary>
     [NativeContainer]
-    [DebuggerTypeProxy(typeof(NativeIntDebugView))]
-    [DebuggerDisplay("Value = {Value}")]
     [NativeContainerIsAtomicWriteOnly]
     [NativeContainerSupportsDeallocateOnJobCompletion]
+    [DebuggerTypeProxy(typeof(NativeIntDebugView))]
+    [DebuggerDisplay("Value = {Value}")]
     public unsafe struct NativeInt : IDisposable
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
-
         [NativeSetClassTypeToNullOnSchedule] DisposeSentinel m_DisposeSentinel;
         static readonly int DisposeSentinelStackDepth = 2;
 #endif
@@ -34,29 +32,52 @@ namespace InfPoints
         /// A copy of the pointer is made and wont be set to null when the NativeInt is Disposed.
         /// </summary>
         public bool IsCreated => m_Buffer != null;
-        
-        [NativeDisableUnsafePtrRestriction] 
-        int* m_Buffer;
+
+        [NativeDisableUnsafePtrRestriction] int* m_Buffer;
         readonly Allocator m_AllocatorLabel;
+        
+        /// <summary>
+        /// Create a new NativeInt with an initial value of 0.
+        /// </summary>
+        /// <param name="allocatorLabel"></param>
+        public NativeInt(Allocator allocatorLabel) : this(0, allocatorLabel)
+        {
+        }
+
+        /// <summary>
+        /// Create a new NativeValue with an initial value.
+        /// </summary>
+        public NativeInt(int initialValue, Allocator allocatorLabel)
+        {
+            m_Buffer = (int*) UnsafeUtility.Malloc(UnsafeUtility.SizeOf<int>(), UnsafeUtility.AlignOf<int>(),
+                allocatorLabel);
+            m_AllocatorLabel = allocatorLabel;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocatorLabel);
+#endif
+            *m_Buffer = initialValue;
+        }
 
         public int Value
         {
             get
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-// TODO: Why does this cause a write error?               AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+                //TODO: Why does this trigger? AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
                 return *m_Buffer;
             }
+            [WriteAccessRequired]
             set
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
-                Interlocked.Exchange(ref *m_Buffer,value);
+                Interlocked.Exchange(ref *m_Buffer, value);
             }
         }
 
+        [WriteAccessRequired]
         public void Add(int value)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -65,6 +86,7 @@ namespace InfPoints
             Interlocked.Add(ref *m_Buffer, value);
         }
 
+        [WriteAccessRequired]
         public void Increment()
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -73,6 +95,7 @@ namespace InfPoints
             Interlocked.Increment(ref *m_Buffer);
         }
 
+        [WriteAccessRequired]
         public void Decrement()
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -81,31 +104,11 @@ namespace InfPoints
             Interlocked.Decrement(ref *m_Buffer);
         }
 
-        /// <summary>
-        /// Create a new NativeInt with an initial value of 0.
-        /// </summary>
-        /// <param name="allocatorLabel"></param>
-        public NativeInt(Allocator allocatorLabel) : this(0, allocatorLabel)
-        {
-        }
-        
-        /// <summary>
-        /// Create a new NativeValue with an initial value.
-        /// </summary>
-        public NativeInt(int initialValue, Allocator allocatorLabel)
-        {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocatorLabel);
-#endif
-            m_Buffer = (int*)UnsafeUtility.Malloc(UnsafeUtility.SizeOf<int>(), UnsafeUtility.AlignOf<int>(), allocatorLabel);
-            m_AllocatorLabel = allocatorLabel;
-            *m_Buffer = initialValue;
-        }
-
-
+        [WriteAccessRequired]
         public void Dispose()
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
 #endif
             if (m_Buffer != null)
@@ -155,7 +158,7 @@ namespace InfPoints
             return jobHandle;
         }
     }
-    
+
     internal sealed class NativeIntDebugView
     {
         private NativeInt m_NativeInt;

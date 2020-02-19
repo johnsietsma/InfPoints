@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using JacksonDunstan.NativeCollections;
+using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
@@ -21,6 +22,16 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void Execute(int index)
         {
             Count.Increment();
+        }
+    }
+    
+    internal struct AccessIntJob : IJob
+    {
+        public NativeInt Count;
+
+        public void Execute()
+        {
+            int value = Count.Value;
         }
     }
 
@@ -96,6 +107,18 @@ namespace InfPoints.Tests.Editor.NativeCollections
             deallocJob.Complete();
             
             Assert.That(()=>nativeInt.Value, Throws.InvalidOperationException); // Deallocated, illegal access
+        }
+        
+        [Test]
+        public void ReadingValueGivesTheCorrectResult()
+        {
+            using (var nativeInt = new NativeInt(Allocator.TempJob))
+            {
+                new AccessIntJob()
+                {
+                    Count = nativeInt
+                }.Schedule().Complete();
+            }
         }
     }
 }
