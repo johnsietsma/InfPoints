@@ -63,7 +63,7 @@ namespace InfPoints
             get
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                //TODO: Why does this trigger? AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
                 return *m_Buffer;
             }
