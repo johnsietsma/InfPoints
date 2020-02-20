@@ -26,7 +26,7 @@ namespace InfPoints.Tests.Editor.Jobs
                 {
                     aabb = aabb,
                     Points = xyzPoints,
-                    OutsideCount = outsideCount
+                    OutsideCount = outsideCount.ToConcurrent()
                 }.Schedule(points.Length, 4);
                 pointsOutsideJob.Complete();
                 

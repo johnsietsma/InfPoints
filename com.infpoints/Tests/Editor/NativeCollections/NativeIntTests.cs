@@ -6,24 +6,24 @@ namespace InfPoints.Tests.Editor.NativeCollections
 {
     internal struct IncrementIntJob : IJobParallelFor
     {
-        public NativeInt Count;
+        [NativeDisableParallelForRestriction] public NativeInt Count;
 
         public void Execute(int index)
         {
             Count.Increment();
         }
     }
-    
-    internal struct DeallocIntJob : IJobParallelFor
+
+    internal struct DeallocIntJob : IJob
     {
         [DeallocateOnJobCompletion] public NativeInt Count;
 
-        public void Execute(int index)
+        public void Execute()
         {
             Count.Increment();
         }
     }
-    
+
     internal struct AccessIntJob : IJob
     {
         public NativeInt Count;
@@ -88,30 +88,27 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 Assert.That(incrementCount, Is.EqualTo(nativeInt.Value));
             }
         }
-        
+
         [Test]
         public void DeallocsOnJobCompletion()
         {
-            const int incrementCount = 1;
-            const int batchCount = 1;
-
-            var nativeInt = new NativeInt(0, Allocator.TempJob);
+            var nativeInt = new NativeInt(Allocator.TempJob);
             nativeInt.Value = 5; // Legal before the job is scheduled
-            
+
             var deallocJob = new DeallocIntJob()
             {
                 Count = nativeInt
-            }.Schedule(incrementCount, batchCount);
-            
+            }.Schedule();
+
             deallocJob.Complete();
-            
-            Assert.That(()=>nativeInt.Value, Throws.InvalidOperationException); // Deallocated, illegal access
+
+            Assert.That(() => nativeInt.Dispose(), Throws.InvalidOperationException); // Deallocated, illegal access
         }
-        
+
         [Test]
         public void ReadingValueGivesTheCorrectResult()
         {
-            using (var nativeInt = new NativeInt(Allocator.TempJob))
+            using (var nativeInt = new NativeInt(0, Allocator.TempJob))
             {
                 new AccessIntJob()
                 {

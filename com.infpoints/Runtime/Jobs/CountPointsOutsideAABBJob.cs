@@ -10,13 +10,13 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public AABB aabb;
         [ReadOnly] public NativeArrayXYZ<float> Points;
-        public NativeInt OutsideCount;
+        public NativeInt.Concurrent OutsideCount;
 
         public CountPointsOutsideAABBJob(AABB aabb, NativeArrayXYZ<float> points, NativeInt outsideCount)
         {
             this.aabb = aabb;
             Points = points;
-            OutsideCount = outsideCount;
+            OutsideCount = outsideCount.ToConcurrent();
         }
 
         public void Execute(int index)

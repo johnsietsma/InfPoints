@@ -11,14 +11,14 @@ namespace InfPoints
     /// <summary>
     /// Use a simple int as a NativeContainer. This allows data to be passed out of a Job without having to create
     /// a new NativeArray to hold a single value.
-    /// Can be used in IJobParallelFor and supports [DeallocateOnJobCompletion]
+    /// Use <c>NativeInt.Concurrent</c> in IJobParallelFor jobs. 
+    /// Supports the [DeallocateOnJobCompletion] attribute.
     /// </summary>
     [NativeContainer]
-    [NativeContainerIsAtomicWriteOnly]
     [NativeContainerSupportsDeallocateOnJobCompletion]
     [DebuggerTypeProxy(typeof(NativeIntDebugView))]
     [DebuggerDisplay("Value = {Value}")]
-    public unsafe struct NativeInt : IDisposable
+    public unsafe partial struct NativeInt : IDisposable
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -102,6 +102,17 @@ namespace InfPoints
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
             Interlocked.Decrement(ref *m_Buffer);
+        }
+
+        public Concurrent ToConcurrent()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            var concurrent = new Concurrent(m_Buffer, m_Safety);
+            AtomicSafetyHandle.UseSecondaryVersion(ref concurrent.m_Safety);
+#else
+            var concurrent = new Concurrent(m_Buffer);
+#endif
+            return concurrent;
         }
 
         [WriteAccessRequired]
