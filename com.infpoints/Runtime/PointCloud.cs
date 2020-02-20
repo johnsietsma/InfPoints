@@ -28,36 +28,29 @@ namespace InfPoints
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             // Because of reinterpret to SIMD friendly types 
             if (points.Length % 4 != 0) throw new ArgumentException("Points must be added in multiples of 4");
-#endif
 
-            Logger.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
-
-            int levelIndex = 0;
-            int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
-            float cellWidth = Octree.AABB.Size / cellCount;
-
-            Logger.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
-
-            Octree.AddLevel();
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
             using (var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 // Check points are inside AABB
-                var arePointsInsideJob = new ArePointsInsideAABBJob()
-                {
-                    aabb = Octree.AABB,
-                    Points = points,
-                    OutsideCount = outsideCount
-                }.Schedule(points.Length, InnerLoopBatchCount);
+                var arePointsInsideJob = new CountPointsOutsideAABBJob(Octree.AABB, points, outsideCount)
+                    .Schedule(points.Length, InnerLoopBatchCount);
                 arePointsInsideJob.Complete();
                 if (outsideCount.Value > 0)
                 {
-                    Logger.Log("Adding points outside the AABB, aborting");
+                    Logger.LogError(
+                        $"Trying to add {outsideCount.Value} points outside the AABB {Octree.AABB}, aborting");
                     return;
                 }
             }
 #endif
+
+            Logger.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
+
+            int levelIndex = Octree.AddLevel() - 1;
+            int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
+            float cellWidth = Octree.AABB.Size / cellCount;
+
+            Logger.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
 
             var coordinates =
                 new NativeArrayXYZ<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -100,7 +93,7 @@ namespace InfPoints
             var validNodesHandle = new FilterFullNodesJob<float>(nodeStorage, mortonCodes)
                 .ScheduleAppend(validNodeIndices, uniqueCodes.Length, InnerLoopBatchCount);
             validNodesHandle.Complete();
-            
+
             Logger.Log("Valid indices " + validNodeIndices.Length);
 
             // For each node
@@ -109,23 +102,19 @@ namespace InfPoints
             {
                 int mortonCodeIndex = validNodeIndices[index];
                 ulong mortonCode = mortonCodes[mortonCodeIndex];
-                int pointsCount = uniqueCodesMap[mortonCode];
-                var collectedPoints = new NativeArrayXYZ<float>(pointsCount, Allocator.TempJob,
+                int pointsInNodeCount = uniqueCodesMap[mortonCode];
+                var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
                     NativeArrayOptions.UninitializedMemory);
-                var collectedPointsCount = new NativeInt(Allocator.TempJob);
 
-                Logger.Log($"Adding {pointsCount} points to node {mortonCode}");
+                Logger.Log($"Adding {pointsInNodeCount} points to node {mortonCode}");
 
                 // Add node to the Octree if it doesn't exist
                 var storage = Octree.GetNodeStorage(levelIndex);
-                var addNodeJobHandle = new AddNodeToStorageJob()
-                {
-                    SparseIndex = mortonCode,
-                    Storage = Octree.GetNodeStorage(levelIndex)
-                }.Schedule(validNodesHandle);
+                var addNodeJobHandle = new TryAddNodeToStorageJob(mortonCode, Octree.GetNodeStorage(levelIndex))
+                    .Schedule(validNodesHandle);
 
                 // Collect points
-                var collectJobHandle = new CollectPointsJob()
+                var collectJobHandle = new CollectPointsJob(mortonCode, mortonCodes, points, collectedPoints)
                 {
                     CodeKey = mortonCode,
                     Codes = mortonCodes,
@@ -135,16 +124,11 @@ namespace InfPoints
                     CollectedPointsX = collectedPoints.X,
                     CollectedPointsY = collectedPoints.Y,
                     CollectedPointsZ = collectedPoints.Z,
-                    CollectedPointsCount = collectedPointsCount
                 }.Schedule(addNodeJobHandle);
 
-                var addDataToStorageHandle = new AddDataToStorageJob()
-                {
-                    SparseIndex = mortonCode,
-                    Data = collectedPoints, // Deallocate on job completion
-                    Count = collectedPointsCount, // Deallocate on job completion
-                    Storage = storage
-                }.Schedule(collectJobHandle);
+                // collectedPoints disposed on job completion
+                var addDataToStorageHandle = new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
+                .Schedule(collectJobHandle);
 
                 collectJobHandles[index] = addDataToStorageHandle;
 

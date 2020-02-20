@@ -22,7 +22,7 @@ namespace InfPoints.Tests.Editor.Jobs
             using (var xyzPoints = NativeArrayXYZUtils.MakeNativeArrayXYZ(points, Allocator.TempJob))
             using(var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
-                var pointsOutsideJob = new ArePointsInsideAABBJob()
+                var pointsOutsideJob = new CountPointsOutsideAABBJob()
                 {
                     aabb = aabb,
                     Points = xyzPoints,

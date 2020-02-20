@@ -11,11 +11,10 @@ namespace InfPoints.Tests.Editor.Jobs
         [Test]
         public void DoesFilterFullNodes()
         {
-            const int length = 1;
             ulong[] codesArray = {1, 2};
-            using (var pagedArray = new NativeSparsePagedArrayXYZ(2,1, 1, Allocator.TempJob))
+            using (var pagedArray = new NativeSparsePagedArrayXYZ(1,1, 2, Allocator.TempJob))
             using( var codes = new NativeArray<ulong>(codesArray, Allocator.TempJob))
-            using( var indices = new NativeList<int>(length, Allocator.TempJob))
+            using( var indices = new NativeList<int>(codes.Length, Allocator.TempJob))
             {
                 // Fill the fist page
                 var index1 = codesArray[0];
@@ -30,13 +29,12 @@ namespace InfPoints.Tests.Editor.Jobs
                 {
                     MortonCodes = codes,
                     SparsePagedArray = pagedArray
-                }.ScheduleAppend(indices, length, 4);
+                }.ScheduleAppend(indices, codes.Length, 4);
                 
                 isFullJob.Complete();
                 
                 Assert.That(indices.Length, Is.EqualTo(1));
             }
-            
         }
     }
 }

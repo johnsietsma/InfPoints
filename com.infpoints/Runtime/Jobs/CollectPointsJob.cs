@@ -3,6 +3,9 @@ using Unity.Jobs;
 
 namespace InfPoints.Jobs
 {
+    /// <summary>
+    /// Copy(collect) all the points matching the same code. 
+    /// </summary>
     public struct CollectPointsJob : IJob
     {
         [ReadOnly] public ulong CodeKey;
@@ -13,7 +16,18 @@ namespace InfPoints.Jobs
         public NativeArray<float> CollectedPointsX;
         public NativeArray<float> CollectedPointsY;
         public NativeArray<float> CollectedPointsZ;
-        public NativeInt CollectedPointsCount;
+
+        public CollectPointsJob(ulong codeKey, NativeArray<ulong> codes, NativeArrayXYZ<float> points, NativeArrayXYZ<float> collectedPoints)
+        {
+            CodeKey = codeKey;
+            Codes = codes;
+            PointsX = points.X;
+            PointsY = points.Y;
+            PointsZ = points.Z;
+            CollectedPointsX = collectedPoints.X;
+            CollectedPointsY = collectedPoints.Y;
+            CollectedPointsZ = collectedPoints.Z;
+        }
         
         public void Execute()
         {
@@ -30,7 +44,6 @@ namespace InfPoints.Jobs
             }
 
             Logger.Log($"Collected {count} points");
-            CollectedPointsCount.Value = count;
         }
     }
 }

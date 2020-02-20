@@ -8,14 +8,22 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public ulong SparseIndex;
         [ReadOnly][DeallocateOnJobCompletion] public NativeArrayXYZ<float> Data;
-        [ReadOnly] [DeallocateOnJobCompletion] public NativeInt Count;
         public NativeSparsePagedArrayXYZ Storage;
+        [ReadOnly] public int Count;
 
+        public AddDataToStorageJob(ulong sparseIndex, NativeArrayXYZ<float> data, NativeSparsePagedArrayXYZ storage, int count)
+        {
+            SparseIndex = sparseIndex;
+            Data = data;
+            Storage = storage;
+            Count = count;
+        }
+        
         public void Execute()
         {
-            Logger.Log($"Adding {Count.Value} points.");
+            Logger.Log($"Adding {Count} points.");
             if(!Storage.ContainsNode(SparseIndex)) Storage.AddNode(SparseIndex);
-            Storage.AddData(SparseIndex, Data, Count.Value);
+            Storage.AddData(SparseIndex, Data, Count);
         }
     }
 }

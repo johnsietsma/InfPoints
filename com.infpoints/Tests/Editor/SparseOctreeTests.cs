@@ -12,7 +12,8 @@ namespace InfPoints.Tests.Editor
         [Test]
         public void CreateAndDispose()
         {
-            var octree = new SparseOctree(AABB.zero, 1, Allocator.Persistent);
+            var aabb = new AABB(float3.zero, 1);
+            var octree = new SparseOctree(aabb, 1, Allocator.Persistent);
             Assert.That(octree.IsCreated, Is.True);
             octree.Dispose();
             Assert.That(octree.IsCreated, Is.False);

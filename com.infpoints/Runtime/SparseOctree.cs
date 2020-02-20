@@ -52,7 +52,11 @@ namespace InfPoints
             return m_NodeStoragePerLevel[levelIndex];
         }
 
-        public void AddLevel()
+        /// <summary>
+        /// Add a new level to the SparseOctree
+        /// </summary>
+        /// <returns>The number of levels in the SparseOctree</returns>
+        public int AddLevel()
         {
             var nodeCount = SparseOctreeUtils.GetNodeCount(LevelCount);
             int maximumPageCount = ((nodeCount * m_MaximumPointsPerNode) / AllocationsPerPage)+1;
@@ -61,6 +65,7 @@ namespace InfPoints
             var nodeStorage =
                 new NativeSparsePagedArrayXYZ(allocationSize, AllocationsPerPage, maximumPageCount, m_Allocator);
             m_NodeStoragePerLevel.Add(nodeStorage);
+            return m_NodeStoragePerLevel.Count;
         }
 
         public void Dispose()
