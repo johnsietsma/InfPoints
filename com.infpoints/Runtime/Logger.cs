@@ -7,7 +7,7 @@ namespace InfPoints
 	/// A logger that wraps Unity's internal logger.
 	/// Calls to its methods are stripped in case the LOGGER_SYMBOL is not defined.
 	/// </summary>
-	public sealed class Logger
+	public partial class Logger
 	{
 		public const string LOGGER_SYMBOL = "ENABLE_LOG";
 
@@ -28,7 +28,7 @@ namespace InfPoints
 		{
 			Debug.LogFormat(message, args);
 		}
-
+		
 		[System.Diagnostics.Conditional(LOGGER_SYMBOL)]
 		public static void LogFormat(Object context, string message, params object[] args)
 		{

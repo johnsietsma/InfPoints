@@ -22,7 +22,7 @@ namespace InfPoints.Jobs
         public void Execute()
         {
             var keyArray = NativeHashMap.GetKeyArray(Allocator.Temp);
-            Logger.Log($"[NativeHashMapGetKeysJob] Getting {keyArray.Length} keys");
+            Logger.LogFormat( LogString.KeysCount, keyArray.Length);
             Keys.AddRange(keyArray);
         }
     }

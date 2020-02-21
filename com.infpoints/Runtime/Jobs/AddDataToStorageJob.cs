@@ -21,7 +21,7 @@ namespace InfPoints.Jobs
         
         public void Execute()
         {
-            Logger.Log($"[AddDataToStorageJob] Adding {Count} points.");
+            Logger.LogFormat(LogString.DataCountAddedToStorage, Count);
             if(!Storage.ContainsNode(SparseIndex)) Storage.AddNode(SparseIndex);
             Storage.AddData(SparseIndex, Data, Count);
         }

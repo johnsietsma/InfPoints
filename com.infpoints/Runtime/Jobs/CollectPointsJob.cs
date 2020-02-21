@@ -4,6 +4,7 @@ using Unity.Jobs;
 
 namespace InfPoints.Jobs
 {
+   
     /// <summary>
     /// Copy(collect) all the points matching the same code. 
     /// </summary>
@@ -45,7 +46,7 @@ namespace InfPoints.Jobs
                 }
             }
 
-            //Logger.Log($"[CollectPointsJob] Collected {count} points");
+            Logger.LogFormat(LogString.PointsCollected, count);
         }
     }
 }
