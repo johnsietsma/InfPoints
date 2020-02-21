@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 
 namespace InfPoints.Jobs
@@ -6,6 +7,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Count how many points are outside an AABB
     /// </summary>
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct CountPointsOutsideAABBJob : IJobParallelFor
     {
         [ReadOnly] public AABB aabb;

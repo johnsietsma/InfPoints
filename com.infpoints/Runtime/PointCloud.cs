@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using InfPoints.Jobs;
 using Unity.Collections;
 using Unity.Jobs;
@@ -38,19 +39,19 @@ namespace InfPoints
                 if (outsideCount.Value > 0)
                 {
                     Logger.LogError(
-                        $"Trying to add {outsideCount.Value} points outside the AABB {Octree.AABB}, aborting");
+                        $"[PointCloud]Trying to add {outsideCount.Value} points outside the AABB {Octree.AABB}, aborting");
                     return;
                 }
             }
 #endif
 
-            Logger.Log($"Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
+            Logger.Log($"[PointCloud] Adding {points.Length} points to the octree with AABB {Octree.AABB}.");
 
             int levelIndex = Octree.AddLevel() - 1;
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = Octree.AABB.Size / cellCount;
 
-            Logger.Log($"Cell count:{cellCount} Cell width:{cellWidth}");
+            Logger.Log($"[PointCloud]Cell count:{cellCount} Cell width:{cellWidth}");
 
             var coordinates =
                 new NativeArrayXYZ<uint>(points.Length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -87,14 +88,15 @@ namespace InfPoints
                 .Schedule(uniqueCodesMapHandle);
             uniqueCodesHandle.Complete();
 
-            Logger.Log("Unique codes " + uniqueCodes.Length);
+            Logger.Log("[PointCloud] Unique codes " + uniqueCodes.Length);
 
             // Filter out full nodes
             var validNodesHandle = new FilterFullNodesJob<float>(nodeStorage, mortonCodes)
                 .ScheduleAppend(validNodeIndices, uniqueCodes.Length, InnerLoopBatchCount);
             validNodesHandle.Complete();
 
-            Logger.Log("Valid indices " + validNodeIndices.Length);
+
+            Logger.Log("[PointCloud] Valid indices " + validNodeIndices.Length);
 
             // For each node
             var collectJobHandles = new JobHandle[validNodeIndices.Length];
@@ -106,12 +108,12 @@ namespace InfPoints
                 var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
                     NativeArrayOptions.UninitializedMemory);
 
-                Logger.Log($"Adding {pointsInNodeCount} points to node {mortonCode}");
+                Logger.Log($"[PointCloud] Adding {pointsInNodeCount} points to node {mortonCode}");
 
                 // Add node to the Octree if it doesn't exist
                 var storage = Octree.GetNodeStorage(levelIndex);
                 var addNodeJobHandle = new TryAddNodeToStorageJob(mortonCode, Octree.GetNodeStorage(levelIndex))
-                    .Schedule(validNodesHandle);
+                    .Schedule();
 
                 // Collect points
                 var collectJobHandle = new CollectPointsJob(mortonCode, mortonCodes, points, collectedPoints)
@@ -127,15 +129,14 @@ namespace InfPoints
                 }.Schedule(addNodeJobHandle);
 
                 // collectedPoints disposed on job completion
-                var addDataToStorageHandle = new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
-                .Schedule(collectJobHandle);
+                var addDataToStorageHandle =
+                    new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
+                        .Schedule(collectJobHandle);
 
                 collectJobHandles[index] = addDataToStorageHandle;
-
-                addDataToStorageHandle.Complete();
             }
 
-            //JobUtils.CombineHandles(collectJobHandles).Complete();
+            JobUtils.CombineHandles(collectJobHandles).Complete();
 
             coordinates.Dispose();
             mortonCodes.Dispose();

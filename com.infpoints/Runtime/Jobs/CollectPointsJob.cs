@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 
 namespace InfPoints.Jobs
@@ -6,6 +7,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Copy(collect) all the points matching the same code. 
     /// </summary>
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct CollectPointsJob : IJob
     {
         [ReadOnly] public ulong CodeKey;
@@ -43,7 +45,7 @@ namespace InfPoints.Jobs
                 }
             }
 
-            Logger.Log($"Collected {count} points");
+            //Logger.Log($"[CollectPointsJob] Collected {count} points");
         }
     }
 }
