@@ -1,4 +1,6 @@
-﻿using Unity.Burst;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -8,26 +10,26 @@ namespace InfPoints.Jobs
     //[BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct SetClustersJob : IJobParallelFor
     {
-        [ReadOnly] NativeArray<float3> Data;
+        [ReadOnly] NativeArray<float3> Points;
         NativeArray<BitField32> Clusters;
         [ReadOnly] float EpsilonSquared;
-        float3 Point;
+        float3 ClusterPoint;
         [NativeDisableParallelForRestriction]
         NativeInt Cluster;
 
-        public SetClustersJob(NativeArray<float3> data, NativeArray<BitField32> clusters, float epsilon, float3 point,
+        public SetClustersJob(NativeArray<float3> points, NativeArray<BitField32> clusters, float epsilon, float3 clusterPoint,
             NativeInt cluster)
         {
-            Data = data;
+            Points = points;
             Clusters = clusters;
             EpsilonSquared = math.pow(epsilon, 2);
-            Point = point;
+            ClusterPoint = clusterPoint;
             Cluster = cluster;
         }
 
         public void Execute(int index)
         {
-            if (math.distancesq(Data[index], Point) <= EpsilonSquared)
+            if (math.distancesq(Points[index], ClusterPoint) <= EpsilonSquared)
             {
                 var clusters = Clusters[index];
                 clusters.Value |= (uint)Cluster.Value;
@@ -46,6 +48,13 @@ namespace InfPoints.Jobs
         [ReadOnly] BitField32 Cluster;
         [ReadOnly] int ClusterPosition;
 
+        public AggregateClustersJob(NativeArray<BitField32> clusters, BitField32 cluster, int clusterPosition)
+        {
+            DataClusters = clusters;
+            Cluster = cluster;
+            ClusterPosition = clusterPosition;
+        }
+
         public void Execute(int index)
         {
             // The point is in our cluster
@@ -57,4 +66,6 @@ namespace InfPoints.Jobs
             }
         }
     }
+
+
 }
