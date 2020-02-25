@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using InfPoints.Jobs;
+using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -91,10 +92,9 @@ namespace InfPoints
             Logger.Log("[PointCloud] Unique codes " + uniqueCodes.Length);
 
             // Filter out full nodes
-            var validNodesHandle = new FilterFullNodesJob<float>(nodeStorage, pointsMortonCodes)
+            var validNodesHandle = new FilterFullNodesJob<float>(nodeStorage, uniqueCodes)
                 .ScheduleAppend(validNodeIndices, uniqueCodes.Length, InnerLoopBatchCount);
             validNodesHandle.Complete();
-
 
             Logger.Log("[PointCloud] Valid indices " + validNodeIndices.Length);
 
@@ -103,38 +103,10 @@ namespace InfPoints
             for (int index = 0; index < validNodeIndices.Length; index++)
             {
                 int mortonCodeIndex = validNodeIndices[index];
-                ulong mortonCode = pointsMortonCodes[mortonCodeIndex];
-                int pointsInNodeCount = uniqueCodesMap[mortonCode];
-                var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
-                    NativeArrayOptions.UninitializedMemory);
-                var collectPointIndices = new NativeArray<int>(pointsInNodeCount, Allocator.TempJob);
-
-                Logger.Log($"[PointCloud] Adding {pointsInNodeCount} points to node {mortonCode}");
-
-
-                // Collect point indices
-                var collectPointIndicesJobHandle = new CollectPointIndicesJob(mortonCode, pointsMortonCodes, collectPointIndices)
-                    .Schedule();
-                
-                // Filter points that don't "fit"
-                
-                // Chop if too many points
-                
-                // Collect points
-                var collectPointsJobHandle = new CollectPointsJob(collectPointIndices, points, collectedPoints)
-                    .Schedule(collectPointIndicesJobHandle);
-
-                // Add node to the Octree if it doesn't exist
-                var storage = Octree.GetNodeStorage(levelIndex);
-                var addNodeJobHandle = new TryAddNodeToStorageJob(mortonCode, Octree.GetNodeStorage(levelIndex))
-                    .Schedule(collectPointsJobHandle);
-
-                // collectedPoints disposed on job completion
-                var addDataToStorageHandle =
-                    new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
-                        .Schedule(addNodeJobHandle);
-
-                collectJobHandles[index] = addDataToStorageHandle;
+                ulong mortonCode = uniqueCodes[mortonCodeIndex];
+                collectJobHandles[index] = AddPointsToNode(mortonCode, points,
+                    pointsMortonCodes,
+                    uniqueCodesMap, nodeStorage);
             }
 
             JobUtils.CombineHandles(collectJobHandles).Complete();
@@ -144,6 +116,39 @@ namespace InfPoints
             uniqueCodesMap.Dispose();
             uniqueCodes.Dispose();
             validNodeIndices.Dispose();
+        }
+
+        JobHandle AddPointsToNode(ulong mortonCode, NativeArrayXYZ<float> points,
+            NativeArray<ulong> pointsMortonCodes,
+            NativeHashMap<ulong, int> uniqueCodesMap, NativeSparsePagedArrayXYZ storage)
+        {
+            int pointsInNodeCount = uniqueCodesMap[mortonCode];
+            var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory);
+            var collectPointIndices = new NativeArray<int>(pointsInNodeCount, Allocator.TempJob);
+
+            Logger.Log($"[PointCloud] Adding {pointsInNodeCount} points to node {mortonCode}");
+
+            // Collect point indices belonging to this node
+            var collectPointIndicesJobHandle =
+                new CollectPointIndicesJob(mortonCode, pointsMortonCodes, collectPointIndices)
+                    .Schedule();
+
+            // Filter points that don't "fit"
+
+            // Chop if too many points
+
+            // Collect points
+            var collectPointsJobHandle = new CollectPointsJob(collectPointIndices, points, collectedPoints)
+                .Schedule(collectPointIndicesJobHandle);
+
+            // Add node to the Octree if it doesn't exist
+            var addNodeJobHandle = new TryAddNodeToStorageJob(mortonCode, storage)
+                .Schedule(collectPointsJobHandle);
+
+            // collectedPoints disposed on job completion
+            return new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
+                .Schedule(addNodeJobHandle);
         }
 
         public void Dispose()
