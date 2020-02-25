@@ -12,13 +12,13 @@ namespace InfPoints
 		public const string LOGGER_SYMBOL = "ENABLE_LOG";
 
 		[System.Diagnostics.Conditional(LOGGER_SYMBOL)]
-		public static void Log(object message)
+		public static void Log(string message)
 		{
 			Debug.Log(message);
 		}
 
 		[System.Diagnostics.Conditional(LOGGER_SYMBOL)]
-		public static void Log(object message, Object context)
+		public static void Log(string message, Object context)
 		{
 			Debug.Log(message, context);
 		}

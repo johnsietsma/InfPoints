@@ -21,7 +21,7 @@ namespace InfPoints.Jobs
         
         public void Execute()
         {
-            Logger.LogFormat(LogString.DataCountAddedToStorage, Count);
+            Logger.LogFormat(LogMessage.DataCountAddedToStorage, Count);
             if(!Storage.ContainsNode(SparseIndex)) Storage.AddNode(SparseIndex);
             Storage.AddData(SparseIndex, Data, Count);
         }

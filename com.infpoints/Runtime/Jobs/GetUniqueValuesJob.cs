@@ -31,7 +31,7 @@ namespace InfPoints.Jobs
                 if(!UniqueValues.ContainsKey(key)) UniqueValues.Add(key, 0);
                 UniqueValues[key]++;
             }
-            Logger.LogFormat(LogString.UniqueValuesCollected, UniqueValues.Length);
+            Logger.LogFormat(LogMessage.UniqueValuesCollected, UniqueValues.Length);
         }
     }
 }

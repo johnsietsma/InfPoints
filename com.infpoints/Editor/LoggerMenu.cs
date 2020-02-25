@@ -7,23 +7,28 @@ namespace Infpoints.Editor
     public static class LoggerMenu
     {
         const string kDebuggerMenu = "Logger/Logging Enabled";
+        static bool isLoggingEnabled;
 
-        [MenuItem(kDebuggerMenu, false)]
-        static void SwitchJobsDebugger()
+        static LoggerMenu()
         {
             string defines =  PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            bool enabled = defines.Contains(Logger.LOGGER_SYMBOL);
-            if(enabled) PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines.Replace(Logger.LOGGER_SYMBOL,""));
-            else PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines+Logger.LOGGER_SYMBOL);
-            UnityEngine.Debug.Log("Defs:" + defines);
+            isLoggingEnabled = defines.Contains(Logger.LOGGER_SYMBOL);
+        }
+
+        [MenuItem(kDebuggerMenu, false)]
+        static void ToggleLogging()
+        {
+            string defines =  PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            if(isLoggingEnabled) PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines.Replace(Logger.LOGGER_SYMBOL,""));
+            else PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines+";"+Logger.LOGGER_SYMBOL);
+            isLoggingEnabled = !isLoggingEnabled;
         }
 
         [MenuItem(kDebuggerMenu, true)]
-        static bool SwitchJobsDebuggerValidate()
+        static bool ToggleLoggingValidate()
         {
-            bool enabled =  PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Contains(Logger.LOGGER_SYMBOL);
-            Menu.SetChecked(kDebuggerMenu, enabled);
-            return enabled;
+            Menu.SetChecked(kDebuggerMenu, isLoggingEnabled);
+            return true;
         }
         
     }

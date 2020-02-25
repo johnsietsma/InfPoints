@@ -25,6 +25,13 @@ namespace InfPoints
       var MAXLENGTH = BYTES - 2;
 #>
 
+   		[BurstDiscard]
+   		[System.Diagnostics.Conditional(LOGGER_SYMBOL)]
+   		public static void Log(FixedString<#=BYTES#> message)
+   		{
+   			UnityEngine.Debug.Log(message.ToString());
+   		}
+
 <#
         var TYPES = new string[] {"int", "float", "in FixedString32"};
         for(var arg0 = 0; arg0 < 3; ++arg0)

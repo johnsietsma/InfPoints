@@ -34,7 +34,7 @@ namespace InfPoints.Jobs
                 }
             }
 
-            Logger.LogFormat(LogString.PointsCollected, count);
+            Logger.LogFormat(LogMessage.PointsCollected, count);
         }
     }
 }
