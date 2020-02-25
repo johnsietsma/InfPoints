@@ -1,4 +1,5 @@
-﻿using InfPoints;
+﻿using System.Diagnostics;
+using InfPoints;
 using UnityEditor;
 
 namespace Infpoints.Editor
@@ -10,7 +11,11 @@ namespace Infpoints.Editor
         [MenuItem(kDebuggerMenu, false)]
         static void SwitchJobsDebugger()
         {
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, Logger.LOGGER_SYMBOL);
+            string defines =  PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            bool enabled = defines.Contains(Logger.LOGGER_SYMBOL);
+            if(enabled) PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines.Replace(Logger.LOGGER_SYMBOL,""));
+            else PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, defines+Logger.LOGGER_SYMBOL);
+            UnityEngine.Debug.Log("Defs:" + defines);
         }
 
         [MenuItem(kDebuggerMenu, true)]
@@ -18,7 +23,7 @@ namespace Infpoints.Editor
         {
             bool enabled =  PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Contains(Logger.LOGGER_SYMBOL);
             Menu.SetChecked(kDebuggerMenu, enabled);
-            return true;
+            return enabled;
         }
         
     }
