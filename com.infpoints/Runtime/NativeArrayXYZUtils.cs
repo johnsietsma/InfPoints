@@ -1,5 +1,6 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -31,24 +32,24 @@ namespace InfPoints
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
         public struct AdditionJob_NativeArrayXYZ_float4 : IJobParallelFor
         {
-            [ReadOnly] public float4 NumberToAdd;
+            [ReadOnly] public float3 NumberToAdd;
             public NativeArray<float4> ValuesX;
             public NativeArray<float4> ValuesY;
             public NativeArray<float4> ValuesZ;
 
-            public AdditionJob_NativeArrayXYZ_float4(NativeArrayXYZ<float4> values, float4 numberToAdd)
+            public AdditionJob_NativeArrayXYZ_float4(NativeArrayXYZ<float> values, float3 numberToAdd)
             {
                 NumberToAdd = numberToAdd;
-                ValuesX = values.X;
-                ValuesY = values.Y;
-                ValuesZ = values.Z;
+                ValuesX = values.X.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                ValuesY = values.Y.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                ValuesZ = values.Z.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
             }
 
             public void Execute(int index)
             {
-                ValuesX[index] += NumberToAdd;
-                ValuesY[index] += NumberToAdd;
-                ValuesZ[index] += NumberToAdd;
+                ValuesX[index] += NumberToAdd.x;
+                ValuesY[index] += NumberToAdd.y;
+                ValuesZ[index] += NumberToAdd.z;
             }
         }
         
@@ -63,16 +64,16 @@ namespace InfPoints
             public NativeArray<uint4> QuotientsY;
             public NativeArray<uint4> QuotientsZ;
 
-            public IntegerDivisionJob_NativeArrayXYZ_float4_uint4(NativeArrayXYZ<float4> values,
-                NativeArrayXYZ<uint4> quotients, float4 divisor)
+            public IntegerDivisionJob_NativeArrayXYZ_float4_uint4(NativeArrayXYZ<float> values,
+                NativeArrayXYZ<uint> quotients, float4 divisor)
             {
                 Divisor = divisor;
-                ValuesX = values.X;
-                ValuesY = values.Y;
-                ValuesZ = values.Z;
-                QuotientsX = quotients.X;
-                QuotientsY = quotients.Y;
-                QuotientsZ = quotients.Z;
+                ValuesX = values.X.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                ValuesY = values.Y.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                ValuesZ = values.Z.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+                QuotientsX = quotients.X.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
+                QuotientsY = quotients.Y.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
+                QuotientsZ = quotients.Z.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
             }
 
             public void Execute(int index)
