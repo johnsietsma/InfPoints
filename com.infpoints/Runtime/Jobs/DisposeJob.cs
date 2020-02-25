@@ -1,48 +1,30 @@
-﻿using System;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 
 namespace InfPoints.Jobs
 {
     [BurstCompile]
-    struct DisposeJob_NativeArray<T> : IJob where T : unmanaged
+    public struct DisposeJob_NativeArray<T> : IJob where T : unmanaged
     {
-        public NativeArray<T> Values;
+        [DeallocateOnJobCompletion] public NativeArray<T> Values;
 
         public DisposeJob_NativeArray(NativeArray<T> values)
         {
             Values = values;
         }
-
+        
         public void Execute()
         {
-            Values.Dispose();
         }
     }
-    
-    [BurstCompile]
-    struct DisposeJob_NativeList<T> : IJob where T : unmanaged
-    {
-        public NativeList<T> Values;
 
-        public DisposeJob_NativeList(NativeList<T> values)
-        {
-            Values = values;
-        }
-
-        public void Execute()
-        {
-            Values.Dispose();
-        }
-    }
-    
     [BurstCompile]
-    struct DisposeJob_NativeArrayXYZ<T> : IJob where T : unmanaged
+    public struct DisposeJob_NativeArrayXYZ<T> : IJob where T : unmanaged
     {
-        public NativeArray<T> ValuesX;
-        public NativeArray<T> ValuesY;
-        public NativeArray<T> ValuesZ;
+        [DeallocateOnJobCompletion] public NativeArray<T> ValuesX;
+        [DeallocateOnJobCompletion] public NativeArray<T> ValuesY;
+        [DeallocateOnJobCompletion] public NativeArray<T> ValuesZ;
 
         public DisposeJob_NativeArrayXYZ(NativeArrayXYZ<T> values)
         {
