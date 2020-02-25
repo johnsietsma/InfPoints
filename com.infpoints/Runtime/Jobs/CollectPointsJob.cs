@@ -4,15 +4,13 @@ using Unity.Jobs;
 
 namespace InfPoints.Jobs
 {
-   
     /// <summary>
-    /// Copy(collect) all the points matching the same code. 
+    /// Copy(collect) all the indices of points matching the code. 
     /// </summary>
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct CollectPointsJob : IJob
     {
-        [ReadOnly] public ulong CodeKey;
-        [ReadOnly] public NativeArray<ulong> Codes;
+        [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<int> CollectedPointsIndices;
         [ReadOnly] public NativeArray<float> PointsX;
         [ReadOnly] public NativeArray<float> PointsY;
         [ReadOnly] public NativeArray<float> PointsZ;
@@ -20,10 +18,10 @@ namespace InfPoints.Jobs
         public NativeArray<float> CollectedPointsY;
         public NativeArray<float> CollectedPointsZ;
 
-        public CollectPointsJob(ulong codeKey, NativeArray<ulong> codes, NativeArrayXYZ<float> points, NativeArrayXYZ<float> collectedPoints)
+        public CollectPointsJob(NativeArray<int> collectedPointIndices, NativeArrayXYZ<float> points,
+            NativeArrayXYZ<float> collectedPoints)
         {
-            CodeKey = codeKey;
-            Codes = codes;
+            CollectedPointsIndices = collectedPointIndices;
             PointsX = points.X;
             PointsY = points.Y;
             PointsZ = points.Z;
@@ -31,22 +29,16 @@ namespace InfPoints.Jobs
             CollectedPointsY = collectedPoints.Y;
             CollectedPointsZ = collectedPoints.Z;
         }
-        
+
         public void Execute()
         {
-            int count = 0;
-            for (int index = 0; index < Codes.Length; index++)
+            for (int index = 0; index < CollectedPointsIndices.Length; index++)
             {
-                if (Codes[index].Equals(CodeKey))
-                {
-                    CollectedPointsX[count] = PointsX[index];
-                    CollectedPointsY[count] = PointsY[index];
-                    CollectedPointsZ[count] = PointsZ[index];
-                    count++;
-                }
+                var pointIndex = CollectedPointsIndices[index];
+                CollectedPointsX[index] = PointsX[pointIndex];
+                CollectedPointsY[index] = PointsY[pointIndex];
+                CollectedPointsZ[index] = PointsZ[pointIndex];
             }
-
-            Logger.LogFormat(LogString.PointsCollected, count);
         }
     }
 }
