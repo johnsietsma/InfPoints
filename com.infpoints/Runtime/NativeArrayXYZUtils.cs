@@ -15,7 +15,7 @@ namespace InfPoints
         /// <param name="points"></param>
         /// <param name="allocator"></param>
         /// <returns></returns>
-        public static NativeArrayXYZ<float> MakeNativeArrayXYZ(NativeArray<float3> points, Allocator allocator)
+        public static NativeArrayXYZ<float> MakeNativeArrayXYZ(float3[] points, Allocator allocator)
         {
             var xyzPoints = new NativeArrayXYZ<float>(points.Length, allocator);
             for (int index = 0; index < points.Length; index++)

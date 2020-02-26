@@ -18,8 +18,7 @@ namespace InfPoints.Tests.Editor.Jobs
                 new float3(20, 23, 20),
             };
             AABB aabb = new AABB(20, 5);
-            using(var points = new NativeArray<float3>(pointsArray, Allocator.TempJob))
-            using (var xyzPoints = NativeArrayXYZUtils.MakeNativeArrayXYZ(points, Allocator.TempJob))
+            using (var xyzPoints = NativeArrayXYZUtils.MakeNativeArrayXYZ(pointsArray, Allocator.TempJob))
             using(var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
                 var pointsOutsideJob = new CountPointsOutsideAABBJob()
@@ -27,7 +26,7 @@ namespace InfPoints.Tests.Editor.Jobs
                     aabb = aabb,
                     Points = xyzPoints,
                     OutsideCount = outsideCount.ToConcurrent()
-                }.Schedule(points.Length, 4);
+                }.Schedule(xyzPoints.Length, 4);
                 pointsOutsideJob.Complete();
                 
                 Assert.That(outsideCount.Value, Is.EqualTo(2));

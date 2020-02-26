@@ -87,7 +87,7 @@ namespace InfPoints
             var uniqueCodesMapHandle = new GetUniqueValuesJob<ulong>(pointNodeIndex, uniqueNodeCodesMap)
                 .Schedule(mortonCodesJobHandle);
 
-            // Extract the codes
+            // Extract the codes from the map
             var uniqueCodesHandle = new NativeHashMapGetKeysJob<ulong, int>(uniqueNodeCodesMap, uniqueNodeIndices)
                 .Schedule(uniqueCodesMapHandle);
             uniqueCodesHandle.Complete();
