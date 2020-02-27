@@ -29,6 +29,7 @@ namespace InfPoints.Jobs
         }
     }
     
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct IsWithinDistanceJob_NativeArrayXYZ : IJobParallelFor
     {
         public int Length => PointsX.Length;
