@@ -112,7 +112,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
                 list.Add(1);
                 list.Add(2);
                 list.Add(3);
-                list.RemoveAt(1);
+                list.RemoveAtSwapBack(1);
                 Assert.That(list[0], Is.EqualTo(1));
                 Assert.That(list[1], Is.EqualTo(3));
                 Assert.That(list.Length, Is.EqualTo(2));

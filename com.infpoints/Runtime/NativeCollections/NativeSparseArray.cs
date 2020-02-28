@@ -21,9 +21,10 @@ namespace InfPoints.NativeCollections
     /// <typeparam name="T"></typeparam>
     [NativeContainer]
     [DebuggerDisplay("Length = {Capacity}")]
-    [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<>))]
-    public struct NativeSparseArray<T> : IEnumerable<T>, IDisposable
-        where T : unmanaged
+    [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<,>))]
+    public struct NativeSparseArray<TIndex,TData> : IEnumerable<TData>, IDisposable
+        where TData : unmanaged
+        where TIndex : unmanaged, IComparable<TIndex>
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -52,13 +53,13 @@ namespace InfPoints.NativeCollections
         /// The sorted indices of data in the `SparseArray`.
         /// These indices can be non-contiguous and far apart.
         /// </summary>
-        public NativeArray<ulong> Indices;
+        public NativeArray<TIndex> Indices;
 
         /// <summary>
         /// The data in the array.
         /// This data is store contiguously, even though the indices are far apart. 
         /// </summary>
-        public NativeArray<T> Data;
+        public NativeArray<TData> Data;
 
         NativeInt m_Length;
 
@@ -76,8 +77,8 @@ namespace InfPoints.NativeCollections
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
 #endif
 
-            Indices = new NativeArray<ulong>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
-            Data = new NativeArray<T>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
+            Indices = new NativeArray<TIndex>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
+            Data = new NativeArray<TData>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             m_Length = new NativeInt(0, allocator);
         }
 
@@ -90,28 +91,7 @@ namespace InfPoints.NativeCollections
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. 
         /// </summary>
         /// <param name="sparseIndex"></param>
-        public T this[int sparseIndex]
-        {
-            get
-            {
-                var dataIndex = FindDataIndex((ulong) sparseIndex);
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-                if (dataIndex == -1) throw new ArgumentOutOfRangeException(nameof(sparseIndex));
-#endif
-                return Data[dataIndex];
-            }
-            set
-            {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
-                if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
-                else SetValue(value, sparseIndex);
-            }
-        }
-
-        public T this[ulong sparseIndex]
+        public TData this[TIndex sparseIndex]
         {
             get
             {
@@ -126,17 +106,12 @@ namespace InfPoints.NativeCollections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
-                if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
+                if (!ContainsIndex(sparseIndex)) AddValue(sparseIndex, value);
                 else SetValue(value, sparseIndex);
             }
         }
 
-        public bool ContainsIndex(int sparseIndex)
-        {
-            return ContainsIndex((ulong) sparseIndex);
-        }
-
-        public bool ContainsIndex(ulong sparseIndex)
+        public bool ContainsIndex(TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
@@ -146,14 +121,9 @@ namespace InfPoints.NativeCollections
 
         /// Explicitly add a new index and value to the `SparseArray`.
         /// </summary>
-        /// <param name="value">The value to add</param>
         /// <param name="sparseIndex">The sparse index of the data</param>
-        public void AddValue(T value, int sparseIndex)
-        {
-            AddValue(value, (ulong) sparseIndex);
-        }
-
-        public void AddValue(T value, ulong sparseIndex)
+        /// <param name="value">The value to add</param>
+        public void AddValue(TIndex sparseIndex, TData value)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -174,12 +144,7 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="value">The value to set</param>
         /// <param name="sparseIndex">The sparse array index</param>
-        public void SetValue(T value, int sparseIndex)
-        {
-            SetValue(value, (ulong) sparseIndex);
-        }
-
-        public void SetValue(T value, ulong sparseIndex)
+        public void SetValue(TData value, TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -196,12 +161,7 @@ namespace InfPoints.NativeCollections
         /// </summary>
         /// <param name="sparseIndex"></param>
         /// <exception cref="IndexOutOfRangeException"></exception>
-        public void RemoveAt(int sparseIndex)
-        {
-            RemoveAt((ulong) sparseIndex);
-        }
-
-        public void RemoveAt(ulong sparseIndex)
+        public void RemoveAt(TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -212,7 +172,7 @@ namespace InfPoints.NativeCollections
             m_Length.Decrement();
         }
 
-        int FindDataIndex(ulong sparseIndex)
+        int FindDataIndex(TIndex sparseIndex)
         {
             return Indices.BinarySearch(sparseIndex, 0, Length);
         }
@@ -225,7 +185,7 @@ namespace InfPoints.NativeCollections
         }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckIndexDoesntExistOrThrow(ulong sparseIndex)
+        void CheckIndexDoesntExistOrThrow(TIndex sparseIndex)
         {
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
@@ -248,24 +208,26 @@ namespace InfPoints.NativeCollections
             return Data.GetEnumerator();
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<TData> GetEnumerator()
         {
             return Data.GetEnumerator();
         }
     }
 
-    sealed class NativeSparseArrayDebugView<T>
-        where T : unmanaged
-    {
-        NativeSparseArray<T> m_Array;
+    sealed class NativeSparseArrayDebugView<TIndex,TData>
+        where TData : unmanaged
+        where TIndex : unmanaged, IComparable<TIndex>
 
-        public NativeSparseArrayDebugView(NativeSparseArray<T> array)
+    {
+        NativeSparseArray<TIndex,TData> m_Array;
+
+        public NativeSparseArrayDebugView(NativeSparseArray<TIndex,TData> array)
         {
             m_Array = array;
         }
 
         // Used for the debugger inspector
         // ReSharper disable once UnusedMember.Global
-        public T[] Items => m_Array.Data.ToArray();
+        public TData[] Items => m_Array.Data.ToArray();
     }
 }

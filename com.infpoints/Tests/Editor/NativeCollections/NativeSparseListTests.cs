@@ -12,9 +12,9 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void Create()
         {
-            var list = default(NativeSparseList<int>);
+            var list = default(NativeSparseList<int,int>);
             Assert.That(list.IsCreated, Is.False);
-            list = new NativeSparseList<int>(10, Allocator.Persistent);
+            list = new NativeSparseList<int,int>(10, Allocator.Persistent);
             Assert.That(list.IsCreated, Is.True);
             list.Dispose();
         }
@@ -22,23 +22,23 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void Dispose()
         {
-            var list = new NativeSparseList<int>(1, Allocator.Persistent);
+            var list = new NativeSparseList<int,int>(1, Allocator.Persistent);
             list.Dispose();
             Assert.That(list.IsCreated, Is.False);
             Assert.That(delegate { list.Dispose(); }, Throws.Exception.TypeOf<InvalidOperationException>());
-            Assert.That(() => list.AddValue(1, 2), Throws.Exception.TypeOf<InvalidOperationException>());
+            Assert.That(() => list.AddValue(2, 1), Throws.Exception.TypeOf<InvalidOperationException>());
         }
 
         [Test]
         public void AddValueGivesCorrectValue()
         {
             const int initialCapacity = 2;
-            using (var list = new NativeSparseList<int>(initialCapacity, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(initialCapacity, Allocator.Persistent))
             {
                 const int sparseIndex = 999;
                 const int value = 5;
 
-                list.AddValue(value, sparseIndex);
+                list.AddValue(sparseIndex, value);
                 Assert.That(list[sparseIndex], Is.EqualTo(value));
                 Assert.That(list.ContainsIndex(sparseIndex), Is.True);
                 Assert.That(list.Length, Is.EqualTo(1));
@@ -48,7 +48,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void AddUsingIndexingOperatorGivesCorrectValue()
         {
-            var list = new NativeSparseList<int>(1, Allocator.Persistent);
+            var list = new NativeSparseList<int,int>(1, Allocator.Persistent);
 
             list[100] = 200;
             Assert.That(list[100], Is.EqualTo(200));
@@ -65,11 +65,11 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddMultipleGivesCorrectValues()
         {
             const int listLength = 3;
-            using (var list = new NativeSparseList<int>(listLength, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(listLength, Allocator.Persistent))
             {
-                list.AddValue(1, 100);
-                list.AddValue(2, 200);
-                list.AddValue(3, 300);
+                list.AddValue(100, 1);
+                list.AddValue(200, 2);
+                list.AddValue(300, 3);
 
                 Assert.That(list[100], Is.EqualTo(1));
                 Assert.That(list[200], Is.EqualTo(2));
@@ -83,7 +83,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void HandlesNonExistentSparseIndexes()
         {
             const int listLength = 2;
-            using (var list = new NativeSparseList<int>(listLength, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(listLength, Allocator.Persistent))
             {
                 const int sparseIndex = 999;
 
@@ -100,7 +100,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void AddFails()
         {
             const int listLength = 2;
-            using (var list = new NativeSparseList<int>(listLength, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(listLength, Allocator.Persistent))
             {
                 list.AddValue(1, 1);
                 Assert.That(list.Length, Is.EqualTo(1));
@@ -119,7 +119,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void SetValue()
         {
             const int listLength = 50;
-            using (var list = new NativeSparseList<int>(listLength, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(listLength, Allocator.Persistent))
             {
                 const int sparseIndex = 12345;
                 const int value1 = 555;
@@ -127,7 +127,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
 
                 Assert.That(() => list.SetValue(value1, sparseIndex),
                     Throws.Exception.TypeOf<IndexOutOfRangeException>());
-                list.AddValue(value1, sparseIndex);
+                list.AddValue(sparseIndex, value1);
                 list.SetValue(value2, sparseIndex);
                 Assert.That(list[sparseIndex], Is.EqualTo(value2));
             }
@@ -137,13 +137,13 @@ namespace InfPoints.Tests.Editor.NativeCollections
         public void RemoveAt()
         {
             const int listLength = 50;
-            using (var list = new NativeSparseList<int>(listLength, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(listLength, Allocator.Persistent))
             {
-                list.AddValue(1, 100);
-                list.AddValue(2, 200);
-                list.AddValue(3, 300);
+                list.AddValue(100, 1);
+                list.AddValue(200, 2);
+                list.AddValue(300, 3);
 
-                list.RemoveAt(200);
+                list.RemoveAtSwapBack(200);
                 Assert.That(list.Length, Is.EqualTo(2));
                 Assert.That(list.ContainsIndex(200), Is.False);
             }
@@ -152,11 +152,11 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void Enumerator()
         {
-            using (var list = new NativeSparseList<int>(3, Allocator.Persistent))
+            using (var list = new NativeSparseList<int,int>(3, Allocator.Persistent))
             {
-                list.AddValue(1, 100);
-                list.AddValue(2, 200);
-                list.AddValue(3, 300);
+                list.AddValue(100, 1);
+                list.AddValue(200, 2);
+                list.AddValue(300, 3);
 
                 IEnumerator e = list.GetEnumerator();
                 Assert.That(e.MoveNext, Is.True);

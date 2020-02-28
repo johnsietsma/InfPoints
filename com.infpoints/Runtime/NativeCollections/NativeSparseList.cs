@@ -21,12 +21,13 @@ namespace InfPoints
     /// There is no explicit thread safety and add or remove operations are not atomic. Can be used within an IJob, but
     /// not within an IJobParallelFor unless it is readonly.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TData"></typeparam>
     [NativeContainer]
     [DebuggerDisplay("Length = {Length}, Capacity = {Capacity}")]
-    [DebuggerTypeProxy(typeof(NativeSparseListDebugView<>))]
-    public struct NativeSparseList<T> : IEnumerable<T>, IDisposable
-        where T : unmanaged
+    [DebuggerTypeProxy(typeof(NativeSparseListDebugView<,>))]
+    public struct NativeSparseList<TIndex, TData> : IEnumerable<TData>, IDisposable
+        where TData : unmanaged
+        where TIndex : unmanaged, IComparable<TIndex>
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -49,13 +50,13 @@ namespace InfPoints
         /// The sorted indices of data in the `SparseList`.
         /// These indices can be non-contiguous and far apart.
         /// </summary>
-        public NativeList<int> Indices;
+        public NativeList<TIndex> Indices;
 
         /// <summary>
         /// The data in the List.
         /// This data is store contiguously, even though the indices are far apart. 
         /// </summary>
-        public NativeList<T> Data;
+        public NativeList<TData> Data;
 
         /// <summary>
         /// Create a new empty `SparseList`.
@@ -68,10 +69,26 @@ namespace InfPoints
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             DisposeSentinel.Create(out m_Safety, out m_DisposeSentinel, DisposeSentinelStackDepth, allocator);
             AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
+            // An initial capacity of 0 means the pointer is null and Find throws an exception
+            if (initialCapacity == 0) throw new ArgumentOutOfRangeException(nameof(initialCapacity), "Capacity must be > 0");
 #endif
 
-            Indices = new NativeList<int>(initialCapacity, allocator);
-            Data = new NativeList<T>(initialCapacity, allocator);
+            Indices = new NativeList<TIndex>(initialCapacity, allocator);
+            Data = new NativeList<TData>(initialCapacity, allocator);
+        }
+
+        public NativeSparseList(NativeList<TIndex> indices, NativeList<TData> data, Allocator allocator)
+            : this(indices.Length, allocator)
+        {
+            Indices.AddRangeNoResize(indices);
+            Data.AddRangeNoResize(data);
+        }
+        
+        public NativeSparseList(TIndex[] indices, TData[] data, Allocator allocator)
+            : this(indices.Length, allocator)
+        {
+            Indices.CopyFrom(indices);
+            Data.CopyFrom(data);
         }
 
         /// <summary>
@@ -81,7 +98,7 @@ namespace InfPoints
         /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. 
         /// </summary>
         /// <param name="sparseIndex"></param>
-        public T this[int sparseIndex]
+        public TData this[TIndex sparseIndex]
         {
             get
             {
@@ -96,12 +113,12 @@ namespace InfPoints
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
-                if (!ContainsIndex(sparseIndex)) AddValue(value, sparseIndex);
+                if (!ContainsIndex(sparseIndex)) AddValue(sparseIndex, value);
                 else SetValue(value, sparseIndex);
             }
         }
 
-        public bool ContainsIndex(int sparseIndex)
+        public bool ContainsIndex(TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
@@ -113,9 +130,9 @@ namespace InfPoints
         /// Explicitly add a new index and value to the `SparseList`.
         /// The list will grow by one, allocating memory if it's beyond capacity.
         /// </summary>
-        /// <param name="value">The value to add</param>
         /// <param name="sparseIndex">The sparse index of the data</param>
-        public void AddValue(T value, int sparseIndex)
+        /// <param name="value">The value to add</param>
+        public void AddValue(TIndex sparseIndex, TData value)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -140,7 +157,7 @@ namespace InfPoints
         /// </summary>
         /// <param name="value">The value to set</param>
         /// <param name="sparseIndex">The sparse List index</param>
-        public void SetValue(T value, int sparseIndex)
+        public void SetValue(TData value, TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -157,24 +174,24 @@ namespace InfPoints
         /// </summary>
         /// <param name="sparseIndex"></param>
         /// <exception cref="IndexOutOfRangeException"></exception>
-        public void RemoveAt(int sparseIndex)
+        public void RemoveAtSwapBack(TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
             int dataIndex = FindDataIndex(sparseIndex);
-            Indices.RemoveAt(dataIndex);
-            Data.RemoveAt(dataIndex);
+            Indices.RemoveAtSwapBack(dataIndex);
+            Data.RemoveAtSwapBack(dataIndex);
         }
 
-        int FindDataIndex(int sparseIndex)
+        int FindDataIndex(TIndex sparseIndex)
         {
             return Indices.BinarySearch(sparseIndex, 0, Indices.Length);
         }
 
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        void CheckIndexDoesntExistOrThrow(int sparseIndex)
+        void CheckIndexDoesntExistOrThrow(TIndex sparseIndex)
         {
             if (ContainsIndex(sparseIndex))
                 throw new ArgumentOutOfRangeException($"Index {sparseIndex} already exists");
@@ -196,28 +213,25 @@ namespace InfPoints
             return Data.GetEnumerator();
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<TData> GetEnumerator()
         {
             return Data.GetEnumerator();
         }
     }
 
-    sealed class NativeSparseListDebugView<T>
-#if CSHARP_7_3_OR_NEWER
-        where T : unmanaged
-#else
-	   	where T : struct
-#endif
+    sealed class NativeSparseListDebugView<TIndex, TData>
+        where TData : unmanaged
+        where TIndex : unmanaged, IComparable<TIndex>
     {
-        NativeSparseList<T> m_List;
+        NativeSparseList<TIndex, TData> m_List;
 
-        public NativeSparseListDebugView(NativeSparseList<T> list)
+        public NativeSparseListDebugView(NativeSparseList<TIndex, TData> list)
         {
             m_List = list;
         }
 
         // Used for the debugger inspector
         // ReSharper disable once UnusedMember.Global
-        public T[] Items => m_List.Data.ToArray();
+        public TData[] Items => m_List.Data.ToArray();
     }
 }

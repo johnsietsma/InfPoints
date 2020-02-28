@@ -16,7 +16,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
 
         public struct AddJob : IJob
         {
-            public NativeSparseArray<int> array;
+            public NativeSparseArray<int,int> array;
             public NativeInt addedCount;
 
             public void Execute()
@@ -32,7 +32,7 @@ namespace InfPoints.Tests.Editor.NativeCollections
         [Test]
         public void AddJobAddsCorrectAmount()
         {
-            using (var array = new NativeSparseArray<int>(AddCount, Allocator.TempJob))
+            using (var array = new NativeSparseArray<int,int>(AddCount, Allocator.TempJob))
             using (var count = new NativeInt(0, Allocator.TempJob))
             {
                 var addJob = new AddJob()

@@ -82,14 +82,7 @@ namespace InfPoints.NativeCollections
         {
             NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
         }
-
-        public static void RemoveAt<T>(this NativeList<T> data, int index)
-            where T : unmanaged
-        {
-            NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
-            data.RemoveAtSwapBack(data.Length - 1); // Shorten the list
-        }
-
+        
         /// <summary>
         /// Searches the entire array for a specific value. Uses IComparable to compare elements.
         /// The container elements must be sorted.

@@ -68,7 +68,7 @@ namespace InfPoints.NativeCollections
         readonly Allocator m_Allocator;
 
         // Sorted array
-        NativeSparseArray<PageAllocation> m_PageAllocations;
+        NativeSparseArray<ulong,PageAllocation> m_PageAllocations;
         [NativeDisableUnsafePtrRestriction] T** m_Pages;
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace InfPoints.NativeCollections
             m_AllocationSize = allocationSize;
             m_PageSize = allocationsPerPage * allocationSize;
             m_MaximumPageCount = maximumPageCount;
-            m_PageAllocations = new NativeSparseArray<PageAllocation>(maximumPageCount * allocationsPerPage, allocator);
+            m_PageAllocations = new NativeSparseArray<ulong,PageAllocation>(maximumPageCount * allocationsPerPage, allocator);
             m_Pages = (T**) UnsafeUtility.Malloc(IntPtr.Size * maximumPageCount, UnsafeUtility.AlignOf<T>(), allocator);
             m_Allocator = allocator;
             m_PageCount = 0;
@@ -176,7 +176,7 @@ namespace InfPoints.NativeCollections
                 Capacity = m_AllocationSize
             };
 
-            m_PageAllocations.AddValue(allocation, sparseIndex);
+            m_PageAllocations.AddValue(sparseIndex, allocation);
         }
 
         public void Add(ulong sparseIndex, T data)

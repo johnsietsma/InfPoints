@@ -32,6 +32,7 @@ namespace InfPoints
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
         public struct AdditionJob_NativeArrayXYZ_float4 : IJobParallelFor
         {
+            public int Length => ValuesX.Length;
             [ReadOnly] public float3 NumberToAdd;
             public NativeArray<float4> ValuesX;
             public NativeArray<float4> ValuesY;
@@ -56,10 +57,11 @@ namespace InfPoints
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
         public struct IntegerDivisionJob_NativeArrayXYZ_float4_uint4 : IJobParallelFor
         {
-            [ReadOnly] public float4 Divisor;
-            [ReadOnly] public NativeArray<float4> ValuesX;
-            [ReadOnly] public NativeArray<float4> ValuesY;
-            [ReadOnly] public NativeArray<float4> ValuesZ;
+            public int Length => ValuesX.Length;
+            [ReadOnly] float4 Divisor;
+            [ReadOnly] NativeArray<float4> ValuesX;
+            [ReadOnly] NativeArray<float4> ValuesY;
+            [ReadOnly] NativeArray<float4> ValuesZ;
             public NativeArray<uint4> QuotientsX;
             public NativeArray<uint4> QuotientsY;
             public NativeArray<uint4> QuotientsZ;

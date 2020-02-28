@@ -32,9 +32,9 @@ namespace InfPoints.Jobs
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton64SoAEncodeJob : IJobParallelFor
     {
-        [ReadOnly] public NativeArray<uint> CoordinatesX;
-        [ReadOnly] public NativeArray<uint> CoordinatesY;
-        [ReadOnly] public NativeArray<uint> CoordinatesZ;
+        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesX;
+        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesY;
+        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesZ;
         public NativeArray<ulong> Codes;
 
         public Morton64SoAEncodeJob(NativeArrayXYZ<uint> coordinates, NativeArray<ulong> codes)

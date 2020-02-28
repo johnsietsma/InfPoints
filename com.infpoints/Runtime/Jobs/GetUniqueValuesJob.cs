@@ -8,16 +8,15 @@ namespace InfPoints.Jobs
 {
     /// <summary>
     /// Get all the unique values. A count is kept of the number of values of each set.
-    /// The unique values can be accessed from `UniqueValues.GetKeyArray`. 
     /// </summary>
     /// <typeparam name="T">An unmanaged and IEquatable<T> value</typeparam>
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct GetUniqueValuesJob<T> : IJob where T : unmanaged, IEquatable<T>
     {
-        [ReadOnly] public NativeArray<T> Values;
-        public NativeHashMap<T, int> UniqueValues;
+        [ReadOnly] public NativeArray<ulong> Values;
+        public NativeSparseList<ulong,int> UniqueValues;
 
-        public GetUniqueValuesJob(NativeArray<T> values, NativeHashMap<T, int> uniqueValues)
+        public GetUniqueValuesJob(NativeArray<ulong> values, NativeSparseList<ulong,int> uniqueValues)
         {
             Values = values;
             UniqueValues = uniqueValues;
@@ -27,8 +26,8 @@ namespace InfPoints.Jobs
         {
             for (int index = 0; index < Values.Length; index++)
             {
-                T key = Values[index];
-                if(!UniqueValues.ContainsKey(key)) UniqueValues.Add(key, 0);
+                ulong key = Values[index];
+                if(!UniqueValues.ContainsIndex(key)) UniqueValues.AddValue(key, 0);
                 UniqueValues[key]++;
             }
             Logger.LogFormat(LogMessage.UniqueValuesCollected, UniqueValues.Length);
