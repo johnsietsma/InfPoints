@@ -9,7 +9,7 @@ namespace InfPoints.Jobs
     public struct FilterFullNodesJob<T> : IJob where T :unmanaged
     {
         [ReadOnly] public NativeSparsePagedArrayXYZ Storage;
-        [ReadOnly] public NativeSparseList<ulong,int> MortonCodes;
+        public NativeSparseList<ulong,int> MortonCodes;
 
         public FilterFullNodesJob(NativeSparsePagedArrayXYZ storage, NativeSparseList<ulong,int> mortonCodes)
         {
