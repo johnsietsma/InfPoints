@@ -90,22 +90,6 @@ namespace InfPoints
             return new FilterFullNodesJob<float>(nodeStorage, validMortonCodes).Schedule(uniqueCodesMapHandle);
         }
 
-        JobHandle AddPointsToLevel(NativeArrayXYZ<float> points, int levelIndex, NativeSparseList<ulong, int> mortonCodes, NativeArray<ulong> pointMortonCodes)
-        {
-            var nodeStorage = Octree.GetNodeStorage(levelIndex);
-            // For each node
-            var collectJobHandles = new JobHandle[mortonCodes.Length];
-            for (int index = 0; index < mortonCodes.Length; index++)
-            {
-                ulong mortonCode = mortonCodes.Indices[index];
-                int pointsInNodeCount = mortonCodes[mortonCode];
-
-                collectJobHandles[index] = AddPointsToNode(mortonCode, points, pointMortonCodes, pointsInNodeCount, nodeStorage);
-            }
-
-            return JobUtils.CombineHandles(collectJobHandles);
-        }
-
         JobHandle ConvertPointsToMortonCodes(NativeArrayXYZ<float> points, int levelIndex,
             NativeArray<ulong> pointsMortonCodes)
         {
@@ -133,36 +117,66 @@ namespace InfPoints
                 .Schedule(pointCoordinates.Length, InnerLoopBatchCount, coordinatesJobHandle);
         }
 
+        JobHandle AddPointsToLevel(NativeArrayXYZ<float> points, int levelIndex, NativeSparseList<ulong, int> mortonCodes, NativeArray<ulong> pointMortonCodes)
+        {
+            var nodeStorage = Octree.GetNodeStorage(levelIndex);
+            // For each node
+            var collectJobHandles = new JobHandle[mortonCodes.Length];
+            for (int index = 0; index < mortonCodes.Length; index++)
+            {
+                ulong mortonCode = mortonCodes.Indices[index];
+                int pointsInNodeCount = mortonCodes[mortonCode];
+
+                collectJobHandles[index] = AddPointsToNode(mortonCode, points, pointMortonCodes, pointsInNodeCount, nodeStorage);
+            }
+
+            return JobUtils.CombineHandles(collectJobHandles);
+        }
+
         JobHandle AddPointsToNode(ulong mortonCode, NativeArrayXYZ<float> points, NativeArray<ulong> mortonCodes, int pointsInNodeCount, NativeSparsePagedArrayXYZ storage)
         {
-            var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
-                NativeArrayOptions.UninitializedMemory);
-            var collectPointIndices = new NativeArray<int>(pointsInNodeCount, Allocator.TempJob);
-
             Logger.Log($"[PointCloud] Adding {pointsInNodeCount} points to node {mortonCode}");
 
+            // The morton code of each point
+            var pointIndices = new NativeList<int>(pointsInNodeCount, Allocator.TempJob);
+            
             // Collect point indices belonging to this node
-            var collectPointIndicesJobHandle =
-                new CollectPointIndicesJob(mortonCode, mortonCodes, collectPointIndices)
-                    .Schedule();
+            new CollectPointIndicesJob(mortonCode, mortonCodes, pointIndices)
+                    .Schedule().Complete();
 
             // Filter points that don't "fit"
+            var withinDistanceJobHandles = new NativeArray<JobHandle>(points.Length, Allocator.TempJob);
+            for (int index = 0; index < pointIndices.Length; index++)
+            {
+                withinDistanceJobHandles[index] = new IsWithinDistanceJob(index, pointIndices.AsDeferredJobArray(), points, 0.1f)
+                    .Schedule();
+            }
+
+            var withinDistanceJobHandle = JobHandle.CombineDependencies(withinDistanceJobHandles);
 
             // Chop if too many points
 
+            var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory);
+            
             // Collect points
-            var collectPointsJobHandle = new CollectPointsJob(collectPointIndices, points, collectedPoints)
-                .Schedule(collectPointIndicesJobHandle);
+            var collectPointsJobHandle = new CollectPointsJob(pointIndices, points, collectedPoints)
+                .Schedule(withinDistanceJobHandle);
+
+            var disposeJobHandles = new DisposeJob_NativeArray<JobHandle>(withinDistanceJobHandles).Schedule(collectPointsJobHandle);
 
             // Kick off jobs to add points to child nodes
 
             // Add node to the Octree if it doesn't exist
             var addNodeJobHandle = new TryAddNodeToStorageJob(mortonCode, storage)
-                .Schedule(collectPointsJobHandle);
+                .Schedule(disposeJobHandles);
+            
+            addNodeJobHandle.Complete();
+            pointIndices.Dispose();
 
             // collectedPoints disposed on job completion
             return new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsInNodeCount)
-                .Schedule(addNodeJobHandle);
+                .Schedule();
         }
 
         public void Dispose()

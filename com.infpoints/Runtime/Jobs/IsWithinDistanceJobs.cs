@@ -7,60 +7,54 @@ using Unity.Mathematics;
 namespace InfPoints.Jobs
 {
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct IsWithinDistanceJob : IJobParallelFor
+    public struct IsWithinDistanceJob : IJob
     {
-        [ReadOnly] NativeArray<float3> Points;
-        [ReadOnly] float3 Point;
+        [ReadOnly] int PointIndex;
+        [ReadOnly] NativeArray<float> PointsX;
+        [ReadOnly] NativeArray<float> PointsY;
+        [ReadOnly] NativeArray<float> PointsZ;
         [ReadOnly] float DistanceSquared;
-        public NativeInt.Concurrent WithinDistanceCount;
+        [NativeDisableContainerSafetyRestriction]
+        NativeArray<int> PointIndices;
 
-        public IsWithinDistanceJob(NativeArray<float3> points, float3 point, float distance,
-            NativeInt withinDistanceCount)
+        public IsWithinDistanceJob(int pointIndex, NativeArray<int> pointIndices, NativeArrayXYZ<float> points, float distance)
         {
-            Points = points;
-            Point = point;
+            PointIndex = pointIndex;
+            PointIndices = pointIndices;
+            PointsX = points.X;
+            PointsY = points.Y;
+            PointsZ = points.Z;
             DistanceSquared = math.pow(distance, 2);
-            WithinDistanceCount = withinDistanceCount.ToConcurrent();
         }
-        
-        public void Execute(int index)
-        {
-            if(math.distancesq(Points[index], Point) <= DistanceSquared) WithinDistanceCount.Increment();
-        }
-    }
-    
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct IsWithinDistanceJob_NativeArrayXYZ : IJobParallelFor
-    {
-        public int Length => PointsX.Length;
-        [ReadOnly] NativeArray<float4> PointsX;
-        [ReadOnly] NativeArray<float4> PointsY;
-        [ReadOnly] NativeArray<float4> PointsZ;
-        [ReadOnly] float3 Point;
-        [ReadOnly] float DistanceSquared;
-        public NativeInt.Concurrent WithinDistanceCount;
 
-        public IsWithinDistanceJob_NativeArrayXYZ(NativeArrayXYZ<float> points, float3 point, float distance,
-            NativeInt withinDistanceCount)
+        public void Execute()
         {
-            PointsX = points.X.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-            PointsY = points.Y.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-            PointsZ = points.Z.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-            Point = point;
-            DistanceSquared = math.pow(distance, 2);
-            WithinDistanceCount = withinDistanceCount.ToConcurrent();
+            var point = new float3(PointsX[PointIndex], PointsY[PointIndex], PointsZ[PointIndex]);
+
+            for (int index = 0; index < PointIndices.Length; index++)
+            {
+                var pointIndex = PointIndices[index];
+                var testPoint = new float3(PointsX[pointIndex], PointsY[pointIndex], PointsZ[pointIndex]);
+                if (PointIndex != pointIndex && math.distancesq(point, testPoint) < DistanceSquared)
+                {
+                    PointIndices[index] = -1;
+                }
+            }
         }
-        
-        public void Execute(int index)
+
+        public static void BuildJobChain(NativeArrayXYZ<float> points, NativeArray<int> pointIndices)
         {
-            float4 xDelta = PointsX[index] - Point.x;
-            float4 yDelta = PointsY[index] - Point.y;
-            float4 zDelta = PointsZ[index] - Point.z;
-            float4 dotResult = xDelta * xDelta + yDelta * yDelta + zDelta * zDelta;
-            dotResult -= DistanceSquared;
-            dotResult = math.clamp(dotResult, -1, 0);
-            dotResult = math.sign(dotResult);
-            WithinDistanceCount.Add(-(int)math.csum(dotResult));
+            var withinDistanceJobHandles = new NativeArray<JobHandle>(points.Length, Allocator.TempJob);
+            for (int index = 0; index < pointIndices.Length; index++)
+            {
+                withinDistanceJobHandles[index] = new IsWithinDistanceJob(index, pointIndices, points, 0.1f)
+                    .Schedule();
+                //withinDistanceJobHandles[index].Complete();
+            }
+
+            var withinDistanceJobHandle = JobHandle.CombineDependencies(withinDistanceJobHandles);
+            withinDistanceJobHandle.Complete();
+            withinDistanceJobHandles.Dispose();
         }
     }
 }

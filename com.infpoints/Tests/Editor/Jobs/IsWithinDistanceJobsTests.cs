@@ -3,119 +3,59 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
-using Unity.PerformanceTesting;
 
 namespace InfPoints.Tests.Editor.Jobs
 {
     public class IsWithinDistanceJobsTests
     {
-        NativeArray<float3> m_Points;
-        NativeArrayXYZ<float> m_PointsXYZ;
-        NativeInt m_WithinDistanceCount;
+        static float3[] pointData = new[]
+        {
+            float3.zero,
+            new float3(1),
+            new float3(1, 0, 0),
+            new float3(2, 0, 0),
+            new float3(0, 2, 0),
+            new float3(0, 0, 2),
+            new float3(2.5f),
+        };
+
+        static int[] pointIndexData = new[] {0, 1, 2, 3, 4, 5, 6};
+
+        NativeArrayXYZ<float> points = NativeArrayXYZUtils.MakeNativeArrayXYZ(pointData, Allocator.TempJob);
+        NativeArray<int> pointIndices = new NativeArray<int>(pointIndexData, Allocator.TempJob);
 
         [SetUp]
         public void Setup()
         {
-            float3[] m_PointData = new float3[1024 * 1024 * 10];
-            for (int index = 0; index < m_PointData.Length; index++)
-            {
-                m_PointData[index] = new float3(index, index + 1, index + 2);
-            }
-
-            m_Points = new NativeArray<float3>(m_PointData, Allocator.Persistent);
-            m_PointsXYZ = NativeArrayXYZUtils.MakeNativeArrayXYZ(m_PointData, Allocator.Persistent);
-            m_WithinDistanceCount = new NativeInt(Allocator.Persistent);
         }
 
         [TearDown]
         public void TearDown()
         {
-            m_Points.Dispose();
-            m_PointsXYZ.Dispose();
-            m_WithinDistanceCount.Dispose();
+            points.Dispose();
+            pointIndices.Dispose();
         }
-
 
         [Test]
         public void FindPointWithinDistanceCorrectly()
         {
-            float3[] pointData = new[]
-            {
-                float3.zero,
-                new float3(1),
-                new float3(1, 0, 0),
-                new float3(2, 0, 0),
-                new float3(0, 2, 0),
-                new float3(0, 0, 2),
-                new float3(2.5f),
-            };
+            new IsWithinDistanceJob(2, pointIndices, points, 1.1f)
+                .Schedule()
+                .Complete();
 
-            using (var points = new NativeArray<float3>(pointData, Allocator.TempJob))
-            using (var withinDistanceCount = new NativeInt(Allocator.TempJob))
-            {
-                new IsWithinDistanceJob(points, new float3(1, 0, 0), 1.1f, withinDistanceCount)
-                    .Schedule(points.Length, 4)
-                    .Complete();
-
-                Assert.That(withinDistanceCount.Value, Is.EqualTo(3));
-            }
+            Assert.That(pointIndices[0], Is.EqualTo(-1));
+            Assert.That(pointIndices[1], Is.GreaterThanOrEqualTo(0));
+            Assert.That(pointIndices[2], Is.GreaterThanOrEqualTo(0));
+            Assert.That(pointIndices[3], Is.EqualTo(-1));
+            Assert.That(pointIndices[4], Is.GreaterThanOrEqualTo(0));
+            Assert.That(pointIndices[5], Is.GreaterThanOrEqualTo(0));
+            Assert.That(pointIndices[6], Is.GreaterThanOrEqualTo(0));
         }
 
         [Test]
-        public void FindPointWithinDistanceCorrectly_NativeArrayXYZ()
+        public void BuildsJobChainCorrectly()
         {
-            float3[] pointData = new[]
-            {
-                float3.zero,
-                new float3(1),
-                new float3(1, 0, 0),
-                new float3(2, 0, 0),
-                new float3(0, 2, 0),
-                new float3(0, 0, 2),
-                new float3(2.5f),
-                new float3(2.5f),
-            };
-
-            using (var points = NativeArrayXYZUtils.MakeNativeArrayXYZ(pointData, Allocator.TempJob))
-            using (var withinDistanceCount = new NativeInt(Allocator.TempJob))
-            {
-                var jobHandle =
-                    new IsWithinDistanceJob_NativeArrayXYZ(points, new float3(1, 0, 0), 1.1f, withinDistanceCount);
-                jobHandle.Schedule(jobHandle.Length, 4)
-                    .Complete();
-
-                Assert.That(withinDistanceCount.Value, Is.EqualTo(3));
-            }
-        }
-
-        [Test, Performance]
-        [Version("1")]
-        public void IsWithinDistancePerformance_NativeArrayXYZ()
-        {
-            Measure.Method(RunIsWithinDistanceJob_NativeArrayXYZ).Run();
-        }
-        
-        [Test, Performance]
-        [Version("1")]
-        public void IsWithinDistancePerformance_NativeArray()
-        {
-            Measure.Method(RunIsWithinDistanceJob_NativeArray).Run();
-        }
-
-        void RunIsWithinDistanceJob_NativeArray()
-        {
-            var jobHandle =
-                new IsWithinDistanceJob(m_Points, new float3(1, 0, 0), 1.1f, m_WithinDistanceCount);
-            jobHandle.Schedule(m_Points.Length, 4)
-                .Complete();
-        }
-        
-        void RunIsWithinDistanceJob_NativeArrayXYZ()
-        {
-            var jobHandle =
-                new IsWithinDistanceJob_NativeArrayXYZ(m_PointsXYZ, new float3(1, 0, 0), 1.1f, m_WithinDistanceCount);
-            jobHandle.Schedule(jobHandle.Length, 4)
-                .Complete();
+            IsWithinDistanceJob.BuildJobChain(points, pointIndices);
         }
     }
 }

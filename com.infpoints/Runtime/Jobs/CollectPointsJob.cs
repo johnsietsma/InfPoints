@@ -5,12 +5,12 @@ using Unity.Jobs;
 namespace InfPoints.Jobs
 {
     /// <summary>
-    /// Copy(collect) all the indices of points matching the code. 
+    /// Copy all the points by index. 
     /// </summary>
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct CollectPointsJob : IJob
     {
-        [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<int> CollectedPointsIndices;
+        [ReadOnly] public NativeList<int> CollectedPointsIndices;
         [ReadOnly] public NativeArray<float> PointsX;
         [ReadOnly] public NativeArray<float> PointsY;
         [ReadOnly] public NativeArray<float> PointsZ;
@@ -18,7 +18,7 @@ namespace InfPoints.Jobs
         public NativeArray<float> CollectedPointsY;
         public NativeArray<float> CollectedPointsZ;
 
-        public CollectPointsJob(NativeArray<int> collectedPointIndices, NativeArrayXYZ<float> points,
+        public CollectPointsJob(NativeList<int> collectedPointIndices, NativeArrayXYZ<float> points,
             NativeArrayXYZ<float> collectedPoints)
         {
             CollectedPointsIndices = collectedPointIndices;

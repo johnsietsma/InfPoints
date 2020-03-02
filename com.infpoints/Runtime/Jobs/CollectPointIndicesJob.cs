@@ -13,9 +13,9 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public ulong CodeKey;
         [ReadOnly] public NativeArray<ulong> PointCodes;
-        public NativeArray<int> CollectedPointsIndices;
+        public NativeList<int> CollectedPointsIndices;
 
-        public CollectPointIndicesJob(ulong codeKey, NativeArray<ulong> pointCodes, NativeArray<int> collectedPointIndices)
+        public CollectPointIndicesJob(ulong codeKey, NativeArray<ulong> pointCodes, NativeList<int> collectedPointIndices)
         {
             CodeKey = codeKey;
             PointCodes = pointCodes;
@@ -29,7 +29,7 @@ namespace InfPoints.Jobs
             {
                 if (PointCodes[index].Equals(CodeKey))
                 {
-                    CollectedPointsIndices[count] = index;
+                    CollectedPointsIndices.Add(index);
                     count++;
                 }
             }
