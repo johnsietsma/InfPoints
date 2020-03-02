@@ -14,6 +14,7 @@ namespace InfPoints.Jobs
         [ReadOnly] NativeArray<float> PointsY;
         [ReadOnly] NativeArray<float> PointsZ;
         [ReadOnly] float DistanceSquared;
+        [NativeDisableContainerSafetyRestriction]
         [ReadOnly] NativeInt PointCount;
 
         [NativeDisableContainerSafetyRestriction]

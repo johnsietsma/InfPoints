@@ -39,12 +39,12 @@ namespace InfPoints.Tests.Editor.Jobs
         [Test]
         public void FindPointWithinDistanceCorrectly()
         {
-            var count = new NativeInt(100, Allocator.TempJob);
+            var count = new NativeInt(points.Length, Allocator.TempJob);
             new IsWithinDistanceJob(2, pointIndices, points, 1.1f, count)
                 .Schedule()
                 .Complete();
-            count.Dispose();
             
+            Assert.That(count.Value, Is.EqualTo(5));
             Assert.That(pointIndices[0], Is.EqualTo(-1));
             Assert.That(pointIndices[1], Is.GreaterThanOrEqualTo(0));
             Assert.That(pointIndices[2], Is.GreaterThanOrEqualTo(0));
@@ -52,12 +52,13 @@ namespace InfPoints.Tests.Editor.Jobs
             Assert.That(pointIndices[4], Is.GreaterThanOrEqualTo(0));
             Assert.That(pointIndices[5], Is.GreaterThanOrEqualTo(0));
             Assert.That(pointIndices[6], Is.GreaterThanOrEqualTo(0));
+            count.Dispose();
         }
 
         [Test]
         public void BuildsJobChainCorrectly()
         {
-            var count = new NativeInt(100, Allocator.TempJob);
+            var count = new NativeInt(points.Length, Allocator.TempJob);
             IsWithinDistanceJob.BuildJobChain(points, pointIndices, count).Complete();
             count.Dispose();
         }
