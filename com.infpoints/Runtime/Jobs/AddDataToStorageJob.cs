@@ -7,23 +7,23 @@ namespace InfPoints.Jobs
     public struct AddDataToStorageJob : IJob
     {
         [ReadOnly] public ulong SparseIndex;
-        [ReadOnly][DeallocateOnJobCompletion] public NativeArrayXYZ<float> Data;
+        [DeallocateOnJobCompletion] [ReadOnly] public NativeArrayXYZ<float> Data;
         public NativeSparsePagedArrayXYZ Storage;
-        [ReadOnly] public int Count;
+        [DeallocateOnJobCompletion] [ReadOnly] public NativeInt Count;
 
-        public AddDataToStorageJob(ulong sparseIndex, NativeArrayXYZ<float> data, NativeSparsePagedArrayXYZ storage, int count)
+        public AddDataToStorageJob(ulong sparseIndex, NativeArrayXYZ<float> data, NativeSparsePagedArrayXYZ storage,
+            NativeInt count)
         {
             SparseIndex = sparseIndex;
             Data = data;
             Storage = storage;
             Count = count;
         }
-        
+
         public void Execute()
         {
-            Logger.LogFormat(LogMessage.DataCountAddedToStorage, Count);
-            if(!Storage.ContainsNode(SparseIndex)) Storage.AddNode(SparseIndex);
-            Storage.AddData(SparseIndex, Data, Count);
+            Logger.LogFormat(LogMessage.DataCountAddedToStorage, Count.Value);
+            Storage.AddData(SparseIndex, Data, Count.Value);
         }
     }
 }

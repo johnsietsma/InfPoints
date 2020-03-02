@@ -13,13 +13,15 @@ namespace InfPoints.Jobs
     {
         [ReadOnly] public ulong CodeKey;
         [ReadOnly] public NativeArray<ulong> PointCodes;
-        public NativeList<int> CollectedPointsIndices;
+        public NativeArray<int> CollectedPointsIndices;
+        public NativeInt CollectedPointsCount;
 
-        public CollectPointIndicesJob(ulong codeKey, NativeArray<ulong> pointCodes, NativeList<int> collectedPointIndices)
+        public CollectPointIndicesJob(ulong codeKey, NativeArray<ulong> pointCodes, NativeArray<int> collectedPointIndices, NativeInt collectedPointsCount)
         {
             CodeKey = codeKey;
             PointCodes = pointCodes;
             CollectedPointsIndices = collectedPointIndices;
+            CollectedPointsCount = collectedPointsCount;
         }
         
         public void Execute()
@@ -29,10 +31,12 @@ namespace InfPoints.Jobs
             {
                 if (PointCodes[index].Equals(CodeKey))
                 {
-                    CollectedPointsIndices.Add(index);
+                    CollectedPointsIndices[count] =index;
                     count++;
                 }
             }
+
+            CollectedPointsCount.Value = count;
 
             Logger.LogFormat(LogMessage.PointsCollected, count);
         }

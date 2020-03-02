@@ -14,10 +14,13 @@ namespace InfPoints.Jobs
         [ReadOnly] NativeArray<float> PointsY;
         [ReadOnly] NativeArray<float> PointsZ;
         [ReadOnly] float DistanceSquared;
+        [ReadOnly] NativeInt PointCount;
+
         [NativeDisableContainerSafetyRestriction]
         NativeArray<int> PointIndices;
 
-        public IsWithinDistanceJob(int pointIndex, NativeArray<int> pointIndices, NativeArrayXYZ<float> points, float distance)
+        public IsWithinDistanceJob(int pointIndex, NativeArray<int> pointIndices, NativeArrayXYZ<float> points,
+            float distance, NativeInt pointCount)
         {
             PointIndex = pointIndex;
             PointIndices = pointIndices;
@@ -25,36 +28,38 @@ namespace InfPoints.Jobs
             PointsY = points.Y;
             PointsZ = points.Z;
             DistanceSquared = math.pow(distance, 2);
+            PointCount = pointCount;
         }
 
         public void Execute()
         {
             var point = new float3(PointsX[PointIndex], PointsY[PointIndex], PointsZ[PointIndex]);
-
-            for (int index = 0; index < PointIndices.Length; index++)
+            var length = PointCount.Value;
+            for (int index = 0; index < length; index++)
             {
                 var pointIndex = PointIndices[index];
                 var testPoint = new float3(PointsX[pointIndex], PointsY[pointIndex], PointsZ[pointIndex]);
                 if (PointIndex != pointIndex && math.distancesq(point, testPoint) < DistanceSquared)
                 {
                     PointIndices[index] = -1;
+                    PointCount.Decrement();
                 }
             }
         }
 
-        public static void BuildJobChain(NativeArrayXYZ<float> points, NativeArray<int> pointIndices)
+        public static JobHandle BuildJobChain(NativeArrayXYZ<float> points, NativeArray<int> pointIndices,
+            NativeInt pointCount, JobHandle deps = default)
         {
             var withinDistanceJobHandles = new NativeArray<JobHandle>(points.Length, Allocator.TempJob);
             for (int index = 0; index < pointIndices.Length; index++)
             {
-                withinDistanceJobHandles[index] = new IsWithinDistanceJob(index, pointIndices, points, 0.1f)
-                    .Schedule();
-                //withinDistanceJobHandles[index].Complete();
+                withinDistanceJobHandles[index] =
+                    new IsWithinDistanceJob(index, pointIndices, points, 0.1f, pointCount)
+                        .Schedule(deps);
             }
 
             var withinDistanceJobHandle = JobHandle.CombineDependencies(withinDistanceJobHandles);
-            withinDistanceJobHandle.Complete();
-            withinDistanceJobHandles.Dispose();
+            return new DisposeJob_NativeArray<JobHandle>(withinDistanceJobHandles).Schedule(withinDistanceJobHandle);
         }
     }
 }
