@@ -13,10 +13,10 @@ namespace InfPoints.Jobs
     public struct CopyPointsByIndexJob : IJob
     {
         [DeallocateOnJobCompletion] [ReadOnly] NativeArray<int> m_CollectedPointsIndices;
-        [ReadOnly] NativeArray<float> m_PointsX;
-        [ReadOnly] NativeArray<float> m_PointsY;
-        [ReadOnly] NativeArray<float> m_PointsZ;
-        [ReadOnly] NativeArray<ulong> m_MortonCodes;
+        NativeArray<float> m_PointsX;
+        NativeArray<float> m_PointsY;
+        NativeArray<float> m_PointsZ;
+        NativeArray<ulong> m_MortonCodes;
         [ReadOnly] NativeInt m_MaximumPointCount;
         NativeArray<float> m_CollectedPointsX;
         NativeArray<float> m_CollectedPointsY;
