@@ -87,7 +87,7 @@ namespace InfPoints
 
             // Filter out full nodes
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
-            return new FilterFullNodesJob<float>(nodeStorage, validMortonCodes).Schedule(uniqueCodesMapHandle);
+            return new FilterFullNodesJob(nodeStorage, validMortonCodes).Schedule(uniqueCodesMapHandle);
         }
 
         JobHandle ConvertPointsToMortonCodes(NativeArrayXYZ<float> points, int levelIndex,
@@ -154,11 +154,11 @@ namespace InfPoints
                 .Schedule().Complete();
 
             // Figure out how many points we can add
-            new RemainingLengthJob(storage, mortonCode, pointCount, pointsToAddCount, MaximumPointsPerNode).Schedule().Complete();
+            new CalculatePointsToAddCount(storage, mortonCode, pointCount, MaximumPointsPerNode, pointsToAddCount).Schedule().Complete();
 
             // Filter points that don't "fit"
             var withinDistanceJobHandle =
-                IsWithinDistanceJob.BuildJobChain(points, pointIndices, pointsToAddCount);
+                IsWithinDistanceJob.BuildJobChain(points, pointsToAddCount, pointIndices);
 
             var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory);

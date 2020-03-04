@@ -11,7 +11,7 @@ namespace InfPoints.Tests.Editor.Jobs
         public void NativeArrayDispose()
         {
             var array = new NativeArray<int>(10, Allocator.TempJob);
-            new DisposeJob_NativeArray<int>(array).Schedule().Complete();
+            new DeallocateNativeArrayJob<int>(array).Schedule().Complete();
             Assert.That(()=>array.Dispose(), Throws.InvalidOperationException);
         }
     }
