@@ -171,7 +171,7 @@ namespace InfPoints
             // Kick off jobs to add points to child nodes
 
             // collectedPoints disposed on job completion
-            return new AddDataToStorageJob(mortonCode, collectedPoints, storage, pointsToAddCount)
+            return new AddDataToStorageJob(storage, mortonCode, collectedPoints, pointsToAddCount)
                 .Schedule(collectPointsJobHandle);
         }
 
