@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using InfPoints.NativeCollections;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -15,29 +16,36 @@ namespace InfPoints.Jobs
         [ReadOnly] NativeArray<float> m_PointsX;
         [ReadOnly] NativeArray<float> m_PointsY;
         [ReadOnly] NativeArray<float> m_PointsZ;
+        [ReadOnly] NativeArray<ulong> m_MortonCodes;
         [ReadOnly] NativeInt m_MaximumPointCount;
         NativeArray<float> m_CollectedPointsX;
         NativeArray<float> m_CollectedPointsY;
         NativeArray<float> m_CollectedPointsZ;
+        NativeArray<ulong> m_CollectMortonCodes;
 
         /// <summary>
         /// Copy all the points by index into a contiguous array.
+        /// The points are removed from the array, so just the un-copied points remain in a contiguous array.
         /// </summary>
         /// <param name="collectedPointIndices">The indices of the points to copy</param>
         /// <param name="points">The array of points to copy from</param>
         /// <param name="collectedPoints">The contiguous array of points</param>
+        /// <param name="collectedMortonCodes">The contiguous array of codes of the points</param>
         /// <param name="maximumPointCount">The most amount of points to copys</param>
         public CopyPointsByIndexJob(NativeArray<int> collectedPointIndices, NativeArrayXYZ<float> points,
-            NativeArrayXYZ<float> collectedPoints, NativeInt maximumPointCount)
+            NativeArray<ulong> mortonCodes, NativeArrayXYZ<float> collectedPoints, NativeArray<ulong> collectedMortonCodes,
+            NativeInt maximumPointCount)
         {
             m_CollectedPointsIndices = collectedPointIndices;
             m_PointsX = points.X;
             m_PointsY = points.Y;
             m_PointsZ = points.Z;
+            m_MortonCodes = mortonCodes;
             m_MaximumPointCount = maximumPointCount;
             m_CollectedPointsX = collectedPoints.X;
             m_CollectedPointsY = collectedPoints.Y;
             m_CollectedPointsZ = collectedPoints.Z;
+            m_CollectMortonCodes = collectedMortonCodes;
         }
 
         public void Execute()
@@ -49,6 +57,10 @@ namespace InfPoints.Jobs
                 m_CollectedPointsX[index] = m_PointsX[pointIndex];
                 m_CollectedPointsY[index] = m_PointsY[pointIndex];
                 m_CollectedPointsZ[index] = m_PointsZ[pointIndex];
+                m_CollectMortonCodes[index] = m_MortonCodes[index];
+                m_PointsX.RemoveAtSwapBack(pointIndex);
+                m_PointsY.RemoveAtSwapBack(pointIndex);
+                m_PointsZ.RemoveAtSwapBack(pointIndex);
             }
         }
     }

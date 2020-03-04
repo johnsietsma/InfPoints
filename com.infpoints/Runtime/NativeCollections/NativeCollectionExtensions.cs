@@ -66,7 +66,7 @@ namespace InfPoints.NativeCollections
 
         /// <summary>
         /// Remove an element from the collection and keep the same order.
-        /// Does not change the size of collection. The lst element of the container will be set to default.
+        /// Does not change the size of collection. The last element of the container will be set to default.
         /// </summary>
         /// <param name="data">The container to remove from</param>
         /// <param name="index">The index to remove</param>
@@ -76,12 +76,24 @@ namespace InfPoints.NativeCollections
         {
             NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
         }
-
-        public static void RemoveAt<T>(this NativeSlice<T> data, int index)
+        
+        /// <summary>
+        /// Remove an element from the collection by swapping it with the last element.
+        /// The last element of the container will be set to default.
+        /// </summary>
+        /// <param name="data">The container to remove from</param>
+        /// <param name="index">The index to remove</param>
+        /// <typeparam name="T">An unmanaged type</typeparam>
+        public static void RemoveAtSwapBack<T>(this NativeArray<T> data, int index)
             where T : unmanaged
         {
-            NativeCollectionUnsafe.RemoveAt<T>(data.GetUnsafePtr(), index, data.Length);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (index < 0 || index >= data.Length) throw new ArgumentOutOfRangeException(nameof(index));
+#endif
+            var lastElement = data[data.Length - 1];
+            data[index] = lastElement;
         }
+
         
         /// <summary>
         /// Searches the entire array for a specific value. Uses IComparable to compare elements.

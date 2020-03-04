@@ -162,13 +162,16 @@ namespace InfPoints
 
             var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory);
-
+            var collectedCodes = new NativeArray<ulong>(pointsInNodeCount, Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory);
+            
             // Collect points
             var collectPointsJobHandle =
-                new CopyPointsByIndexJob(pointIndices, points, collectedPoints, pointsToAddCount)
+                new CopyPointsByIndexJob(pointIndices, points, mortonCodes, collectedPoints, collectedCodes, pointsToAddCount)
                     .Schedule(withinDistanceJobHandle);
             
             // Kick off jobs to add points to child nodes
+            // Get child codes
 
             // collectedPoints disposed on job completion
             return new AddDataToStorageJob(storage, mortonCode, collectedPoints, pointsToAddCount)
