@@ -18,40 +18,6 @@ namespace InfPoints.Jobs
     }
     
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct Morton64EncodeJob : IJobParallelFor
-    {
-        [ReadOnly] public NativeArray<uint3> Coordinates;
-        public NativeArray<ulong> Codes;
-
-        public void Execute(int index)
-        {
-            Codes[index] = Morton.EncodeMorton64(Coordinates[index]);
-        }
-    }
-    
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-    public struct Morton64SoAEncodeJob : IJobParallelFor
-    {
-        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesX;
-        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesY;
-        [DeallocateOnJobCompletion][ReadOnly] public NativeArray<uint> CoordinatesZ;
-        public NativeArray<ulong> Codes;
-
-        public Morton64SoAEncodeJob(NativeArrayXYZ<uint> coordinates, NativeArray<ulong> codes)
-        {
-            CoordinatesX = coordinates.X;
-            CoordinatesY = coordinates.Y;
-            CoordinatesZ = coordinates.Z;
-            Codes = codes;
-        }
-
-        public void Execute(int index)
-        {
-            Codes[index] = Morton.EncodeMorton64( new uint3(CoordinatesX[index], CoordinatesY[index], CoordinatesZ[index]));
-        }
-    }
-
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton32DecodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint> Codes;
@@ -64,6 +30,18 @@ namespace InfPoints.Jobs
     }
     
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct Morton64EncodeJob : IJobParallelFor
+    {
+        [ReadOnly] public NativeArray<uint3> Coordinates;
+        public NativeArray<ulong> Codes;
+
+        public void Execute(int index)
+        {
+            Codes[index] = Morton.EncodeMorton64(Coordinates[index]);
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct Morton64DecodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<ulong> Codes;
@@ -72,6 +50,28 @@ namespace InfPoints.Jobs
         public void Execute(int index)
         {
             Coordinates[index] = Morton.DecodeMorton64(Codes[index]);
+        }
+    }
+    
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    public struct Morton64SoAEncodeJob : IJobParallelFor
+    {
+        [DeallocateOnJobCompletion][ReadOnly] NativeArray<uint> m_CoordinatesX;
+        [DeallocateOnJobCompletion][ReadOnly] NativeArray<uint> m_CoordinatesY;
+        [DeallocateOnJobCompletion][ReadOnly] NativeArray<uint> m_CoordinatesZ;
+        NativeArray<ulong> m_Codes;
+
+        public Morton64SoAEncodeJob(NativeArrayXYZ<uint> coordinates, NativeArray<ulong> codes)
+        {
+            m_CoordinatesX = coordinates.X;
+            m_CoordinatesY = coordinates.Y;
+            m_CoordinatesZ = coordinates.Z;
+            m_Codes = codes;
+        }
+
+        public void Execute(int index)
+        {
+            m_Codes[index] = Morton.EncodeMorton64( new uint3(m_CoordinatesX[index], m_CoordinatesY[index], m_CoordinatesZ[index]));
         }
     }
 }

@@ -2,7 +2,6 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 
 namespace InfPoints.Jobs
 {
@@ -13,24 +12,29 @@ namespace InfPoints.Jobs
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct GetUniqueValuesJob<T> : IJob where T : unmanaged, IEquatable<T>
     {
-        [ReadOnly] public NativeArray<ulong> Values;
-        public NativeSparseList<ulong,int> UniqueValues;
+        [ReadOnly] readonly NativeArray<ulong> m_Values;
+        NativeSparseList<ulong,int> m_UniqueValues;
 
+        /// <summary>
+        /// Finds all the unique occurrences of <c>values</c>.
+        /// </summary>
+        /// <param name="values">The values to find unique values in</param>
+        /// <param name="uniqueValues">All the unique value and the count of their occurrences</param>
         public GetUniqueValuesJob(NativeArray<ulong> values, NativeSparseList<ulong,int> uniqueValues)
         {
-            Values = values;
-            UniqueValues = uniqueValues;
+            m_Values = values;
+            m_UniqueValues = uniqueValues;
         }
         
         public void Execute()
         {
-            for (int index = 0; index < Values.Length; index++)
+            foreach (var key in m_Values)
             {
-                ulong key = Values[index];
-                if(!UniqueValues.ContainsIndex(key)) UniqueValues.AddValue(key, 0);
-                UniqueValues[key]++;
+                if(!m_UniqueValues.ContainsIndex(key)) m_UniqueValues.AddValue(key, 0);
+                m_UniqueValues[key]++;
             }
-            Logger.LogFormat(LogMessage.UniqueValuesCollected, UniqueValues.Length);
+
+            Logger.LogFormat(LogMessage.UniqueValuesCollected, m_UniqueValues.Length);
         }
     }
 }

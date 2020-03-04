@@ -25,7 +25,7 @@ namespace InfPoints.Tests.Editor.Jobs
                 var index2 = codesArray[1];
                 storage.AddNode(index2);
 
-                var isFullJob = new FilterFullNodesJob<int>(storage, codes).Schedule();
+                var isFullJob = new FilterFullNodesJob(storage, codes).Schedule();
 
                 isFullJob.Complete();
                 Assert.That(codes.Length, Is.EqualTo(1));
