@@ -10,21 +10,27 @@ namespace InfPoints.Jobs
     [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
     public struct CountPointsOutsideAABBJob : IJobParallelFor
     {
-        [ReadOnly] public AABB aabb;
-        [ReadOnly] public NativeArrayXYZ<float> Points;
-        public NativeInt.Concurrent OutsideCount;
+        [ReadOnly] AABB m_AABB;
+        [ReadOnly] NativeArrayXYZ<float> m_Points;
+        NativeInt.Concurrent m_OutsideCount;
 
+        /// <summary>
+        /// Calculate how many points are outside an AABB.
+        /// </summary>
+        /// <param name="aabb">The AABB to test against</param>
+        /// <param name="points">The points to test</param>
+        /// <param name="outsideCount">How many points are outside</param>
         public CountPointsOutsideAABBJob(AABB aabb, NativeArrayXYZ<float> points, NativeInt outsideCount)
         {
-            this.aabb = aabb;
-            Points = points;
-            OutsideCount = outsideCount.ToConcurrent();
+            m_AABB = aabb;
+            m_Points = points;
+            m_OutsideCount = outsideCount.ToConcurrent();
         }
 
         public void Execute(int index)
         {
-            if(!aabb.Contains(Points.X[index], Points.Y[index], Points.Z[index]))
-                OutsideCount.Increment();
+            if(!m_AABB.Contains(m_Points.X[index], m_Points.Y[index], m_Points.Z[index]))
+                m_OutsideCount.Increment();
         }
     }
 }

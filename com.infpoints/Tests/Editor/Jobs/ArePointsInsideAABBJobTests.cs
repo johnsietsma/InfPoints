@@ -21,12 +21,8 @@ namespace InfPoints.Tests.Editor.Jobs
             using (var xyzPoints = NativeArrayXYZUtils.MakeNativeArrayXYZ(pointsArray, Allocator.TempJob))
             using(var outsideCount = new NativeInt(0, Allocator.TempJob))
             {
-                var pointsOutsideJob = new CountPointsOutsideAABBJob()
-                {
-                    aabb = aabb,
-                    Points = xyzPoints,
-                    OutsideCount = outsideCount.ToConcurrent()
-                }.Schedule(xyzPoints.Length, 4);
+                var pointsOutsideJob = new CountPointsOutsideAABBJob(aabb, xyzPoints, outsideCount)
+                    .Schedule(xyzPoints.Length, 4);
                 pointsOutsideJob.Complete();
                 
                 Assert.That(outsideCount.Value, Is.EqualTo(2));

@@ -165,7 +165,7 @@ namespace InfPoints
 
             // Collect points
             var collectPointsJobHandle =
-                new CollectPointsJob(pointIndices, points, collectedPoints, pointsToAddCount)
+                new CopyPointsByIndexJob(pointIndices, points, collectedPoints, pointsToAddCount)
                     .Schedule(withinDistanceJobHandle);
             
             // Kick off jobs to add points to child nodes
