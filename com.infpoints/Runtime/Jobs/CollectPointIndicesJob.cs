@@ -11,7 +11,7 @@ namespace InfPoints.Jobs
     public struct CollectPointIndicesJob : IJob
     {
         [ReadOnly] readonly ulong m_MortonCode;
-        [ReadOnly] readonly NativeArray<ulong> m_PointCodes;
+        [ReadOnly] readonly NativeArray<ulong> m_PointMortonCodes;
         NativeArray<int> m_CollectedPointsIndices;
         NativeInt m_CollectedPointsCount;
 
@@ -19,14 +19,14 @@ namespace InfPoints.Jobs
         /// Copy all point indices that belong to a node.
         /// </summary>
         /// <param name="mortonCode">The morton code of the node</param>
-        /// <param name="pointCodes">The morton codes of all the points</param>
+        /// <param name="pointMortonCodes">The morton codes of all the points</param>
         /// <param name="collectedPointIndices">The indices that match the code</param>
         /// <param name="collectedPointsCount">The number of points collected</param>
-        public CollectPointIndicesJob(ulong mortonCode, NativeArray<ulong> pointCodes,
+        public CollectPointIndicesJob(ulong mortonCode, NativeArray<ulong> pointMortonCodes,
             NativeArray<int> collectedPointIndices, NativeInt collectedPointsCount)
         {
             m_MortonCode = mortonCode;
-            m_PointCodes = pointCodes;
+            m_PointMortonCodes = pointMortonCodes;
             m_CollectedPointsIndices = collectedPointIndices;
             m_CollectedPointsCount = collectedPointsCount;
         }
@@ -34,9 +34,9 @@ namespace InfPoints.Jobs
         public void Execute()
         {
             int count = 0;
-            for (int index = 0; index < m_PointCodes.Length; index++)
+            for (int index = 0; index < m_PointMortonCodes.Length; index++)
             {
-                if (m_PointCodes[index].Equals(m_MortonCode))
+                if (m_PointMortonCodes[index].Equals(m_MortonCode))
                 {
                     m_CollectedPointsIndices[count] = index;
                     count++;

@@ -72,7 +72,7 @@ namespace InfPoints.Jobs
         public static JobHandle BuildJobChain(NativeArrayXYZ<float> points, NativeInt pointCount,
             NativeArray<int> pointIndices, JobHandle deps = default)
         {
-            var withinDistanceJobHandles = new NativeArray<JobHandle>(points.Length, Allocator.TempJob);
+            var withinDistanceJobHandles = new NativeArray<JobHandle>(pointIndices.Length, Allocator.TempJob);
             for (int index = 0; index < pointIndices.Length; index++)
             {
                 withinDistanceJobHandles[index] =

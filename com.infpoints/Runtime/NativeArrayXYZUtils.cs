@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -28,61 +29,85 @@ namespace InfPoints
 
             return xyzPoints;
         }
-        
+
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
         public struct AdditionJob_NativeArrayXYZ_float4 : IJobParallelFor
         {
-            public int Length => ValuesX.Length;
-            [ReadOnly] public float3 NumberToAdd;
-            public NativeArray<float4> ValuesX;
-            public NativeArray<float4> ValuesY;
-            public NativeArray<float4> ValuesZ;
+            public readonly int Length; // The calculated Length, use when scheduling the job
+            [ReadOnly] readonly float3 m_NumberToAdd;
+            NativeArray<float4> m_ValuesX;
+            NativeArray<float4> m_ValuesY;
+            NativeArray<float4> m_ValuesZ;
 
             public AdditionJob_NativeArrayXYZ_float4(NativeArrayXYZ<float> values, float3 numberToAdd)
+                : this(values, values.Length, numberToAdd)
             {
-                NumberToAdd = numberToAdd;
-                ValuesX = values.X.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-                ValuesY = values.Y.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-                ValuesZ = values.Z.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
+            }
+
+            public AdditionJob_NativeArrayXYZ_float4(NativeArrayXYZ<float> values, int valuesLength, float3 numberToAdd)
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                // Because of reinterpret to SIMD friendly types 
+                if (values.Length % 4 != 0) throw new ArgumentException("Values must be added in multiples of 4");
+#endif
+                m_NumberToAdd = numberToAdd;
+                int sizeOfFloat = UnsafeUtility.SizeOf<float>();
+                m_ValuesX = values.X.Reinterpret<float4>(sizeOfFloat);
+                m_ValuesY = values.Y.Reinterpret<float4>(sizeOfFloat);
+                m_ValuesZ = values.Z.Reinterpret<float4>(sizeOfFloat);
+                Length = valuesLength / sizeOfFloat;
             }
 
             public void Execute(int index)
             {
-                ValuesX[index] += NumberToAdd.x;
-                ValuesY[index] += NumberToAdd.y;
-                ValuesZ[index] += NumberToAdd.z;
+                m_ValuesX[index] += m_NumberToAdd.x;
+                m_ValuesY[index] += m_NumberToAdd.y;
+                m_ValuesZ[index] += m_NumberToAdd.z;
             }
         }
-        
+
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
         public struct IntegerDivisionJob_NativeArrayXYZ_float4_uint4 : IJobParallelFor
         {
-            public int Length => ValuesX.Length;
-            [ReadOnly] float4 Divisor;
-            [ReadOnly] NativeArray<float4> ValuesX;
-            [ReadOnly] NativeArray<float4> ValuesY;
-            [ReadOnly] NativeArray<float4> ValuesZ;
-            public NativeArray<uint4> QuotientsX;
-            public NativeArray<uint4> QuotientsY;
-            public NativeArray<uint4> QuotientsZ;
+            public readonly int Length; // The calculated Length, use when scheduling the job
+            [ReadOnly] readonly float4 m_Divisor;
+            [ReadOnly] NativeArray<float4> m_ValuesX;
+            [ReadOnly] NativeArray<float4> m_ValuesY;
+            [ReadOnly] NativeArray<float4> m_ValuesZ;
+            NativeArray<uint4> m_QuotientsX;
+            NativeArray<uint4> m_QuotientsY;
+            NativeArray<uint4> m_QuotientsZ;
 
             public IntegerDivisionJob_NativeArrayXYZ_float4_uint4(NativeArrayXYZ<float> values,
                 NativeArrayXYZ<uint> quotients, float4 divisor)
+                : this(values, values.Length, quotients, divisor)
             {
-                Divisor = divisor;
-                ValuesX = values.X.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-                ValuesY = values.Y.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-                ValuesZ = values.Z.Reinterpret<float4>(UnsafeUtility.SizeOf<float>());
-                QuotientsX = quotients.X.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
-                QuotientsY = quotients.Y.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
-                QuotientsZ = quotients.Z.Reinterpret<uint4>(UnsafeUtility.SizeOf<uint>());
+            }
+
+            public IntegerDivisionJob_NativeArrayXYZ_float4_uint4(NativeArrayXYZ<float> values, int valuesLength,
+                NativeArrayXYZ<uint> quotients, float4 divisor)
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                // Because of reinterpret to SIMD friendly types 
+                if (values.Length % 4 != 0) throw new ArgumentException("Values must be added in multiples of 4");
+#endif
+
+                int sizeOfFloat = UnsafeUtility.SizeOf<float>();
+                m_Divisor = divisor;
+                m_ValuesX = values.X.Reinterpret<float4>(sizeOfFloat);
+                m_ValuesY = values.Y.Reinterpret<float4>(sizeOfFloat);
+                m_ValuesZ = values.Z.Reinterpret<float4>(sizeOfFloat);
+                m_QuotientsX = quotients.X.Reinterpret<uint4>(sizeOfFloat);
+                m_QuotientsY = quotients.Y.Reinterpret<uint4>(sizeOfFloat);
+                m_QuotientsZ = quotients.Z.Reinterpret<uint4>(sizeOfFloat);
+                Length = valuesLength / sizeOfFloat;
             }
 
             public void Execute(int index)
             {
-                QuotientsX[index] = (uint4) math.floor(ValuesX[index] / Divisor);
-                QuotientsY[index] = (uint4) math.floor(ValuesY[index] / Divisor);
-                QuotientsZ[index] = (uint4) math.floor(ValuesZ[index] / Divisor);
+                m_QuotientsX[index] = (uint4) math.floor(m_ValuesX[index] / m_Divisor);
+                m_QuotientsY[index] = (uint4) math.floor(m_ValuesY[index] / m_Divisor);
+                m_QuotientsZ[index] = (uint4) math.floor(m_ValuesZ[index] / m_Divisor);
             }
         }
     }
