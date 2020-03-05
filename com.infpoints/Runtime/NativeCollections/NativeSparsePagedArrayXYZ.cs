@@ -103,9 +103,7 @@ namespace InfPoints.NativeCollections
         public void Dispose()
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             DisposeSentinel.Dispose(ref m_Safety, ref m_DisposeSentinel);
-            if (!m_DataX.IsCreated) throw new InvalidOperationException();
 #endif
             m_DataX.Dispose();
             m_DataY.Dispose();

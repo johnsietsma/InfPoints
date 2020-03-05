@@ -27,7 +27,6 @@ namespace InfPoints.Jobs
             m_MortonCodes = mortonCodes;
         }
         
-        
         public void Execute()
         {
             var indices = m_MortonCodes.Indices;

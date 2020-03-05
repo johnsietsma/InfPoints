@@ -58,14 +58,13 @@ namespace InfPoints
             // The morton codes for each node with no duplicates
             var validMortonCodes = new NativeSparseList<ulong, int>(pointsLength, Allocator.TempJob);
             var preparePointsHandle = ConvertPointsToMortonCodes(points, pointsLength, levelIndex, pointMortonCodes);
-            preparePointsHandle.Complete();
 
-            var validNodesHandle = GetValidNodes(levelIndex, pointMortonCodes, validMortonCodes);
+            var validNodesHandle = GetValidNodes(levelIndex, pointMortonCodes, validMortonCodes, preparePointsHandle);
             validNodesHandle.Complete();
 
             Logger.Log("[PointCloud] Valid indices " + validMortonCodes.Length);
 
-            var addPointsHandle = AddPointsToNodes(points, levelIndex, validMortonCodes, pointMortonCodes);
+            var addPointsHandle = AddPointsToNodes(points, levelIndex, validMortonCodes, pointMortonCodes, validNodesHandle);
             addPointsHandle.Complete();
 
             pointMortonCodes.Dispose();
@@ -73,11 +72,11 @@ namespace InfPoints
         }
 
         JobHandle GetValidNodes(int levelIndex, NativeArray<ulong> pointMortonCodes,
-            NativeSparseList<ulong, int> validMortonCodes)
+            NativeSparseList<ulong, int> validMortonCodes, JobHandle deps=default)
         {
             // Get all unique codes and a count of how many of each there are
             var uniqueCodesMapHandle = new GetUniqueValuesJob<ulong>(pointMortonCodes, validMortonCodes)
-                .Schedule();
+                .Schedule(deps);
 
             // Filter out full nodes
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
@@ -85,7 +84,7 @@ namespace InfPoints
         }
 
         JobHandle ConvertPointsToMortonCodes(NativeArrayXYZ<float> points, int pointsLength, int levelIndex,
-            NativeArray<ulong> pointsMortonCodes)
+            NativeArray<ulong> pointsMortonCodes, JobHandle deps=default)
         {
             int cellCount = SparseOctreeUtils.GetNodeCount(levelIndex);
             float cellWidth = Octree.AABB.Size / cellCount;
@@ -95,7 +94,7 @@ namespace InfPoints
             // Transform points from world to Octree AABB space
             float3 offset = -Octree.AABB.Minimum;
             var transformJob = new NativeArrayXYZUtils.AdditionJob_NativeArrayXYZ_float4(points, pointsLength, offset);
-            var transformHandle = transformJob.Schedule(transformJob.Length, InnerLoopBatchCount);
+            var transformHandle = transformJob.Schedule(transformJob.Length, InnerLoopBatchCount, deps);
 
             var pointCoordinates =
                 new NativeArrayXYZ<uint>(pointsLength, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -112,7 +111,7 @@ namespace InfPoints
         }
 
         JobHandle AddPointsToNodes(NativeArrayXYZ<float> points, int levelIndex,
-            NativeSparseList<ulong, int> mortonCodeCounts, NativeArray<ulong> pointMortonCodes)
+            NativeSparseList<ulong, int> mortonCodeCounts, NativeArray<ulong> pointMortonCodes, JobHandle deps=default)
         {
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
             // For each node
@@ -123,14 +122,14 @@ namespace InfPoints
                 int pointsInNodeCount = mortonCodeCounts[mortonCode];
 
                 collectJobHandles[index] =
-                    AddPointsToNode(mortonCode, points, pointMortonCodes, pointsInNodeCount, nodeStorage);
+                    AddPointsToNode(mortonCode, points, pointMortonCodes, pointsInNodeCount, nodeStorage, deps);
             }
 
             return JobUtils.CombineHandles(collectJobHandles);
         }
 
         JobHandle AddPointsToNode(ulong mortonCode, NativeArrayXYZ<float> points, NativeArray<ulong> mortonCodes,
-            int pointsInNodeCount, NativeSparsePagedArrayXYZ storage)
+            int pointsInNodeCount, NativeSparsePagedArrayXYZ storage, JobHandle deps=default)
         {
             Logger.Log($"[PointCloud] Adding {pointsInNodeCount} points to node {mortonCode}");
 
@@ -144,16 +143,17 @@ namespace InfPoints
             var pointsToAddCount = new NativeInt(Allocator.TempJob);
 
             // Collect point indices belonging to this node
-            new CollectPointIndicesJob(mortonCode, mortonCodes, pointIndices, pointCount)
-                .Schedule().Complete();
+            var collectHandle = new CollectPointIndicesJob(mortonCode, mortonCodes, pointIndices, pointCount)
+                .Schedule(deps);
 
             // Figure out how many points we can add
-            new CalculatePointsToAddCount(storage, mortonCode, pointCount, MaximumPointsPerNode, pointsToAddCount)
-                .Schedule().Complete();
+            var calculatePointsHandle =
+                new CalculatePointsToAddCount(storage, mortonCode, pointCount, MaximumPointsPerNode, pointsToAddCount)
+                    .Schedule(collectHandle);
 
             // Filter points that don't "fit"
             var withinDistanceJobHandle =
-                IsWithinDistanceJob.BuildJobChain(points, pointsToAddCount, pointIndices);
+                IsWithinDistanceJob.BuildJobChain(points, pointsToAddCount, pointIndices, calculatePointsHandle);
 
             var collectedPoints = new NativeArrayXYZ<float>(pointsInNodeCount, Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory);
