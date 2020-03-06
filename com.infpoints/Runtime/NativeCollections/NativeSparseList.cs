@@ -6,7 +6,7 @@ using InfPoints.NativeCollections;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace InfPoints
+namespace InfPoints.NativeCollections
 {
     /// <summary>
     /// Store data contiguously, while allowing indices that are far apart.
@@ -132,6 +132,7 @@ namespace InfPoints
         /// </summary>
         /// <param name="sparseIndex">The sparse index of the data</param>
         /// <param name="value">The value to add</param>
+        [WriteAccessRequired]
         public void AddValue(TIndex sparseIndex, TData value)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -157,6 +158,7 @@ namespace InfPoints
         /// </summary>
         /// <param name="value">The value to set</param>
         /// <param name="sparseIndex">The sparse List index</param>
+        [WriteAccessRequired]
         public void SetValue(TData value, TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
@@ -174,6 +176,7 @@ namespace InfPoints
         /// </summary>
         /// <param name="sparseIndex"></param>
         /// <exception cref="IndexOutOfRangeException"></exception>
+        [WriteAccessRequired]
         public void RemoveAtSwapBack(TIndex sparseIndex)
         {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS

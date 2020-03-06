@@ -1,4 +1,5 @@
 ﻿using System;
+using InfPoints.NativeCollections;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -13,14 +14,14 @@ namespace InfPoints.Jobs
     public struct GetUniqueValuesJob<T> : IJob where T : unmanaged, IEquatable<T>
     {
         [ReadOnly] readonly NativeArray<ulong> m_Values;
-        NativeSparseList<ulong,int> m_UniqueValues;
+        NativeSparseArray<ulong,int> m_UniqueValues;
 
         /// <summary>
         /// Finds all the unique occurrences of <c>values</c>.
         /// </summary>
         /// <param name="values">The values to find unique values in</param>
         /// <param name="uniqueValues">All the unique value and the count of their occurrences</param>
-        public GetUniqueValuesJob(NativeArray<ulong> values, NativeSparseList<ulong,int> uniqueValues)
+        public GetUniqueValuesJob(NativeArray<ulong> values, NativeSparseArray<ulong,int> uniqueValues)
         {
             m_Values = values;
             m_UniqueValues = uniqueValues;

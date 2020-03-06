@@ -14,7 +14,7 @@ namespace InfPoints.Tests.Editor
             using(var pointCloud = new PointCloud(aabb))
             using (var points = PointCloudGenerator.PointsInGrid(PointCount, 1, Allocator.TempJob))
             {
-                pointCloud.AddPoints(points);
+                pointCloud.AddPoints(points).Complete();
                 var storage = pointCloud.Octree.GetNodeStorage(0);
                 Assert.That(storage.DataLength, Is.EqualTo(PointCount));
 

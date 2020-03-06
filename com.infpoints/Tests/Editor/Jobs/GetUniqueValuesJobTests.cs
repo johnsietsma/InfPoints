@@ -1,4 +1,5 @@
 ﻿using InfPoints.Jobs;
+using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
@@ -12,7 +13,7 @@ namespace InfPoints.Tests.Editor.Jobs
         {
             ulong[] values = {1, 1, 2, 3, 5, 5, 6, 6};
             using (var valuesArray = new NativeArray<ulong>(values, Allocator.TempJob))
-            using (var uniqueValues = new NativeSparseList<ulong, int>(valuesArray.Length, Allocator.TempJob))
+            using (var uniqueValues = new NativeSparseArray<ulong, int>(valuesArray.Length, Allocator.TempJob))
             {
                 var uniqueJob = new GetUniqueValuesJob<int>(valuesArray, uniqueValues);
 

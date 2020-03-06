@@ -15,7 +15,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-namespace InfPoints
+namespace InfPoints.NativeCollections
 {
 
     /// <summary>

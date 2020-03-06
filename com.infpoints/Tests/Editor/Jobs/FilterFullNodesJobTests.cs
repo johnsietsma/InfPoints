@@ -14,7 +14,7 @@ namespace InfPoints.Tests.Editor.Jobs
             ulong[] codesArray = {1, 2};
             int[] codesCount = {1, 1}; // Doesn't matter what these values are
             using (var storage = new NativeSparsePagedArrayXYZ(1, 1, 2, Allocator.TempJob))
-            using (var codes = new NativeSparseList<ulong, int>(codesArray, codesCount, Allocator.TempJob))
+            using (var codes = new NativeSparseArray<ulong, int>(codesArray, codesCount, Allocator.TempJob))
             {
                 // Fill the fist page
                 var index1 = codesArray[0];

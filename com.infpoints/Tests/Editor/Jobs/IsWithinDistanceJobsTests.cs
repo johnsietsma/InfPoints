@@ -1,4 +1,5 @@
 ﻿using InfPoints.Jobs;
+using InfPoints.NativeCollections;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;

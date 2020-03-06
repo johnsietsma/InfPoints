@@ -19,12 +19,12 @@ namespace InfPoints
             Octree = new SparseOctree(aabb, MaximumPointsPerNode, Allocator.Persistent);
         }
 
-        public void AddPoints(NativeArrayXYZ<float> points)
+        public JobHandle AddPoints(NativeArrayXYZ<float> points)
         {
-            AddPoints(points, points.Length);
+            return AddPoints(points, points.Length);
         }
 
-        public void AddPoints(NativeArrayXYZ<float> points, int pointCount)
+        public JobHandle AddPoints(NativeArrayXYZ<float> points, int pointCount)
         {
             // TODO: https://www.nuget.org/packages/System.Buffers
 
@@ -42,7 +42,7 @@ namespace InfPoints
                 {
                     Logger.LogError(
                         $"[PointCloud]Trying to add {outsideCount.Value} points outside the AABB {Octree.AABB}, aborting");
-                    return;
+                    return default;
                 }
             }
 #endif
@@ -56,7 +56,7 @@ namespace InfPoints
             var pointMortonCodes =
                 new NativeArray<ulong>(pointsLength, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             // The morton codes for each node with no duplicates
-            var validMortonCodes = new NativeSparseList<ulong, int>(pointsLength, Allocator.TempJob);
+            var validMortonCodes = new NativeSparseArray<ulong, int>(pointsLength, Allocator.TempJob);
             var preparePointsHandle = ConvertPointsToMortonCodes(points, pointsLength, levelIndex, pointMortonCodes);
 
             var validNodesHandle = GetValidNodes(levelIndex, pointMortonCodes, validMortonCodes, preparePointsHandle);
@@ -65,14 +65,13 @@ namespace InfPoints
             Logger.Log("[PointCloud] Valid indices " + validMortonCodes.Length);
 
             var addPointsHandle = AddPointsToNodes(points, levelIndex, validMortonCodes, pointMortonCodes, validNodesHandle);
-            addPointsHandle.Complete();
-
-            pointMortonCodes.Dispose();
-            validMortonCodes.Dispose();
+            var deallocatePointMortonCodesHandle = new DeallocateNativeArrayJob<ulong>(pointMortonCodes).Schedule(addPointsHandle);
+            var deallocateValidMortonCodesHandle = new DeallocateNativeSparseArrayJob<ulong,int>(validMortonCodes).Schedule(deallocatePointMortonCodesHandle);
+            return deallocateValidMortonCodesHandle;
         }
 
         JobHandle GetValidNodes(int levelIndex, NativeArray<ulong> pointMortonCodes,
-            NativeSparseList<ulong, int> validMortonCodes, JobHandle deps=default)
+            NativeSparseArray<ulong, int> validMortonCodes, JobHandle deps=default)
         {
             // Get all unique codes and a count of how many of each there are
             var uniqueCodesMapHandle = new GetUniqueValuesJob<ulong>(pointMortonCodes, validMortonCodes)
@@ -111,7 +110,7 @@ namespace InfPoints
         }
 
         JobHandle AddPointsToNodes(NativeArrayXYZ<float> points, int levelIndex,
-            NativeSparseList<ulong, int> mortonCodeCounts, NativeArray<ulong> pointMortonCodes, JobHandle deps=default)
+            NativeSparseArray<ulong, int> mortonCodeCounts, NativeArray<ulong> pointMortonCodes, JobHandle deps=default)
         {
             var nodeStorage = Octree.GetNodeStorage(levelIndex);
             // For each node
@@ -163,8 +162,6 @@ namespace InfPoints
                 new CopyPointsByIndexJob(pointIndices, points, collectedPoints, pointsToAddCount)
                     .Schedule(withinDistanceJobHandle);
 
-            // Kick off jobs to add points to child nodes
-            // Get child codes
 
             // collectedPoints disposed on job completion
             return new AddDataToStorageJob(storage, mortonCode, collectedPoints, pointsToAddCount)

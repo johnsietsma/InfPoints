@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 
 namespace InfPoints.NativeCollections
 {
@@ -22,9 +23,9 @@ namespace InfPoints.NativeCollections
     [NativeContainer]
     [DebuggerDisplay("Length = {Capacity}")]
     [DebuggerTypeProxy(typeof(NativeSparseArrayDebugView<,>))]
-    public struct NativeSparseArray<TIndex,TData> : IEnumerable<TData>, IDisposable
-        where TData : unmanaged
+    public unsafe struct NativeSparseArray<TIndex, TData> : IEnumerable<TData>, IDisposable
         where TIndex : unmanaged, IComparable<TIndex>
+        where TData : unmanaged
     {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         AtomicSafetyHandle m_Safety;
@@ -48,6 +49,8 @@ namespace InfPoints.NativeCollections
         /// When the `SparseArray` is full no more items can be added.
         /// </summary>
         public int Length => m_Length.Value;
+
+        public NativeInt NativeLength => m_Length;
 
         /// <summary>
         /// The sorted indices of data in the `SparseArray`.
@@ -80,6 +83,14 @@ namespace InfPoints.NativeCollections
             Indices = new NativeArray<TIndex>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             Data = new NativeArray<TData>(capacity, allocator, NativeArrayOptions.UninitializedMemory);
             m_Length = new NativeInt(0, allocator);
+        }
+
+        public NativeSparseArray(TIndex[] indices, TData[] data, Allocator allocator)
+            : this(indices.Length, allocator)
+        {
+            Indices.CopyFrom(indices);
+            Data.CopyFrom(data);
+            m_Length.Value = indices.Length;
         }
 
         /// <summary>
@@ -172,6 +183,24 @@ namespace InfPoints.NativeCollections
             m_Length.Decrement();
         }
 
+        /// <summary>
+        /// Remove the sparse array element by swapping it with the last element and decrementing the count.
+        /// Throws <exception cref="ArgumentOutOfRangeException"></exception> if the index does not exist and
+        /// `ENABLE_UNITY_COLLECTIONS_CHECKS` is enabled. Else it will silently fail.
+        /// </summary>
+        /// <param name="sparseIndex"></param>
+        /// <exception cref="IndexOutOfRangeException"></exception>
+        public void RemoveAtSwapBack(TIndex sparseIndex)
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
+            int dataIndex = FindDataIndex(sparseIndex);
+            Indices.RemoveAtSwapBack(dataIndex);
+            Data.RemoveAtSwapBack(dataIndex);
+            m_Length.Decrement();
+        }
+
         int FindDataIndex(TIndex sparseIndex)
         {
             return Indices.BinarySearch(sparseIndex, 0, Length);
@@ -214,14 +243,14 @@ namespace InfPoints.NativeCollections
         }
     }
 
-    sealed class NativeSparseArrayDebugView<TIndex,TData>
+    sealed class NativeSparseArrayDebugView<TIndex, TData>
         where TData : unmanaged
         where TIndex : unmanaged, IComparable<TIndex>
 
     {
-        NativeSparseArray<TIndex,TData> m_Array;
+        NativeSparseArray<TIndex, TData> m_Array;
 
-        public NativeSparseArrayDebugView(NativeSparseArray<TIndex,TData> array)
+        public NativeSparseArrayDebugView(NativeSparseArray<TIndex, TData> array)
         {
             m_Array = array;
         }

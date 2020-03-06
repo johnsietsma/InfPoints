@@ -13,7 +13,7 @@ namespace InfPoints.Jobs
     public struct FilterFullNodesJob : IJob
     {
         [ReadOnly] NativeSparsePagedArrayXYZ m_Storage;
-        NativeSparseList<ulong,int> m_MortonCodes;
+        NativeSparseArray<ulong,int> m_MortonCodes;
 
         /// <summary>
         /// Remove any nodes that are full.
@@ -21,7 +21,7 @@ namespace InfPoints.Jobs
         /// </summary>
         /// <param name="storage">The storage that keeps track of nodes allocations</param>
         /// <param name="mortonCodes">The codes to filter</param>
-        public FilterFullNodesJob(NativeSparsePagedArrayXYZ storage, NativeSparseList<ulong,int> mortonCodes)
+        public FilterFullNodesJob(NativeSparsePagedArrayXYZ storage, NativeSparseArray<ulong,int> mortonCodes)
         {
             m_Storage = storage;
             m_MortonCodes = mortonCodes;

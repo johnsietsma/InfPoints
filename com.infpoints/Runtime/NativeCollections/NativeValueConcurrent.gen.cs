@@ -11,7 +11,7 @@ using System;
 using System.Threading;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace InfPoints
+namespace InfPoints.NativeCollections
 {
 
 
