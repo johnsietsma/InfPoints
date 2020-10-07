@@ -39,7 +39,7 @@ foreach (var TYPE in TYPES)
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_<#=TYPE_FULL #>_<#=QUOTIENT #> : IJobParallelFor
     {
         [ReadOnly] public <#=TYPE_FULL #> Divisor;

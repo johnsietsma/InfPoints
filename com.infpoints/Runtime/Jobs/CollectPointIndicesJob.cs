@@ -8,7 +8,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Copy(collect) all the indices of points matching the code. 
     /// </summary>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct CollectPointIndicesJob : IJob
     {
         [ReadOnly] readonly ulong m_MortonCode;

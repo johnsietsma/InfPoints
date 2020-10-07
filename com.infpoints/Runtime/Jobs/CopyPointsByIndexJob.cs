@@ -9,7 +9,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Copy all the points by index. 
     /// </summary>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct CopyPointsByIndexJob : IJob
     {
         [DeallocateOnJobCompletion] [ReadOnly] NativeArray<int> m_CollectedPointsIndices;

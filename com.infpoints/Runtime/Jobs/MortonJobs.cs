@@ -5,7 +5,7 @@ using Unity.Mathematics;
 
 namespace InfPoints.Jobs
 {
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton32EncodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint3> Coordinates;
@@ -17,7 +17,7 @@ namespace InfPoints.Jobs
         }
     }
     
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton32DecodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint> Codes;
@@ -29,7 +29,7 @@ namespace InfPoints.Jobs
         }
     }
     
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton64EncodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<uint3> Coordinates;
@@ -41,7 +41,7 @@ namespace InfPoints.Jobs
         }
     }
     
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton64DecodeJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<ulong> Codes;
@@ -53,7 +53,7 @@ namespace InfPoints.Jobs
         }
     }
     
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton64SoAEncodeJob : IJobParallelFor
     {
         [DeallocateOnJobCompletion][ReadOnly] NativeArray<uint> m_CoordinatesX;

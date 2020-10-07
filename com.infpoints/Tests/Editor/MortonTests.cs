@@ -18,7 +18,7 @@ namespace InfPoints.Tests.Editor
     // ----
     // Code for packing and unpacking points into 4x3 arrays
 
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct TransposePackedJob : IJob
     {
         [ReadOnly] public NativeArray<uint3x4> SourceArray;
@@ -33,7 +33,7 @@ namespace InfPoints.Tests.Editor
         }
     }
 
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct TransposeUnpackedJob : IJob
     {
         [ReadOnly] public NativeArray<uint4x3> SourceArray;
@@ -48,7 +48,7 @@ namespace InfPoints.Tests.Editor
         }
     }
 
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile()]//FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton32EncodeJob_Packed : IJob
     {
         [ReadOnly] public NativeArray<uint4x3> Coordinates;
@@ -64,7 +64,7 @@ namespace InfPoints.Tests.Editor
         }
     }
 
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile()]//FloatPrecision.Standard, FloatMode.Fast)]
     public struct Morton32DecodeJob_Packed : IJob
     {
         [ReadOnly] public NativeArray<uint4> Codes;
@@ -122,6 +122,7 @@ namespace InfPoints.Tests.Editor
         NativeArray<uint3> m_Coordinates32Decoded;
         NativeArray<uint4x3> m_Coordinates32DecodedPacked;
         NativeArray<uint> m_Codes32;
+        NativeArray<uint4> m_Codes32_4;
 
         NativeArray<uint3> m_Coordinates64;
         NativeArray<uint3> m_Coordinates64Decoded;

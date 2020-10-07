@@ -9,7 +9,7 @@ namespace InfPoints.Jobs
     /// Remove any nodes that are full in storage.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct FilterFullNodesJob : IJob
     {
         [ReadOnly] NativeSparsePagedArrayXYZ m_Storage;

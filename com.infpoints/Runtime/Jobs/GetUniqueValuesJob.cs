@@ -10,7 +10,7 @@ namespace InfPoints.Jobs
     /// Get all the unique values. A count is kept of the number of values of each set.
     /// </summary>
     /// <typeparam name="T">An unmanaged and IEquatable<T> value</typeparam>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct GetUniqueValuesJob<T> : IJob where T : unmanaged, IEquatable<T>
     {
         [ReadOnly] readonly NativeArray<ulong> m_Values;
@@ -29,8 +29,9 @@ namespace InfPoints.Jobs
         
         public void Execute()
         {
-            foreach (var key in m_Values)
+            for (int i = 0; i < m_Values.Length; i++)
             {
+                var key = m_Values[i];
                 if(!m_UniqueValues.ContainsIndex(key)) m_UniqueValues.AddValue(key, 0);
                 m_UniqueValues[key]++;
             }

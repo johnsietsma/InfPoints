@@ -30,7 +30,7 @@ namespace InfPoints
             return xyzPoints;
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
         public struct AdditionJob_NativeArrayXYZ_float4 : IJobParallelFor
         {
             public readonly int Length; // The calculated Length, use when scheduling the job
@@ -66,7 +66,7 @@ namespace InfPoints
             }
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
         public struct IntegerDivisionJob_NativeArrayXYZ_float4_uint4 : IJobParallelFor
         {
             public readonly int Length; // The calculated Length, use when scheduling the job

@@ -9,7 +9,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Calculate the number of points that can be added to a node.
     /// </summary>
-    [BurstCompile(FloatPrecision.Low, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Low, FloatMode.Fast)]
     public struct CalculatePointsToAddCount : IJob
     {
         [ReadOnly] NativeSparsePagedArrayXYZ m_Storage;

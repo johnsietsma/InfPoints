@@ -10,7 +10,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Find all the points within a certain distance of a point.
     /// </summary>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IsWithinDistanceJob : IJob
     {
         [ReadOnly] readonly int m_PointIndex;

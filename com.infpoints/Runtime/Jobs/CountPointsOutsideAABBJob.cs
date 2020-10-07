@@ -8,7 +8,7 @@ namespace InfPoints.Jobs
     /// <summary>
     /// Count how many points are outside an AABB
     /// </summary>
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct CountPointsOutsideAABBJob : IJobParallelFor
     {
         [ReadOnly] AABB m_AABB;

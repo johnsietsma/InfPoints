@@ -2,7 +2,7 @@
 
 Version 0.000001
 
-Unite Version 2019.3.0f3
+Unity Version 2020.1.6f1
 
 It's becoming more and more common to use photogrammetry and lidar scanning to capture buildings, engineering projects, sites of cultural significance, archaeological digs, etc. Most of these points clouds are in the billions of points; slow to render and unable to fit into memory.
 

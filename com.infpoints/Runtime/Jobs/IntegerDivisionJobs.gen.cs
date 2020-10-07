@@ -23,7 +23,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double_int : IJobParallelFor
     {
         [ReadOnly] public double Divisor;
@@ -39,7 +39,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double_uint : IJobParallelFor
     {
         [ReadOnly] public double Divisor;
@@ -55,7 +55,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double2_int2 : IJobParallelFor
     {
         [ReadOnly] public double2 Divisor;
@@ -71,7 +71,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double2_uint2 : IJobParallelFor
     {
         [ReadOnly] public double2 Divisor;
@@ -87,7 +87,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double3_int3 : IJobParallelFor
     {
         [ReadOnly] public double3 Divisor;
@@ -103,7 +103,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double3_uint3 : IJobParallelFor
     {
         [ReadOnly] public double3 Divisor;
@@ -119,7 +119,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double4_int4 : IJobParallelFor
     {
         [ReadOnly] public double4 Divisor;
@@ -135,7 +135,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_double4_uint4 : IJobParallelFor
     {
         [ReadOnly] public double4 Divisor;
@@ -151,7 +151,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float_int : IJobParallelFor
     {
         [ReadOnly] public float Divisor;
@@ -167,7 +167,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float_uint : IJobParallelFor
     {
         [ReadOnly] public float Divisor;
@@ -183,7 +183,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float2_int2 : IJobParallelFor
     {
         [ReadOnly] public float2 Divisor;
@@ -199,7 +199,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float2_uint2 : IJobParallelFor
     {
         [ReadOnly] public float2 Divisor;
@@ -215,7 +215,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float3_int3 : IJobParallelFor
     {
         [ReadOnly] public float3 Divisor;
@@ -231,7 +231,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float3_uint3 : IJobParallelFor
     {
         [ReadOnly] public float3 Divisor;
@@ -247,7 +247,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float4_int4 : IJobParallelFor
     {
         [ReadOnly] public float4 Divisor;
@@ -263,7 +263,7 @@ namespace InfPoints.Jobs
     /// Divide all the values in the array by a divisor, storing the quotient.
     /// Jobs have a name format of `IntegerDivision_<ValuesType>_<QuotientType>`.
     /// For example `IntegerDivision_float3_uint3`.
-    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
+    [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
     public struct IntegerDivisionJob_float4_uint4 : IJobParallelFor
     {
         [ReadOnly] public float4 Divisor;
